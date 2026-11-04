@@ -424,17 +424,31 @@ codecTablesDecl ctx first' bts = (Gen.decl (provenance first') "codecTables" bod
     provenance bt = provenanceOf ctx (btAnchor bt) (btTable bt) (title bt)
     body =
       [ Gen.provenanceComment (provenance first')
-      , "--   The tables of " <> Gen.specLabel (cxSpec ctx) <> within <> " the hand-written codec (Hsed.Core.Token)"
-      , "--   implements, each with its SpecRef and title under its provenance: the token table"
-      , "--   is checked against the codec on every hsedc run (C-TOKEN-CODEC), the atom"
-      , "--   diagrams are the codec's by hand."
-      , "codecTables :: [(Text, Text)]"
+      , "--   The tables of " <> Gen.specLabel (cxSpec ctx) <> within <> " the hand-written codec (Hsed.Core.Token)" ]
+      <> held <>
+      [ "codecTables :: [(Text, Text)]"
       , "codecTables =" ]
       <> concat (zipWith element [0 :: Int ..] bts)
       <> ["  ]"]
     element i bt =
       [ "    -- " <> fromMaybe "" (T.stripPrefix "-- | " (Gen.provenanceComment (provenance bt))) <> nestedNote bt
       , "  " <> (if i == 0 then "[ " else ", ") <> "(" <> tshow (specRef bt) <> ", " <> tshow (title bt) <> ")" ]
+    -- what holds each table to the codec: a token table C-TOKEN-CODEC, a token list bound narrows (core N) its
+    -- target's token table by C-TOKEN-NARROWS (Opal's T15, whose [Token, Acronym] isTokenTable does not take), the
+    -- rest (the atom diagrams) nothing but the codec's author; Core's words as they were where nothing is narrowed
+    narrowed = [ (bt, target) | bt <- bts, Just target <- [narrowsOf (btBinding bt) >>= narrowedIn ctx] ]
+    held = case narrowed of
+      [] -> [ "--   implements, each with its SpecRef and title under its provenance: the token table"
+            , "--   is checked against the codec on every hsedc run (C-TOKEN-CODEC), the atom"
+            , "--   diagrams are the codec's by hand." ]
+      _  -> map ("--   " <>) . Gen.wrapText 84 . (<> ".") . T.intercalate "; " $
+              [ "implements, each with its SpecRef and title under its provenance" ]
+              <> [ "the token table is checked against the codec on every hsedc run (C-TOKEN-CODEC)" | any (isTokenTable ctx) bts ]
+              <> [ specRef bt <> " lists the tokens " <> Gen.specLabel (cxSpec ctx) <> " supports, each held to "
+                   <> specIdText (cxSpec b) <> " " <> renderAnchorId aid <> "'s by C-TOKEN-NARROWS, not to the codec"
+                 | (bt, (b, aid)) <- narrowed ]
+              <> [ "the atom diagrams are the codec's by hand"
+                 | any (\bt -> not (isTokenTable ctx bt) && btAnchor bt `notElem` map (btAnchor . fst) narrowed) bts ]
     -- the section every table lies in: the longest common prefix of their sections
     within = case [ DT.splitOn "." s | bt <- bts, Just s <- [sectionOf ctx bt] ] of
       s : ss | common@(_ : _) <- foldl' (\a b -> map fst (takeWhile (uncurry (==)) (zip a b))) s ss -> " " <> T.intercalate "." common

@@ -118,7 +118,7 @@ import           Hsed.Spec.Grammar (Payload (..), printSomeBinding)
 import           Hsed.Spec.IR      (AnnotIR (..), SigIR (..), SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef (Classification (..), Context (..), RuleDef (..), boundBinding, contextChain, locatedAt,
-                                    numberedTables, ruleShape, signatureUnits, tablePage)
+                                    numberedTables, ofFamily, refTable, refTarget, ruleShape, signatureUnits, tablePage)
 import           Hsed.Spec.Scope
 import           Hsed.Spec.Shape   (KnownShape, SShape, Shape (Doc), SomeShape (..), UnitKind (..),
                                     measure, projectColumns, shapeUnit, toSomeShape)
@@ -272,18 +272,13 @@ classifyOverWithRules ruleSet base ir = (final, annotFindings <> unimplemented <
         []  -> Left (finding Error "E-SHAPE" "a cross-spec binding names no target")
         ss  -> Left (finding Error "E-SHAPE" ("the targets have different shapes: " <> T.intercalate ", " (map tshow ss)))
     -- the classification a reference's table is read in, the table, and its name in a message
-    target m r = case refFamily r of
-      Just (family, n)
-        | family `T.isPrefixOf` ir.spec -> Right (m, TableId n, renderAnchorId (TableId n))
-        | Just b <- L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) bases ->
-            Right (cxClasses b, TableId n, Cm.specIdText (cxSpec b) <> " " <> renderAnchorId (TableId n))
+    target m r = case (refTable r, refTarget bases r) of
+      (Just (family, n), _)
+        | ofFamily family ir.spec -> Right (m, TableId n, renderAnchorId (TableId n))
+      (_, Just (b, aid)) -> Right (cxClasses b, aid, Cm.specIdText (cxSpec b) <> " " <> renderAnchorId aid)
       _ -> Left (finding Error "E-SHAPE" ("the shape comes from " <> tshow r <> ", which is not in " <> ir.spec
                    <> if null bases then "; resolve it with that spec's IR" else " nor in a spec it is read over"))
     bases = maybe [] contextChain base
-    refFamily = \case
-      Core n    -> Just ("core" :: Text, n)
-      Opal n    -> Just ("opal", n)
-      Section _ -> Nothing
     unresolved named = finding Error "E-SHAPE" ("the shape comes from " <> named <> ", which nothing binds")
     unresolvedShape s = finding Error "E-SHAPE" ("cannot take the shape " <> tshow s)
 

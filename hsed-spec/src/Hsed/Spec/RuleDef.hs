@@ -102,6 +102,9 @@ module Hsed.Spec.RuleDef
   , replacedIn
   , narrowsOf
   , narrowedIn
+  , refTable
+  , ofFamily
+  , refTarget
     -- * Bound units
   , BoundUnit (..)
   , SomeUnit (..)
@@ -305,18 +308,15 @@ replacesOf = \case
       _                       -> []
 
 -- | The spec a reference names among those a Context is read over, its base
---   and the base's base (@core 102@: the first whose name is Core's), with
+--   and the base's base (@core 102@: the first of Core's family, 'refTarget'), with
 --   the table; or why there is none.
 replacedIn :: Context -> Ref -> Either Text (Context, AnchorId)
 replacedIn ctx = \case
-  Core n    -> inSpec "core" n
-  Opal n    -> inSpec "opal" n
   Section s -> Left ("it replaces section " <> tshow s <> ", which is no table")
+  r         -> maybe (Left (missing r)) Right (refTarget (maybe [] contextChain (cxBase ctx)) r)
   where
-    bases = maybe [] contextChain (cxBase ctx)
-    inSpec family n = case L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) bases of
-      Just b  -> Right (b, TableId n)
-      Nothing -> Left ("it replaces " <> family <> " " <> tshow n <> ", in no spec " <> Cm.specIdText (cxSpec ctx) <> " is read over")
+    missing r = "it replaces " <> maybe "" (\(family, n) -> family <> " " <> tshow n) (refTable r)
+                <> ", in no spec " <> Cm.specIdText (cxSpec ctx) <> " is read over"
 
 -- | The table a binding narrows, through its modifiers: Opal Table 14's
 --   @narrows (core 26)@ (since M5a; the rule whose shape the binding takes
@@ -338,12 +338,39 @@ narrowsOf = \case
 --   with the Context that owns it; Nothing for a section, or a family no
 --   spec of the chain is.
 narrowedIn :: Context -> Ref -> Maybe (Context, AnchorId)
-narrowedIn ctx = \case
-  Core n    -> inSpec "core" n
-  Opal n    -> inSpec "opal" n
+narrowedIn ctx = refTarget (contextChain ctx)
+
+-- | The spec family a reference names and its table's number (@core 26@:
+--   @("core", 26)@); none for a section. The one place a 'Ref' is read as a
+--   spec family ('refTarget', and "Hsed.Spec.Rules"' @classifyOver@).
+--
+-- >>> refTable (Opal 16)
+-- Just ("opal",16)
+-- >>> refTable (Section "4.2")
+-- Nothing
+refTable :: Ref -> Maybe (Text, Int)
+refTable = \case
+  Core n    -> Just ("core", n)
+  Opal n    -> Just ("opal", n)
   Section _ -> Nothing
-  where
-    inSpec family n = (\c -> (c, TableId n)) <$> L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) (contextChain ctx)
+
+-- | Whether a spec, by its SpecId text, is of a family: the SpecId up to its
+--   @-version@ is the family exactly (@core-2.01@ is @core@; an
+--   @opalite-1.00@ is not @opal@, which a prefix would take it for).
+--
+-- >>> map (ofFamily "opal") ["opal-2.30", "opalite-1.00", "core-2.01"]
+-- [True,False,False]
+ofFamily :: Text -> Text -> Bool
+ofFamily family spec = T.takeWhile (/= '-') spec == family
+
+-- | The table a reference names among some Contexts, in their order: the
+--   first whose spec is of the reference's family ('ofFamily'), with the
+--   table; none for a section, or a family none of them is.
+refTarget :: [Context] -> Ref -> Maybe (Context, AnchorId)
+refTarget ctxs r = do
+  (family, n) <- refTable r
+  c <- L.find (ofFamily family . Cm.specIdText . cxSpec) ctxs
+  pure (c, TableId n)
 
 
 -- * Bound units

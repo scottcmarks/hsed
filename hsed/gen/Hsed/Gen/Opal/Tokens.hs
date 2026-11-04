@@ -21,9 +21,9 @@ import           Data.Text (Text)
 
 -- | opal-2.30 T15 Supported Tokens (PDF 30 / p.29, ord 17, sha256:baa66379d0fc)
 --   The tables of Opal 3.3.4.1.1 the hand-written codec (Hsed.Core.Token)
---   implements, each with its SpecRef and title under its provenance: the token table
---   is checked against the codec on every hsedc run (C-TOKEN-CODEC), the atom
---   diagrams are the codec's by hand.
+--   implements, each with its SpecRef and title under its provenance; opal-2.30:T15
+--   lists the tokens Opal supports, each held to core-2.01 T4's by C-TOKEN-NARROWS, not
+--   to the codec.
 codecTables :: [(Text, Text)]
 codecTables =
     -- opal-2.30 T15 Supported Tokens (PDF 30 / p.29, ord 17, sha256:baa66379d0fc)

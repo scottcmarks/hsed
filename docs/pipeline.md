@@ -217,7 +217,8 @@ ledger, and commit the rule and its generated output together.
 
 **Bind a table nothing binds.** After `make ir-annotated`, run
 `stack exec hsedc -- orphans build/core-2.01.hsed.json` to list them (for Opal, give its IR with
-`--base build/core-2.01.hsed.json --partial opal-2.30`, as the Makefile does). Then either add the rule's
+`--base build/core-2.01.hsed.json`, as the Makefile does; since M5a every Opal unit is bound, so an
+unbound one is an Error). Then either add the rule's
 token to the `doc` line, or add a table annotation if the rule cannot find the table on its own. Run
 `make annotate`, `make pdf-checks` and `make gen`.
 

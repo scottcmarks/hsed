@@ -92,7 +92,7 @@ import           Hsed.Core.UID                   (HalfUID, UID, halfUID, uid, ui
 import           Hsed.Gen.Core.Enums             (Core_table_kind (..))
 import           Hsed.Gen.Core.TableDescs        (aceTableDesc, accessControlTableDesc, authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs         (uACETable, uAccessControlTable, uAuthorityTable, uC_PINTable, uK_AES_128Table,
-                                                  uK_AES_256Table, uLockingInfoTable, uLockingTable, uMBRControlTable, uSPTable, uTableTable)
+                                                  uK_AES_256Table, uLockingInfoTable, uSPTable, uTableTable)
 import           Hsed.Gen.Core.UIDs              (uAuthority_Admins, uAuthority_Anybody, uAuthority_Issuers, uAuthority_SID, uC_PIN_SID,
                                                   uMethodID_Get, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1,

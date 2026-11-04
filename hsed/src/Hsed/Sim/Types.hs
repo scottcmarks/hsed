@@ -42,6 +42,7 @@ module Hsed.Sim.Types
   , ByteTable (..)
   , byteTables
   , initialState
+  , initialComIds
   , initialStateProblems
   , preconfiguredSPs
   , FoldProblem (..)
@@ -225,8 +226,7 @@ data TPerState = TPerState
 initialState :: SimParams -> TPerState
 initialState p = TPerState
   { tsParams              = p
-  , tsComIds              = Map.fromList [ (c, ComIdState 0 Issued S1 initialHostProperties (MgmtBuffer False Nothing))
-                                         | c <- staticComIds p, not (reservedComId c) ]
+  , tsComIds              = initialComIds p
   , tsSessions            = mempty
   , tsNextTSN             = firstTSN
   , tsSPs                 = Map.fromList [ (pspUID sp, either refused (spState sp) (Preconfig.foldTables p sp)) | sp <- preconfiguredSPs ]
@@ -236,6 +236,13 @@ initialState p = TPerState
     spState sp (descs, tables) = SPState (pspUID sp) descs tables (byteTables descs tables)
     refused problems = error . T.unpack $
       "Hsed.Sim.Types.initialState: the parameters' SPs do not fold: " <> T.intercalate "; " (map foldProblemText problems)
+
+-- | A TPer's static ComIDs as it starts ('initialState'): each Issued, with
+--   extension 0, awaiting IF-SEND, with the host's initial properties and an
+--   empty management buffer; none reserved.
+initialComIds :: SimParams -> Map Word16 ComIdState
+initialComIds p = Map.fromList [ (c, ComIdState 0 Issued S1 initialHostProperties (MgmtBuffer False Nothing))
+                               | c <- staticComIds p, not (reservedComId c) ]
 
 -- | The SPs a TPer is manufactured with, each its preconfiguration as hsedc
 --   generates it from Opal 2.30: the Admin SP's (Tables 18-33, PDF 34-52,

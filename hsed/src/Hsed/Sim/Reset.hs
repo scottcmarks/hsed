@@ -22,8 +22,11 @@ host's properties to the initial assumptions; a hot plug, another TCG reset
 event, keeps it (Core 5.2.2.4.4, PDF 148; Opal 3.2.3 g, PDF 29). A power cycle
 alone resets a C_PIN's Tries, where its Persistence is False; no other reset
 does (Core 5.3.4.1.1.2, PDF 210). Since M5a every reset of the TPer also
-applies the Locking SP's reset columns, at either life of the SP (the plan's
-D3: Manufactured-Inactive too): a Locking object whose LockOnReset lists the
+applies the Locking SP's reset columns while the SP is Manufactured (since
+the M5a review, not while it is Manufactured-Inactive, where "the Locking
+SP's management of the Storage Device's locking and media encryption
+features SHALL be disabled", Opal 2.30 5.2.2.3.1, PDF 97, the plan's D3
+having applied them at either life): a Locking object whose LockOnReset lists the
 reset's type has ReadLocked and WriteLocked set True, whatever its
 ReadLockEnabled and WriteLockEnabled (Core 5.7.2.2.10, PDF 275; Opal 3.2.3 h,
 PDF 29, for TPER_RESET's Programmatic), and an empty set changes neither;
@@ -52,15 +55,14 @@ import qualified RIO.List                 as L
 import qualified RIO.Map                  as Map
 import           RIO
 
-import           Hsed.Core.Table          (Cell (..), ColNum, Row)
+import           Hsed.Core.Table          (Cell (..), Row)
 import           Hsed.Core.Types          (enumValue)
-import           Hsed.Gen.Core.Enums      (Core_boolean (..))
-import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingTable, uMBRControlTable)
 import           Hsed.Gen.Opal.Enums      (Opal_reset_types (..))
-import           Hsed.Sim.State           (abortSessions, cellOf, columnOf, initialHostProperties)
-import           Hsed.Sim.Types           (ComIdState (..), MgmtBuffer (..), SPState (..), Session (..), SyncState (..),
-                                           TPerState (..))
+import           Hsed.Sim.Cells           (booleanCell, putCell)
+import           Hsed.Sim.State           (abortSessions, booleanNamedIn, cellOf, columnOf, initialHostProperties, spLifeCycle)
+import           Hsed.Sim.Types           (ComIdState (..), LifeCycle (..), MgmtBuffer (..), SPState (..), Session (..), SyncState (..),
+                                           TPerState (..), lifeCycleValue)
 import           Hsed.Wire                (Event (..))
 
 
@@ -107,15 +109,21 @@ event = resetTPer . \case
 --   initial assumptions on a power cycle, a hardware reset and TPER_RESET
 --   and kept on a hot plug (Core 5.2.2.4.4, PDF 148; Opal 3.2.3 g), and Tries
 --   reset to 0 on a power cycle in every C_PIN row whose Persistence is False
---   (Core 5.3.4.1.1.2, PDF 210), in every SP; and in every SP, at either life
---   of the Locking SP, the Locking and MBRControl rows as the reset's type
---   and their reset columns say ('lockingReset').
+--   (Core 5.3.4.1.1.2, PDF 210), in every SP; and in every SP not
+--   Manufactured-Inactive, the Locking and MBRControl rows as the reset's
+--   type and their reset columns say ('lockingReset'): an SP's locking is
+--   disabled while it is Manufactured-Inactive (Opal 2.30 5.2.2.3.1, PDF 97),
+--   so that the rows the fold gives it are the rows Activate finds (since
+--   the M5a review; the plan's D3 applied them at either life).
 resetTPer :: ResetKind -> TPerState -> TPerState
 resetTPer kind st = (abortSessions (const True) st)
   { tsComIds = fmap comId (tsComIds st)
-  , tsSPs    = fmap (lockingReset kind . if kind == OnPowerCycle then triesReset else id) (tsSPs st)
+  , tsSPs    = Map.mapWithKey (\sp -> locking sp . if kind == OnPowerCycle then triesReset else id) (tsSPs st)
   }
   where
+    locking sp
+      | spLifeCycle sp st == Just (lifeCycleValue ManufacturedInactive) = id
+      | otherwise                                                       = lockingReset kind
     comId cs = cs
       { cSync      = S1
       , cMgmt      = MgmtBuffer False Nothing
@@ -141,13 +149,10 @@ triesReset sps = sps { spsTables = Map.adjust (map row) uC_PINTable (spsTables s
   where
     row :: Row -> Row
     row r
-      | persistent r = r
-      | otherwise    = [ (col, if Just col == triesColumn then UIntCell 0 else cell) | (col, cell) <- r ]
-    persistent r = case persistenceColumn >>= (`lookup` r) of
-      Just (EnumCell _ v) -> v == enumValue Core_boolean_True
-      _                   -> False
-    triesColumn       = columnOf c_PINTableDesc "Tries"
-    persistenceColumn = columnOf c_PINTableDesc "Persistence"
+      | booleanNamedIn sps uC_PINTable "Persistence" r = r
+      | otherwise = [ (col, if Just col == triesColumn then UIntCell 0 else cell) | (col, cell) <- r ]
+    -- the column found in the SP's own description of its C_PIN table (since the M5a review)
+    triesColumn = Map.lookup uC_PINTable (spsDescs sps) >>= (`columnOf` "Tries")
 
 -- | An SP's rows after a reset of a kind, as their reset columns list the
 --   reset's type ('resetType'): each Locking row whose LockOnReset lists it
@@ -161,17 +166,16 @@ triesReset sps = sps { spsTables = Map.adjust (map row) uC_PINTable (spsTables s
 --   Admin SP) is as it was.
 lockingReset :: ResetKind -> SPState -> SPState
 lockingReset kind sps = L.foldl' resetIn sps
-  [ (uLockingTable, "LockOnReset", [("ReadLocked", boolean True), ("WriteLocked", boolean True)])
-  , (uMBRControlTable, "MBRDoneOnReset", [("Done", boolean False)])
+  [ (uLockingTable, "LockOnReset", [("ReadLocked", booleanCell True), ("WriteLocked", booleanCell True)])
+  , (uMBRControlTable, "MBRDoneOnReset", [("Done", booleanCell False)])
   ]
   where
     resetIn s (table, listing, puts) = fromMaybe s $ do
       desc    <- Map.lookup table (spsDescs s)
       listed  <- columnOf desc listing
       targets <- traverse (\(name, cell) -> (\c -> (c, cell)) <$> columnOf desc name) puts
-      let reset r = if maybe False (resetListed kind) (cellOf listed r) then L.foldl' (flip (uncurry setCell)) r targets else r
+      let reset r = if maybe False (resetListed kind) (cellOf listed r) then L.foldl' (flip (uncurry putCell)) r targets else r
       pure s { spsTables = Map.adjust (map reset) table (spsTables s) }
-    boolean b = EnumCell (if b then "True" else "False") (enumValue (if b then Core_boolean_True else Core_boolean_False))
 
 -- | Whether a reset_types set cell (Core Table 128, PDF 119, which Opal
 --   2.30 Table 16 replaces, PDF 32) lists a reset's kind: its elements'
@@ -193,7 +197,3 @@ resetListed kind = \case
       EnumCell _ v -> Just (fromIntegral v)
       UIntCell v   -> Just (fromIntegral v)
       _            -> Nothing
-
--- | A row with a cell put in a column, in column order.
-setCell :: ColNum -> Cell -> Row -> Row
-setCell c new r = L.sortOn fst ((c, new) : filter ((/= c) . fst) r)

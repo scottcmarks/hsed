@@ -23,7 +23,11 @@ does one ComID's share, its management buffer kept (Core 3.3.4.7.5, PDF
 65-66).
 
 M5a's group G4: every reset of the TPer applies the Locking SP's reset
-columns, at either life of the SP (the plan's D3). A Locking row whose
+columns while the SP is Manufactured, and none while it is
+Manufactured-Inactive, its locking disabled (Opal 2.30 5.2.2.3.1, PDF 97;
+since the M5a review, where the plan's D3 applied them at either life). A
+reset's type is written here as Table 16 prints it, not taken from
+"Hsed.Sim.Reset".@resetType@, which an example holds to it. A Locking row whose
 LockOnReset lists the reset's type (Opal Table 16, PDF 32: Power Cycle 0,
 Hardware 1, HotPlug 2, Programmatic 3, TPER_RESET's) is ReadLocked and
 WriteLocked True after it, whatever its ReadLockEnabled and
@@ -156,6 +160,15 @@ globalLocks st = (isTrue (cellAt uSP_Locking uLockingTable uLocking_GlobalRange 
 mbrDone :: TPerState -> Bool
 mbrDone = isTrue . cellAt uSP_Locking uMBRControlTable uMBRControl_Row "Done"
 
+-- | A reset kind's type as Opal 2.30 Table 16 prints it (PDF 32), written
+--   here rather than taken from the simulator.
+printedType :: ResetKind -> Int
+printedType = \case
+  OnPowerCycle    -> 0
+  OnHardwareReset -> 1
+  OnHotPlug       -> 2
+  OnTPerReset     -> 3
+
 -- | Every reset of the TPer, by kind: the events through the step, TPER_RESET by the function.
 everyReset :: [(ResetKind, TPerState -> TPerState)]
 everyReset =
@@ -217,11 +230,17 @@ spec = describe "the resets of the simulated TPer" $ do
       stackReset 0x2000 busy `shouldBe` busy
 
   describe "LockOnReset (Core 5.7.2.2.10, PDF 275; Opal 3.2.3 h, PDF 29)" $ do
-    it "locks Locking_GlobalRange on each reset its set lists, though neither lock is enabled, at either life (D3)" $
-      forM_ [ManufacturedInactive, Manufactured] $ \life ->
-        forM_ everyReset $ \(kind, reset) -> do
-          globalLocks (reset (armed life [fromIntegral (resetType kind)] [])) `shouldBe` (True, True)
-          globalLocks (reset (armed life [0, 3] [])) `shouldBe` (kind `elem` [OnPowerCycle, OnTPerReset], kind `elem` [OnPowerCycle, OnTPerReset])
+    it "locks Locking_GlobalRange on each reset its set lists, though neither lock is enabled, at Manufactured" $
+      forM_ everyReset $ \(kind, reset) -> do
+        globalLocks (reset (armed Manufactured [printedType kind] [])) `shouldBe` (True, True)
+        globalLocks (reset (armed Manufactured [0, 3] [])) `shouldBe` (kind `elem` [OnPowerCycle, OnTPerReset], kind `elem` [OnPowerCycle, OnTPerReset])
+    it "changes no Locking or MBRControl row while the Locking SP is Manufactured-Inactive, whatever its sets list (Opal 2.30 5.2.2.3.1, PDF 97)" $
+      forM_ everyReset $ \(_, reset) -> do
+        let st = armed ManufacturedInactive [0, 1, 2, 3] [0, 1, 2, 3]
+        tableRows uSP_Locking uLockingTable (reset st) `shouldBe` tableRows uSP_Locking uLockingTable st
+        tableRows uSP_Locking uMBRControlTable (reset st) `shouldBe` tableRows uSP_Locking uMBRControlTable st
+    it "takes a reset's type as Opal 2.30 Table 16 prints it (PDF 32: Power Cycle 0, Hardware 1, HotPlug 2, Programmatic 3)" $
+      map resetType [minBound .. maxBound] `shouldBe` map (fromIntegral . printedType) [minBound .. maxBound]
     it "changes neither lock where the set is empty" $
       forM_ everyReset $ \(_, reset) -> globalLocks (reset (armed Manufactured [] [])) `shouldBe` (False, False)
     it "leaves every other cell of the row, and a row whose set does not list the type, as they were" $ do
@@ -236,12 +255,12 @@ spec = describe "the resets of the simulated TPer" $ do
       tableRows uSP_Locking uMBRControlTable (stackReset base st) `shouldBe` tableRows uSP_Locking uMBRControlTable st
 
   describe "MBRDoneOnReset (Core 5.7.2.5.4, PDF 278; Opal 3.2.3 i, PDF 29)" $ do
-    it "clears Done on each reset its set lists, at either life, and keeps it where the set does not list it" $
-      forM_ [ManufacturedInactive, Manufactured] $ \life ->
-        forM_ everyReset $ \(kind, reset) -> do
-          mbrDone (reset (armed life [] [fromIntegral (resetType kind)])) `shouldBe` False
-          mbrDone (reset (armed life [] [ t | t <- [0 .. 3], t /= fromIntegral (resetType kind) ])) `shouldBe` True
-          mbrDone (reset (armed life [] [])) `shouldBe` True
+    it "clears Done on each reset its set lists, at Manufactured, and keeps it where the set does not list it, and at Manufactured-Inactive" $
+      forM_ everyReset $ \(kind, reset) -> do
+        mbrDone (reset (armed Manufactured [] [printedType kind])) `shouldBe` False
+        mbrDone (reset (armed Manufactured [] [ t | t <- [0 .. 3], t /= printedType kind ])) `shouldBe` True
+        mbrDone (reset (armed Manufactured [] [])) `shouldBe` True
+        mbrDone (reset (armed ManufacturedInactive [] [0, 1, 2, 3])) `shouldBe` True
     it "keeps Enable" $
       cellAt uSP_Locking uMBRControlTable uMBRControl_Row "Enable" (afterEvent PowerCycle (armed Manufactured [] [0]))
         `shouldBe` cellAt uSP_Locking uMBRControlTable uMBRControl_Row "Enable" (armed Manufactured [] [0])

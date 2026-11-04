@@ -53,6 +53,7 @@ module Hsed.Sim.State
   , cellOf
   , columnOf
   , cellNamedIn
+  , booleanNamedIn
     -- * The Locking SP's tables
   , lockingRows
   , mbrControl
@@ -78,6 +79,7 @@ import           Hsed.Gen.Core.Enums     (Core_boolean (..))
 import           Hsed.Gen.Core.TableUIDs (uLockingTable, uMBRControlTable, uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs      (uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import           Hsed.Sim.Cells          (isTrue)
 import           Hsed.Sim.Types
 
 
@@ -178,6 +180,13 @@ cellOf = L.lookup
 --   describes no such table or column, or the row gives no cell in it.
 cellNamedIn :: SPState -> UID -> Text -> Row -> Maybe Cell
 cellNamedIn sps table name r = Map.lookup table (spsDescs sps) >>= \desc -> columnOf desc name >>= (`cellOf` r)
+
+-- | Whether a row holds True in a boolean column of a name (Core Table 59,
+--   PDF 103; "Hsed.Sim.Cells".'isTrue'), the column found as 'cellNamedIn'
+--   finds it; False where the row holds no such cell. The one boolean
+--   reader of the resets, Level 0 and the resets' laws.
+booleanNamedIn :: SPState -> UID -> Text -> Row -> Bool
+booleanNamedIn sps table name r = maybe False isTrue (cellNamedIn sps table name r)
 
 
 -- * The Locking SP's tables

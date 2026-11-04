@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -29,6 +30,7 @@ module Hsed.Sim.Gen
   , genStagedPackets
   , genResetColumns
   , genResetSet
+  , foldedAt
   ) where
 
 import qualified RIO.ByteString        as B
@@ -41,20 +43,19 @@ import           Hsed.Core.Method      (invocation)
 import           Hsed.Core.StreamItem  (StreamItem (generate))
 import           Hsed.Core.Table       (Cell (..), columnOf)
 import           Hsed.Core.Token       (Token (Empty))
-import           Hsed.Core.Types       (enumValue)
 import           Hsed.Core.UID         (UID)
-import           Hsed.Gen.Core.Enums   (Core_boolean (..))
 import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable)
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
+import           Hsed.Sim.Cells        (booleanCell, putCell)
 import           Hsed.Sim.Session      (packets)
 import           Hsed.Sim.State        (openSession, sessionsOn)
 import           Hsed.Sim.Types        (ComIdState (..), LifeCycle (..), Limits (..), SPState (..), Session (..), SimParams (..),
                                         SyncState (..),
-                                        TPerState (..), comIdHostLimits, defaultSimParams, initialHostProperties, initialState,
+                                        TPerState (..), comIdHostLimits, defaultSimParams, initialComIds, initialHostProperties, initialState,
                                         maxComPacketSizeName, maxMethodsName, maxPacketSizeName, maxPacketsName, maxSubpacketsName,
                                         tperLimits)
 import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPacketHeaderSize, comPacketProtocol, dataKind, roundUp,
@@ -91,7 +92,7 @@ genState = do
              { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard, spLockingOFS = locking
              , spTPerProperties = [ (name, if roomier && name == maxComPacketSizeName then 2 * v else v)
                                   | (name, v) <- spTPerProperties defaultSimParams ] }
-      st0 = initialState p
+      st0 = (foldedAt locking) { tsParams = p, tsComIds = initialComIds p }
   sps    <- traverse genResetColumns (tsSPs st0)
   let st = st0 { tsSPs = sps }
   comIds <- traverse (\cs -> genHostProperties >>= \props -> (\s -> cs { cSync = s, cHostProps = props }) <$> genSync p props) (tsComIds st)
@@ -102,6 +103,29 @@ genState = do
       hsn         <- arbitrary
       authorities <- elements [[uAuthority_Anybody], [uAuthority_Anybody, uAuthority_SID]]
       pure (snd (openSession c hsn sp True authorities st))
+
+-- | The TPer of the default parameters with the Locking SP in an Original
+--   Factory State, its SPs folded once per state and shared
+--   ('initialManufacturedInactive', 'initialManufactured'): what 'genState'
+--   varies of the parameters besides the OFS (the unit, the static ComIDs,
+--   the inactive ComID's discard, the TPer's properties) the fold does not
+--   read, so that 'genState' takes its SPs from here, with its own
+--   parameters and ComIDs ("Hsed.Sim.Types".'initialComIds'), rather than
+--   folding both SPs for every state it generates, which took about 85% of
+--   each reset law's case (the M5a review: about 1.8 ms a fold). @LawsSpec@
+--   holds it to 'initialState''s.
+foldedAt :: LifeCycle -> TPerState
+foldedAt = \case
+  ManufacturedInactive -> initialManufacturedInactive
+  Manufactured         -> initialManufactured
+
+-- | The TPer of the default parameters at each Locking SP OFS, each a
+--   constant evaluated once ('foldedAt').
+initialManufacturedInactive, initialManufactured :: TPerState
+initialManufacturedInactive = initialState defaultSimParams { spLockingOFS = ManufacturedInactive }
+initialManufactured         = initialState defaultSimParams { spLockingOFS = Manufactured }
+{-# NOINLINE initialManufacturedInactive #-}
+{-# NOINLINE initialManufactured #-}
 
 -- | An IF-SEND or IF-RECV of protocol 1 (the ComPacket protocol, SIIS 1.20
 --   Tables 12-13, PDF 30-31) on one of a state's static ComIDs (on its base
@@ -266,8 +290,7 @@ genResetColumns sps = (\tables -> sps { spsTables = tables }) <$> Map.traverseWi
     varied table rows = case (Map.lookup table (spsDescs sps), L.lookup table columns) of
       (Just desc, Just (always, gens)) -> traverse (row always [ (c, g) | (name, g) <- gens, Just c <- [columnOf desc name] ]) rows
       _                                -> pure rows
-    row always gens r = foldM (\r' (c, g) -> if always || isJust (L.lookup c r') then (\cell -> put c cell r') <$> g else pure r') r gens
-    put c cell r = L.sortOn fst ((c, cell) : filter ((/= c) . fst) r)
+    row always gens r = foldM (\r' (c, g) -> if always || isJust (L.lookup c r') then (\cell -> putCell c cell r') <$> g else pure r') r gens
     columns :: [(UID, (Bool, [(Text, Gen Cell)]))]
     columns =
       [ (uLockingTable,    (True,  [ ("ReadLockEnabled", boolean), ("WriteLockEnabled", boolean), ("ReadLocked", boolean)
@@ -275,7 +298,7 @@ genResetColumns sps = (\tables -> sps { spsTables = tables }) <$> Map.traverseWi
       , (uMBRControlTable, (True,  [ ("Enable", boolean), ("Done", boolean), ("MBRDoneOnReset", genResetSet) ]))
       , (uC_PINTable,      (False, [ ("Tries", UIntCell . toInteger <$> chooseInt (0, 5)), ("Persistence", boolean) ]))
       ]
-    boolean = (\b -> EnumCell (if b then "True" else "False") (enumValue (if b then Core_boolean_True else Core_boolean_False))) <$> arbitrary
+    boolean = booleanCell <$> arbitrary
 
 -- | A reset_types set (Core Table 128, PDF 119; Opal 2.30 Table 16, PDF 32,
 --   which replaces it: Power Cycle 0, Hardware 1, HotPlug 2, Programmatic

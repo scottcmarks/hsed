@@ -73,9 +73,7 @@ import           Hsed.Core.Feature        (Allowance (..), Feature (..))
 import           Hsed.Core.Layout         (Content (..), Field (..), FieldKind (..), Layout (..), LayoutError)
 import           Hsed.Core.Record         (LayoutRecord (..))
 import           Hsed.Core.Table          (Cell (..), Row)
-import           Hsed.Core.Types          (enumValue)
 import           Hsed.Core.UID            (UID)
-import           Hsed.Gen.Core.Enums      (Core_boolean (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingInfoTable, uLockingTable, uMBRControlTable, uMBRTable)
 import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uSP_Admin)
@@ -86,8 +84,10 @@ import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeatu
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Level0              (Descriptor (..), featureDescriptor, renderLevel0)
 import           Hsed.Sim.FeatureSets     (BlockSIDFeature (..), DataStoreFeature (..), SiisFeature (..))
-import           Hsed.Sim.State           (cellNamedIn, cellOf, columnOf, rowWithUID, spLifeCycle, tableRows)
-import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SPState (..), SimParams (..),
+import           Hsed.Sim.Cells           (isTrue)
+import           Hsed.Sim.State           (booleanNamedIn, byteTableSize, cellNamedIn, cellOf, columnOf, descOf, lockingRows,
+                                           mbrControl, rowWithUID, spLifeCycle, tableRows)
+import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SimParams (..),
                                            TPerState (..), lifeCycleValue)
 
 
@@ -183,10 +183,10 @@ lockingEnabled st = maybe False (/= lifeCycleValue ManufacturedInactive) (spLife
 -- >>> map ($ initialState defaultSimParams { spLockingOFS = Manufactured }) [lockedBit, mbrEnabledBit, mbrDoneBit]
 -- [False,False,False]
 lockedBit :: TPerState -> Bool
-lockedBit st = lockingEnabled st && any locked (lockingRows uLockingTable st)
+lockedBit st = lockingEnabled st && any locked (lockingRows st)
   where
     locked r = (flag "ReadLockEnabled" r && flag "ReadLocked" r) || (flag "WriteLockEnabled" r && flag "WriteLocked" r)
-    flag     = booleanNamed st uLockingTable
+    flag     = lockingFlag st uLockingTable
 
 -- | The Locking descriptor's MBREnabled bit (Opal 2.30 3.1.1.3, PDF 21; Core
 --   3.3.6.5.5, PDF 71): one when LockingEnabled is one, the Locking SP
@@ -194,15 +194,14 @@ lockedBit st = lockingEnabled st && any locked (lockingRows uLockingTable st)
 --   description and the MBR byte table, Opal 2.30 Table 36, PDF 54) and
 --   MBRControl's Enable is True; zero otherwise.
 mbrEnabledBit :: TPerState -> Bool
-mbrEnabledBit st = lockingEnabled st && implemented && any (booleanNamed st uMBRControlTable "Enable") (lockingRows uMBRControlTable st)
-  where implemented = maybe False (\sps -> Map.member uMBRControlTable (spsDescs sps) && Map.member uMBRTable (spsBytes sps))
-                                (Map.lookup uSP_Locking (tsSPs st))
+mbrEnabledBit st = lockingEnabled st && implemented && maybe False (lockingFlag st uMBRControlTable "Enable") (mbrControl st)
+  where implemented = isJust (descOf uSP_Locking uMBRControlTable st) && isJust (byteTableSize uSP_Locking uMBRTable st)
 
 -- | The Locking descriptor's MBRDone bit (Opal 2.30 3.1.1.3, PDF 21; Core
 --   3.3.6.5.6, PDF 71): one when MBREnabled is one and MBRControl's Done is
 --   True; zero otherwise.
 mbrDoneBit :: TPerState -> Bool
-mbrDoneBit st = mbrEnabledBit st && any (booleanNamed st uMBRControlTable "Done") (lockingRows uMBRControlTable st)
+mbrDoneBit st = mbrEnabledBit st && maybe False (lockingFlag st uMBRControlTable "Done") (mbrControl st)
 
 -- | The Geometry Reporting descriptor's fields as the Locking SP's
 --   LockingInfo row holds them (Opal 2.30 3.1.1.4.2-5, PDF 22: ALIGN is
@@ -223,8 +222,8 @@ lockingInfoGeometry st = do
   r   <- listToMaybe (tableRows uSP_Locking uLockingInfoTable st)
   let named name = cellNamedIn sps uLockingInfoTable name r
   align <- named "AlignmentRequired" >>= \case
-    EnumCell _ v -> Just (v == enumValue Core_boolean_True)
-    _            -> Nothing
+    cell@EnumCell{} -> Just (isTrue cell)
+    _               -> Nothing
   Geometry align <$> (named "LogicalBlockSize" >>= number) <*> (named "AlignmentGranularity" >>= number)
                  <*> (named "LowestAlignedLBA" >>= number)
   where
@@ -233,17 +232,11 @@ lockingInfoGeometry st = do
       UIntCell v -> Just (fromInteger v)
       _          -> Nothing
 
--- | The rows of a table of the Locking SP.
-lockingRows :: UID -> TPerState -> [Row]
-lockingRows = tableRows uSP_Locking
-
 -- | Whether a row of a Locking SP table holds True in a boolean column of a
---   name (Core Table 59, PDF 103), the column found in the SP's description;
---   False where it holds no such cell.
-booleanNamed :: TPerState -> UID -> Text -> Row -> Bool
-booleanNamed st table name r = case Map.lookup uSP_Locking (tsSPs st) >>= \sps -> cellNamedIn sps table name r of
-  Just (EnumCell _ v) -> v == enumValue Core_boolean_True
-  _                   -> False
+--   name ("Hsed.Sim.State".'booleanNamedIn'); False for a TPer without the
+--   Locking SP.
+lockingFlag :: TPerState -> UID -> Text -> Row -> Bool
+lockingFlag st table name r = maybe False (\sps -> booleanNamedIn sps table name r) (Map.lookup uSP_Locking (tsSPs st))
 
 -- | A descriptor whose fields hold what its allowances give them, then what
 --   the simulator chooses of them.

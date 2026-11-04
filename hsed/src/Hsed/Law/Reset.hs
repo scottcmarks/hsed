@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -17,7 +18,8 @@ and the Test Cases' cases that observe it, and says what it holds as a
 QuickCheck property over the simulator: over the states of
 "Hsed.Sim.Gen".'genState', whose Locking and MBRControl rows, LockOnReset
 and MBRDoneOnReset sets and C_PIN Tries and Persistence are varied, at
-either life of the Locking SP (the resets apply at both, the plan's D3), and
+either life of the Locking SP (its reset columns applied only while it is
+Manufactured, Opal 2.30 5.2.2.3.1, PDF 97, since the M5a review), and
 over every reset as the TPer meets it: a power cycle, a hardware reset and
 a hot plug as events ("Hsed.Sim".@step@), TPER_RESET as the IF-SEND of
 Opal's Table 13 on ComID 0x0004 with ProgrammaticResetEnable True (Opal
@@ -28,6 +30,11 @@ anchor names (design 13.29 (j), the per-clause anchoring; the plan's D7:
 write and cite now, anchor later), so "Hsed.Gen.Core.Laws" lists none of
 them and @LawsSpec@ holds them by name and hash to the paragraphs cited
 here.
+
+Each law states what it expects in the spec's own terms, not through the
+simulator's: a reset's type is Opal Table 16's value written here
+('printedType'), not "Hsed.Sim.Reset"'s @resetType@ or @resetListed@, so
+that a wrong mapping there fails the laws (since the M5a review).
 -}
 module Hsed.Law.Reset
   ( lockOnReset
@@ -49,17 +56,16 @@ import           RIO
 import           Test.QuickCheck          (Property, counterexample, elements, forAll, (===))
 
 import           Hsed.Core.Table          (Cell (..), Row, columnOf)
-import           Hsed.Core.Types          (enumValue)
 import           Hsed.Core.UID            (UID)
-import           Hsed.Gen.Core.Enums      (Core_boolean (..))
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingTable, uMBRControlTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs       (uSP_Admin)
 import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
 import           Hsed.Law                 (Law (..))
 import           Hsed.Sim                 (step)
 import           Hsed.Sim.Gen             (genState)
-import           Hsed.Sim.Reset           (ResetKind (..), resetListed, stackReset)
-import           Hsed.Sim.State           (cellNamedIn, lifeOf)
+import           Hsed.Sim.Cells           (booleanCell, putCell)
+import           Hsed.Sim.Reset           (ResetKind (..), stackReset)
+import           Hsed.Sim.State           (booleanNamedIn, cellNamedIn, lifeOf, spLifeCycle)
 import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), Input (..), Output (..), SPState (..),
                                            SyncState (..), TPerState (..), initialHostProperties)
 import           Hsed.Wire                (Dir (..), Event (..), IfStatus (..), Request (..), Response (..), comIdManagementProtocol,
@@ -112,9 +118,8 @@ tperResetEnabled :: TPerState -> TPerState
 tperResetEnabled st = st { tsSPs = Map.adjust enable uSP_Admin (tsSPs st) }
   where
     enable sps = case Map.lookup uTPerInfoTable (spsDescs sps) >>= (`columnOf` "ProgrammaticResetEnable") of
-      Just c  -> sps { spsTables = Map.adjust (map (put c (boolean True))) uTPerInfoTable (spsTables sps) }
+      Just c  -> sps { spsTables = Map.adjust (map (putCell c (booleanCell True))) uTPerInfoTable (spsTables sps) }
       Nothing -> sps
-    put c cell r = L.sortOn fst ((c, cell) : filter ((/= c) . fst) r)
 
 
 -- * The laws
@@ -126,10 +131,12 @@ tperResetEnabled st = st { tsSPs = Map.adjust enable uSP_Admin (tsSPs st) }
 --   Programmatic (3, Opal Table 16, PDF 32), and 4.3.5.2.2 (PDF 88) makes
 --   {0} and {0, 3} supported. SPF-12 case 1 (TPER_RESET) and UCT-10 (a power
 --   cycle, step 9, Test Cases PDF 39-40) observe it. The property: for any
---   state and any of the TPer's resets, each Locking row of each SP whose
---   LockOnReset lists the reset's type is ReadLocked and WriteLocked True
---   after it, whatever its ReadLockEnabled and WriteLockEnabled, and else
---   as it was; every other cell of every Locking row as it was; and
+--   state and any of the TPer's resets, each Locking row of each SP not
+--   Manufactured-Inactive whose LockOnReset lists the reset's type is
+--   ReadLocked and WriteLocked True after it, whatever its ReadLockEnabled
+--   and WriteLockEnabled, and else as it was (Opal 2.30 5.2.2.3.1, PDF 97:
+--   locking disabled while the SP is Manufactured-Inactive); every other
+--   cell of every Locking row as it was; and
 --   STACK_RESET on any ComID leaves every Locking row as it was (Core
 --   3.3.4.7.5 items 1-8, PDF 65-66, name none).
 lockOnReset :: Law
@@ -146,8 +153,9 @@ lockOnReset = Law
 --   change the value of the Done column on any reset." Opal 3.2.3 i (PDF 29)
 --   for TPER_RESET's Programmatic. SPF-12 case 2 (TPER_RESET, Test Cases PDF
 --   66) and UCT-11 (PDF 41) observe it. The property: for any state and any
---   of the TPer's resets, each MBRControl row whose MBRDoneOnReset lists the
---   reset's type is Done False after it, and else as it was; its Enable and
+--   of the TPer's resets, each MBRControl row of an SP not
+--   Manufactured-Inactive whose MBRDoneOnReset lists the reset's type is
+--   Done False after it, and else as it was; its Enable and
 --   every other cell as they were; STACK_RESET changes no MBRControl row.
 mbrDoneOnReset :: Law
 mbrDoneOnReset = Law
@@ -204,8 +212,8 @@ tries = Law
       forAll (elements (resets st)) $ \reset ->
         let (before, after) = afterReset reset st
             expected sps r
-              | reset == Whole OnPowerCycle && not (flagIn sps uC_PINTable "Persistence" r) = putNamed sps uC_PINTable "Tries" (UIntCell 0) r
-              | otherwise                                                                   = r
+              | reset == Whole OnPowerCycle && not (booleanNamedIn sps uC_PINTable "Persistence" r) = putNamed sps uC_PINTable "Tries" (UIntCell 0) r
+              | otherwise                                                                           = r
         in counterexample (show reset) $ tableIn uC_PINTable after === Map.mapWithKey (\sp -> map (expected (spOf before sp))) (tableIn uC_PINTable before)
   , lawCases = [whole (SPF 5)]
   }
@@ -256,24 +264,40 @@ laws = [lockOnReset, mbrDoneOnReset, properties, tries, comIdIssued]
 -- * Parts
 
 -- | The law of a reset column (LockOnReset, MBRDoneOnReset): for any state
---   and any reset, each row of a table in each SP whose set column lists
---   the reset's type holds after a TPer reset the values named, and else
---   is as it was; every other cell as it was; STACK_RESET changes no row.
+--   and any reset, each row of a table in each SP not Manufactured-Inactive
+--   (Opal 2.30 Table 49, PDF 98: its LifeCycleState 8; 5.2.2.3.1, PDF 97)
+--   whose set column lists the reset's type ('printedType') holds after a
+--   TPer reset the values named, and else is as it was; every other cell as
+--   it was; STACK_RESET changes no row.
 resetColumnLaw :: UID -> Text -> [(Text, Bool)] -> Property
 resetColumnLaw table listing puts =
   forAll genState $ \st ->
   forAll (elements (resets st)) $ \reset ->
     let (before, after) = afterReset reset st
-        expected sps r = case reset of
-          Whole kind | listedIn sps kind r -> L.foldl' (\r' (name, b) -> putIn sps name (boolean b) r') r puts
-          _                                -> r
-        listedIn sps kind r = maybe False (resetListed kind) (cellNamedIn sps table listing r)
+        expected sp sps r = case reset of
+          Whole kind | active sp, listedIn sps kind r -> L.foldl' (\r' (name, b) -> putIn sps name (booleanCell b) r') r puts
+          _                                           -> r
+        active sp = spLifeCycle sp before /= Just manufacturedInactive
+        listedIn sps kind r = case cellNamedIn sps table listing r of
+          Just (ListCell cells) -> printedType kind `elem` [ v | EnumCell _ v <- cells ] <> [ fromInteger v | UIntCell v <- cells ]
+          _                     -> False
     in counterexample (show reset) $
-         tableIn table after === Map.mapWithKey (\sp -> map (expected (spOf before sp))) (tableIn table before)
+         tableIn table after === Map.mapWithKey (\sp -> map (expected sp (spOf before sp))) (tableIn table before)
   where
-    putIn sps name cell r = case Map.lookup table (spsDescs sps) >>= (`columnOf` name) of
-      Just c  -> L.sortOn fst ((c, cell) : filter ((/= c) . fst) r)
-      Nothing -> r
+    putIn sps name cell r = maybe r (\c -> putCell c cell r) (Map.lookup table (spsDescs sps) >>= (`columnOf` name))
+    -- Opal 2.30 Table 49 (PDF 98): Manufactured-Inactive
+    manufacturedInactive = 8
+
+-- | A reset kind's type as Opal 2.30 Table 16 prints it (PDF 32: Power
+--   Cycle 0, Hardware 1, HotPlug 2, Programmatic 3, TPER_RESET's, Opal 3.2.3
+--   h, PDF 29), written here so that the laws do not take it from the
+--   simulator they check.
+printedType :: ResetKind -> Int
+printedType = \case
+  OnPowerCycle    -> 0
+  OnHardwareReset -> 1
+  OnHotPlug       -> 2
+  OnTPerReset     -> 3
 
 -- | A table's rows in each SP that holds it, by the SP's UID.
 tableIn :: UID -> TPerState -> Map UID [Row]
@@ -283,16 +307,6 @@ tableIn table st = Map.mapMaybe (Map.lookup table . spsTables) (tsSPs st)
 spOf :: TPerState -> UID -> SPState
 spOf st sp = fromMaybe (SPState sp mempty mempty mempty) (Map.lookup sp (tsSPs st))
 
--- | Whether a row holds True in a boolean column of a name, the column found
---   in the SP's description of the table (Core Table 59, PDF 103).
-flagIn :: SPState -> UID -> Text -> Row -> Bool
-flagIn sps table name r = case cellNamedIn sps table name r of
-  Just (EnumCell _ v) -> v == enumValue Core_boolean_True
-  _                   -> False
-
--- | A boolean cell (Core Table 59, PDF 103).
-boolean :: Bool -> Cell
-boolean b = EnumCell (if b then "True" else "False") (enumValue (if b then Core_boolean_True else Core_boolean_False))
 
 -- | A whole test.
 whole :: TestId -> CaseKey

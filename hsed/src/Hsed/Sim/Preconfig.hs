@@ -45,7 +45,8 @@ sections 8.1 and 8.3; M4b). 'foldTables' does it in six passes:
 The fold reads a run's parameters and nothing of the state, so that the
 initial state can run it ("Hsed.Sim.Types".@initialState@), and a Revert can
 run it again (M6, but C_PIN_SID's PIN on an Admin SP Revert, Opal 5.1.2.2.1,
-PDF 93); it imports the parameters ("Hsed.Sim.Params"), hsed-core and the
+PDF 93); it imports the parameters ("Hsed.Sim.Params"), the shared cells
+("Hsed.Sim.Cells"), hsed-core and the
 generated modules, the Admin SP's preconfiguration among them
 ("Hsed.Gen.Opal.Preconfig.AdminSP": Opal 2.30's Admin SP tables as hsedc
 generates them, since M4b, which "Hsed.Sim.Types".@initialState@ folds),
@@ -87,7 +88,7 @@ import           Hsed.Core.Preconfig             (Placeholder (..), PreCell (..)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNumbered, columnOf)
 import           Hsed.Core.Types                 (enumValue)
 import           Hsed.Core.UID                   (HalfUID, UID, uNull, uidLower, uidUpper)
-import           Hsed.Gen.Core.Enums             (Core_boolean (..), Core_symmetric_mode (..), Core_table_kind (..))
+import           Hsed.Gen.Core.Enums             (Core_symmetric_mode (..), Core_table_kind (..))
 import           Hsed.Gen.Core.TableDescs        (k_AES_128TableDesc, k_AES_256TableDesc)
 import           Hsed.Gen.Core.TableUIDs         (uACETable, uAuthorityTable, uC_PINTable, uK_AES_128Table, uK_AES_256Table,
                                                   uLockingInfoTable, uLockingTable, uMBRTableObject, uSPTable, uSecretProtectTable,
@@ -97,6 +98,7 @@ import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (.
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.TableUIDs         (uDataRemovalMechanismTable)
+import           Hsed.Sim.Cells                  (booleanCell, putCell)
 import           Hsed.Sim.Params                 (Geometry (..), LifeCycle (..), LockingKeys (..), SimParams (..), lifeCycleValue,
                                                   lockingBounds)
 
@@ -513,7 +515,7 @@ override p desc r
   | otherwise                                                          = r
   where
     geometry = spGeometry p
-    puts     = L.foldl' (\r' (name, new) -> maybe r' (\c -> putCell c new r') (columnOf desc name)) r
+    puts     = L.foldl' (\r' (name, new) -> maybe r' (\c -> putValue c new r') (columnOf desc name)) r
 
 -- | (d): the row an every-object row stands for, for one object: its cells
 --   with the object as its InvokingID. An every-object row of a table with no
@@ -593,13 +595,13 @@ uidIn = \case
   RefCell _ u -> Just u
   _           -> Nothing
 
--- | A row with a cell put in a column, in column order; a cell there that
---   holds the same value already (an enumeration's, whatever its label) is
---   kept.
-putCell :: ColNum -> Cell -> Row -> Row
-putCell c new r
+-- | A row with a cell put in a column ("Hsed.Sim.Cells".'putCell'); a cell
+--   there that holds the same value already (an enumeration's, whatever its
+--   label) is kept.
+putValue :: ColNum -> Cell -> Row -> Row
+putValue c new r
   | holds (L.lookup c r) = r
-  | otherwise            = L.sortOn fst ((c, new) : filter ((/= c) . fst) r)
+  | otherwise            = putCell c new r
   where
     holds = \case
       Just (EnumCell _ v) | EnumCell _ v' <- new -> v == v'
@@ -623,9 +625,6 @@ lifeCycleCell lc = EnumCell label (lifeCycleValue lc)
       ManufacturedInactive -> "Manufactured-Inactive"
       Manufactured         -> "Manufactured"
 
--- | A boolean cell, labelled and valued as Core Table 59 has it (PDF 103).
-booleanCell :: Bool -> Cell
-booleanCell b = if b then EnumCell "True" (enumValue Core_boolean_True) else EnumCell "False" (enumValue Core_boolean_False)
 
 
 -- * The cells the TPer chooses

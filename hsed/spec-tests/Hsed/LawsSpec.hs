@@ -29,7 +29,8 @@ pends with that rung (design section 11). A law without a property fails, as
 does a case that neither the catalogue nor a later rung has. The states the laws
 quantify over ("Hsed.Sim.Gen".@genState@) open at most one session per SP,
 the Locking SP Manufactured where one is open to it and in either life
-else, the shipping default Manufactured-Inactive among them.
+else, the shipping default Manufactured-Inactive among them, and start from
+"Hsed.Sim.Types".@initialState@'s TPer for their parameters (@foldedAt@).
 -}
 module Hsed.LawsSpec (spec) where
 
@@ -52,9 +53,10 @@ import           Hsed.Jig.Catalogue    (CaseKey (..), CatalogueEntry (..), TestI
 import           Hsed.Law              (Law (..), LawRef (..))
 import qualified Hsed.Law.Reset        as Reset
 import qualified Hsed.Law.Sync         as Sync
-import           Hsed.Sim.Gen          (genState)
+import           Hsed.Sim.Gen          (foldedAt, genState)
 import           Hsed.Sim.Reset        (ResetKind (..), resetListed)
-import           Hsed.Sim.Types        (LifeCycle (..), SPState (..), Session (..), SimParams (..), TPerState (..))
+import           Hsed.Sim.Types        (LifeCycle (..), SPState (..), Session (..), SimParams (..), TPerState (..), defaultSimParams,
+                                        initialComIds, initialState, maxComPacketSizeName)
 
 
 -- | Every hand-written law: those of each module of "Hsed.Law" (M3: Sync's;
@@ -181,3 +183,11 @@ spec = do
                                            _                 -> False)
              , counterexample "both lives" $ length (L.nub (map (spLockingOFS . tsParams) sts)) == 2
              ]
+    it "start from initialState's TPer for their parameters, the SPs folded once per OFS (foldedAt; the M5a review), whatever unit, ComIDs, discard and MaxComPacketSize" $
+      forM_ [ (u, n, d, roomier, ofs) | u <- [minBound .. maxBound], n <- [1 .. 3], d <- [False, True], roomier <- [False, True]
+                                      , ofs <- [ManufacturedInactive, Manufactured] ] $ \(u, n, d, roomier, ofs) -> do
+        let p = defaultSimParams
+                  { spUnits = u, spNComIds = n, spInactiveComIdDiscard = d, spLockingOFS = ofs
+                  , spTPerProperties = [ (name, if roomier && name == maxComPacketSizeName then 2 * v else v)
+                                       | (name, v) <- spTPerProperties defaultSimParams ] }
+        (foldedAt ofs) { tsParams = p, tsComIds = initialComIds p } `shouldBe` initialState p

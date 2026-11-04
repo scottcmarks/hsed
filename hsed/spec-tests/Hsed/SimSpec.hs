@@ -199,15 +199,17 @@ spec = describe "a step of the simulated TPer" $ do
       lComPacketSize (tperLimits defaultSimParams { spTPerProperties = [(maxComPacketSizeName, 4096)] }) `shouldBe` 4096
 
   describe "events and ticks" $ do
-    it "an event puts every static ComID back to awaiting IF-SEND, Good, and applies the Locking SP's reset columns of its kind (since M5a: Table 45's LockOnReset and Table 46's MBRDoneOnReset print Power Cycle, PDF 86-87)" $ do
-      let fresh = tper (\p -> p { spNComIds = 3 })
-          st = fresh { tsComIds = Map.fromList [ (base + i, ComIdState 0 Issued s initialHostProperties (MgmtBuffer False Nothing)) | (i, s) <- zip [0 ..] [S1, S2 ["a"], S3 ["b"]] ] }
-          kindOf = \case
-            PowerCycle    -> OnPowerCycle
-            HardwareReset -> OnHardwareReset
-            HotPlug       -> OnHotPlug
-      forM_ [minBound .. maxBound] $ \e ->
-        step (Ev e) st `shouldBe` (Evented Good, fresh { tsSPs = Map.map (lockingReset (kindOf e)) (tsSPs fresh) })
+    it "an event puts every static ComID back to awaiting IF-SEND, Good, and applies the Locking SP's reset columns of its kind while it is Manufactured, none while Manufactured-Inactive (since M5a: Table 45's LockOnReset and Table 46's MBRDoneOnReset print Power Cycle, PDF 86-87; Opal 5.2.2.3.1, PDF 97, since the M5a review)" $
+      forM_ [ManufacturedInactive, Manufactured] $ \life -> do
+        let fresh = tper (\p -> p { spNComIds = 3, spLockingOFS = life })
+            st = fresh { tsComIds = Map.fromList [ (base + i, ComIdState 0 Issued s initialHostProperties (MgmtBuffer False Nothing)) | (i, s) <- zip [0 ..] [S1, S2 ["a"], S3 ["b"]] ] }
+            kindOf = \case
+              PowerCycle    -> OnPowerCycle
+              HardwareReset -> OnHardwareReset
+              HotPlug       -> OnHotPlug
+            locked e = if life == Manufactured then Map.map (lockingReset (kindOf e)) (tsSPs fresh) else tsSPs fresh
+        forM_ [minBound .. maxBound] $ \e ->
+          step (Ev e) st `shouldBe` (Evented Good, fresh { tsSPs = locked e })
     it "a Tick releases a prepared response, S2 to S3, and leaves any other state" $ do
       step (Tick base) (withSync (S2 ["p", "q"]) (tper id)) `shouldBe` (Ticked, withSync (S3 ["p", "q"]) (tper id))
       forM_ [S1, S3 ["p"]] $ \s ->

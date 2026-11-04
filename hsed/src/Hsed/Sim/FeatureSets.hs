@@ -33,8 +33,8 @@ Opal's Geometry Reporting descriptor: its LockingInfo table's columns, which
 the Locking SP folded since M5a holds ("Hsed.Sim.Level0".@lockingInfoGeometry@).
 
 One table of Opal's that is no descriptor is hand-written here too, with
-its page, until Opal's tables other than its descriptors are compiled (M5):
-Table 7, the SSC minor versions ('sscMinorVersions', PDF 24), which the
+its page: Table 7, which Opal's sidecar binds as @prose@ since M5a (design
+13.34 (9) and (18)), the SSC minor versions ('sscMinorVersions', PDF 24), which the
 Pair runner evaluates the Opal SSC V2 descriptor's SSC Minor Version Number
 against and UCT-01 names in its note. No other module of hsed writes a
 Level 0 descriptor or a table of descriptor values by hand; Opal Table 17 is
@@ -77,7 +77,7 @@ module Hsed.Sim.FeatureSets
   , geometryAllowances
     -- * Supported Data Removal Mechanism
   , dataRemovalAllowances
-    -- * Opal Table 7, until M5
+    -- * Opal Table 7, by hand
   , sscMinorVersions
   ) where
 
@@ -401,14 +401,14 @@ dataRemovalAllowances =
     time b   = "Data Removal Time for Supported Data Removal Mechanism Bit " <> b
 
 
--- * Opal Table 7, until M5
+-- * Opal Table 7, by hand
 
 -- | Opal 2.30 Table 7, SSC Minor Versions (PDF 24): the values the Opal SSC
 --   V2 descriptor's SSC Minor Version Number may hold (Table 6's bullets,
 --   PDF 23: \"As specified in Table 7\"), each with the specification it
 --   references; every other value is Reserved. Written by hand, as the
---   module header says: Opal's tables other than its descriptors are not
---   compiled until M5.
+--   module header says: Opal's sidecar binds Table 7 as @prose@ (since M5a),
+--   so nothing is generated from it.
 sscMinorVersions :: [(Integer, Text)]
 sscMinorVersions =
   [ (0x0, "TCG Opal SSC Specification v2.00")

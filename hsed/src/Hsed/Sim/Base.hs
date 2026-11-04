@@ -22,7 +22,9 @@ that the simulator fails so. The cell_block is read and resolved by
 
 What Get is invoked on is found among the tables the session's SP holds: an
 object, the row of a table whose UID column holds the InvokingID, or an
-object table, the InvokingID a table's UID (byte tables: none at M4a). The
+object table, the InvokingID a table's UID (byte tables: the Locking SP
+holds two since M5a, the MBR and the DataStore, "Hsed.Sim.Types".@spsBytes@,
+which Get reaches at M5b, design 11). The
 descriptions of those tables, which give a target its last column, are the
 ones the SP holds with them ("Hsed.Sim.Types".@spsDescs@, its
 preconfiguration's: "Hsed.Sim.Preconfig").
@@ -135,7 +137,8 @@ target sps u = table <|> object
     rowsOf desc = fromMaybe [] (Map.lookup (tdTableUID desc) (spsTables sps))
 
 -- | The cell_block target a table or an object is: its last column (Core
---   5.1.4.2.3, PDF 129-130; a byte table is none of the SP's at M4a).
+--   5.1.4.2.3, PDF 129-130; a byte table is no 'Found' yet: the Locking SP's,
+--   held in @spsBytes@ since M5a, are Get's at M5b).
 targetOf :: TableDesc -> Found -> CellTarget
 targetOf desc = \case
   Object _ -> OnObject (lastColumn desc)
@@ -154,7 +157,7 @@ lastColumn = maybe 0 colNumber . L.lastMaybe . tdColumns
 --   129-130), INVALID_PARAMETER (5.1.5.11 e, PDF 139). Each item's property
 --   runs 'get' in an Admin SP session as Anybody on the default TPer
 --   ('asAnybody'), except c's, which holds the cell_block reader to a byte
---   table's rule, the simulator having no byte table at M4a:
+--   table's rule, no byte table being a target of Get until M5b:
 --
 --   * a: Get on a random UID that is no table and no object of the Admin SP
 --     is NOT_AUTHORIZED;

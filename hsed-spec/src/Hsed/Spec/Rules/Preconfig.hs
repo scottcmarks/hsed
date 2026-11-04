@@ -17,10 +17,10 @@ two columns whose caption is @… \<T\> Table Preconfiguration@ (Opal) or
 @Default … \<Ts\>@ (Core): in Core 2.01, Table 209 @Default Base Template
 Authorities@ (section 5.3.4.1.2) and Table 216 @Default Admin Template
 Authorities@ (5.4.4.4). Their captions are theirs alone across Core, so the
-rule rides on the @doc@ anchor (design 13.24). In Opal 2.30 since M4b it is
-anchored at section 4.2 (PDF 35) and binds the Admin SP's twelve tables,
-Tables 18-25, 27-29 and 33 (PDF 35-52); the Locking SP's are M5's (read
-since M5a, bound when the integration's sidecar binds them).
+rule rides on the @doc@ anchor (design 13.24). In Opal 2.30 it rides on the
+doc line too since M5a (at M4b it was anchored at section 4.2, PDF 35) and
+binds the Admin SP's twelve tables, Tables 18-25, 27-29 and 33 (PDF 35-52),
+and the Locking SP's fourteen, Tables 34-42 and 44-48 (PDF 52-89).
 
 A table's target is the table its caption names (@Authority@ in @… Authority
 Table Preconfiguration@; in @Default … Authorities@ the last word, a plural:

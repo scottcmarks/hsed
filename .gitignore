@@ -13,8 +13,6 @@ tarballs/
 dist-newstyle
 *.cabal
 build/
-# M5a's scratch annotation sidecar for its groups (passed to hsedc with --hsa; never committed)
-/build-scratch/
 __pycache__/
 # generated haddock, tags and module graphs (make them locally; never commit them)
 /doc/

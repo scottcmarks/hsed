@@ -319,7 +319,8 @@ decodeDescriptor d = do
 
 -- | The descriptors hsed has a layout of, by code: Opal's (generated from
 --   Opal 2.30 Tables 3-6 and 8), what the simulator allows Geometry
---   Reporting until M5 ("Hsed.Sim.FeatureSets".'geometryAllowances') and
+--   Reporting ("Hsed.Sim.FeatureSets".'geometryAllowances', the Locking SP's
+--   LockingInfo columns since M5a) and
 --   Supported Data Removal Mechanism ('dataRemovalAllowances', Tables 9-12),
 --   and the hand-written feature sets'.
 known :: [(Word16, (Text, Layout, [(Text, Allowance)]))]

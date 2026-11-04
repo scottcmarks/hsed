@@ -137,7 +137,9 @@ data LockingKeys
 
 -- | What the Geometry Reporting descriptor reports (Opal 2.30 Table 5 and
 --   3.1.1.4.2-5, PDF 21-22), which Opal takes from the LockingInfo table:
---   until that table is simulated (M5), parameters.
+--   the parameters the fold puts in the Locking SP's LockingInfo row since
+--   M5a, which Level 0 reads there ("Hsed.Sim.Level0".@lockingInfoGeometry@),
+--   and reports itself where the TPer holds no such row.
 data Geometry = Geometry
   { gAlign            :: !Bool
   , gLogicalBlockSize :: !Word32
@@ -184,9 +186,12 @@ data SimParams = SimParams
                                                   --   (Opal 2.30 Table 17's maxima are VU, PDF 33-34)
   , spCloseSessionOnAbort  :: !Bool               -- ^ whether the TPer prepares CloseSession when it aborts a session, as it
                                                   --   MAY (Core 3.3.10.7 b, PDF 86; 3.3.7.1.5, PDF 75)
-  , spLockingAdmins        :: !Natural            -- ^ the Locking SP's Admin authorities, Admin1 and the ones after it, each
-                                                  --   with its C_PIN credential (Opal 2.30 Table 40 note 1, PDF 82: Admin1 to
-                                                  --   Admin4 required, any more (O); Table 41, PDF 84)
+  , spLockingAdmins        :: !Natural            -- ^ the Locking SP's Admin authorities, Admin1 and the ones after it (Opal
+                                                  --   2.30 Table 40 note 1, PDF 82: Admin1 to Admin4 required, any more (O)):
+                                                  --   Admin1 to Admin4 each with its C_PIN credential (Table 41, PDF 84); Admin5
+                                                  --   on as Table 40 row 7 prints AdminXXXX, Operation None and Credential Null
+                                                  --   (PDF 83), so that one enabled authenticates with no challenge (design
+                                                  --   13.34 (15), Scott's); no option sets more than the default 4
   , spLockingUsers         :: !Natural            -- ^ the Locking SP's User authorities, User1 and the ones after it, each with
                                                   --   its C_PIN credential (Table 40 note 2, PDF 82: User1 through User8 SHALL)
   , spLockingRanges        :: !Natural            -- ^ the Locking ranges besides the global range, Range1 and the ones after it:

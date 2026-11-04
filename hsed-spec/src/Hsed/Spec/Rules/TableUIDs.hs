@@ -131,12 +131,12 @@ tableUIDsModule = Gen.GenModule
   , Gen.description = "Table UIDs: each table's UID, its descriptor object's UID and its half-UID"
   , Gen.notes       = [] }
 
--- | 'tableUIDsModule' for a spec, its note saying why the typed half-UIDs
---   are not generated in the spec's words: a spec read alone (Core) does not
---   give a table's kind as data; a spec read over another (Opal) prints it,
---   in its preconfiguration of an SP's Table table (Opal Table 20's Kind,
---   PDF 36-37), which the rule reading it does not keep until M5 (design
---   section 11).
+-- | 'tableUIDsModule' for a spec, its note saying where the typed half-UIDs
+--   come from in the spec's words: a spec read alone (Core) does not give a
+--   table's kind as data, so none is generated; a spec read over another
+--   (Opal) prints it, in its preconfiguration of an SP's Table table (Opal
+--   Table 20's and Table 36's Kind, PDF 36-37 and 53-54), and since M5a they
+--   are generated for every table such a row names (design 5.5).
 tableUIDsModuleFor :: Context -> Gen.GenModule
 tableUIDsModuleFor ctx = tableUIDsModule { Gen.notes = intro <> why }
   where

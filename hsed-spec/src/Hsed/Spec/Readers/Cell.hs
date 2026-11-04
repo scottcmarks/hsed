@@ -92,7 +92,7 @@ since the M4b review).
 
 Since M5a the reader reads the Locking SP's tables (Opal Tables 34-48, PDF
 52-89), where Opal prints some cells otherwise, by readings in the reader,
-not errata (Scott's answer 1 to the M5 plan; design 13.33): a Set_Type
+not errata (Scott's answer 1 to the M5 plan; design 13.34 (1)): a Set_Type
 column is a set of its enumeration's labels ('setKind': Table 45's
 LockOnReset @Power Cycle@, PDF 86, Core Table 128, PDF 119); a template's
 UID may print its placeholder's letters for its last bytes, @00 00 08 02 00

@@ -114,8 +114,9 @@ withM4bOpal k = withCore $ \corePristine -> withOpal $ \opalPristine -> do
   opal   <- runIO (annotated opalPristine m4bOpalHsa)
   k (mkContext Scott coreIR) opal
 
--- | The Opal sidecar of M5a, as its scratch copy stands
---   (@build-scratch/opal-2.30.m5a.hsa@, the plan's annotations, A3): the rule
+-- | The Opal sidecar of M5a, the M5 plan's annotations (A3), as the groups
+--   read it from a scratch copy and the integration committed it
+--   (@spec/annot/opal-2.30.hsa@, 5c6e96e): the rule
 --   tokens of M4b's doc line with @rule preconfig@ (the Admin SP's tables and
 --   the Locking SP's, Tables 34-48) and @rule sig@, the units nothing else
 --   binds as @prose@, Tables 14 and 15 narrowing Core's 26 and 4 and Table 16

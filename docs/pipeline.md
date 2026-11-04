@@ -6,9 +6,12 @@ stage reads and writes and which command runs it. The design of record is
 [spec-as-source.md](spec-as-source.md): this guide points into it rather than restating it. To add a rule
 to the compiler, see [adding-a-rule.md](adding-a-rule.md); for the IR's format, see [ir-v1.md](ir-v1.md).
 
-State as of 2026-11-03 (M4c landed): the chain runs end to end for Core 2.01 and for the parts of Opal
-2.30 bound so far: its Admin SP, Properties and feature descriptors. Opal's Locking SP tables are M5's.
-Writes to a real drive, the Linux leg and a Haskell-native PDF reader are M6's (design §11).
+State as of 2026-11-03 (M5a): the chain runs end to end for Core 2.01 and for all of Opal 2.30, every
+Opal table and signature block bound: its Admin SP and Locking SP, Properties, feature descriptors, and
+Tables 14-16 over Core's. The simulator holds both SPs, the Locking SP Manufactured-Inactive or
+Manufactured. The Locking SP's
+jig cases are M5b's and mh_transport over a LAN is M5c's. Writes to a real drive, the Linux leg and a
+Haskell-native PDF reader are M6's (design §11).
 
 ## The chain at a glance
 
@@ -52,23 +55,29 @@ numbers are 17 less than its PDF page numbers; Opal's are 1 less.
 
 ## 2. Annotations: `spec/annot/<spec>.hsa`
 
-Each annotation is one line of the sidecar: `spec | anchor | payload`. For example, Opal's four:
+Each annotation is one line of the sidecar: `spec | anchor | payload`. For example, from Opal's twelve:
 
 ```
-opal-2.30 | doc | doc opal230 & rule feature & rule legend & ... & rule tableDesc
-opal-2.30 | 4.2 | rule preconfig
+opal-2.30 | doc | doc opal230 & rule feature & rule legend & ... & rule preconfig & rule sig
+opal-2.30 | T2 | prose
+opal-2.30 | T14 | narrows (core 26)
+opal-2.30 | T16 | replaces [core 128]
 opal-2.30 | T17 | propsReq
 opal-2.30 | T49 | enumInDescription (replaces [core 102, core 103])
 ```
+
+`narrows (core 26)` and `replaces [core 128]` name a Core table: Opal's run classifies over Core's, so the
+binding takes the shape Core binds its table to (design E14).
 
 - **Anchors** are `doc` (the whole document), a section such as `4.2`, a table `T<n>`, or a sentence or
   list item (design §3.2).
 - **Payloads** are rule names and modifiers, the smart constructors of `Hsed.Spec.DSL` (grammar in
   design §3.3). Most tables need no annotation at all: a document-wide `rule` on the `doc` line binds
-  every table that rule recognises. Annotations stay minimal: Core has 24 and Opal 4, about 270–290
-  bytes each (budget in design §3.6).
+  every table that rule recognises. Annotations stay minimal: Core has 24, about 287 bytes each, and Opal
+  12, about 246 (budget in design §3.6).
 - **Errata:** Scott's corrections to the text are `erratum scott ["old" ~> "new"]` modifiers, held to
-  `tcg/Core Spec errata.txt` by a test.
+  `tcg/Core Spec errata.txt` by a test. Opal's slips are not errata but readings in the compiler, which cost
+  no annotation (Scott's answer of 2026-11-03; see "Read a slip of the PDF" below).
 
 In the PDF, each annotation is a hidden text annotation (flags `/F 6`) whose `/Contents` is the payload,
 added in one incremental update after the pristine bytes. An ordinary viewer shows the document unchanged
@@ -112,7 +121,7 @@ so Opal's tables can refer to Core's (design §5.2).
    wrong annotation fails as a Haskell type error that points at its PDF page.
 2. **`hsedc check`** classifies every numbered table, binds it to its rule and runs the rules' checks.
    Each finding is an Error, Warning or Note with a code (e.g. `C-PRECONF-HEADER`), and any Error stops the
-   run. Today: Core 0 Errors, 31 Warnings, 51 Notes; Opal 0, 48, 22.
+   run. Today: Core 0 Errors, 31 Warnings, 51 Notes; Opal 0, 37, 49.
 3. **`hsedc compile`** writes the generated modules and the reports in `build/report/`: `findings.md`,
    `coverage.md`, `ERRATA.md` and `ledger.md`, the last copied to `docs/LEDGER*.md`.
 
@@ -131,8 +140,8 @@ Other useful commands:
 - **Core** (`Hsed.Gen.Core.*`): Types, Enums, TableUIDs, TableDescs, ColumnDefaults, Preconfig, UIDs,
   UIDRanges, Methods, Codes, Fields, Tokens, StateTables, Properties, Layouts, Features, Laws, Behaviours.
   That is 471 declarations in 18 modules.
-- **Opal** (`Hsed.Gen.Opal.*`): Types, Enums, TableUIDs, TableDescs, Fields, Features, Properties, and
-  `Preconfig.AdminSP`. That is 55 declarations in 8 modules.
+- **Opal** (`Hsed.Gen.Opal.*`): Types, Enums, TableUIDs, TableDescs, Fields, Features, Properties, Codes,
+  Tokens, Methods, `Preconfig.AdminSP` and `Preconfig.LockingSP`. That is 145 declarations in 12 modules.
 
 Every declaration carries its provenance: the spec, the table or section, and the PDF page. These modules
 are committed. `make gen-diff` fails if `make gen` would change them, so an edit to an annotation, a rule
@@ -153,7 +162,7 @@ The runtime oracle (design §5.5) compares the generated Core types with the 201
   - `Replay` answers from a captured file.
   - `MacKext` reaches a real SED through Bright Plaza's kext. It is built only with
     `--flag hsed:kext`, and its CDBs come from `hsed/cbits/hsed_cdb.c`.
-  - mh_transport over a LAN is M5's.
+  - mh_transport over a LAN is M5c's.
 
 ## 8. The simulator (`Hsed.Sim.*`)
 
@@ -164,11 +173,15 @@ A TPer built from the generated modules (design §8):
 - method dispatch through each SP's AccessControl;
 - the resets.
 
-The Admin SP's tables are not written by hand: `Hsed.Sim.Preconfig` folds the generated
-`Hsed.Gen.Opal.Preconfig.AdminSP` into the simulator's state. That folding fills in templates and
-vendor-unique cells from `SimParams`, gives every column its default, and expands wildcard
-AccessControl rows. Simulator options, such as units, held responses and a SID PIN past the factory
-state, are `hsed-jig` flags.
+Neither SP's tables are written by hand: `Hsed.Sim.Preconfig` folds the generated
+`Hsed.Gen.Opal.Preconfig.AdminSP` and `Preconfig.LockingSP` into the simulator's state. That folding fills
+in templates and vendor-unique cells from `SimParams`, gives every column its default, expands wildcard
+AccessControl rows, and leaves out the key table the TPer does not hold. It lists every problem it meets
+(a parameter out of bounds, a cell nobody answers), and the simulator refuses to open on any. The Locking
+SP starts Manufactured-Inactive, its Original Factory State, or Manufactured with
+`--locking-ofs manufactured`; every reset applies its LockOnReset and MBRDoneOnReset columns (design
+§8.3, §8.4). Simulator options, such as units, held responses, the Locking SP's state and a SID PIN past
+the factory state, are `hsed-jig` flags.
 
 ## 9. The host jig (`Hsed.Jig.*`, exe `hsed-jig`)
 
@@ -215,6 +228,12 @@ ledger, and commit the rule and its generated output together.
 **Correct the spec's text.** Add an `erratum scott [...]` to the table's `.hsa` line and record it in
 `tcg/Core Spec errata.txt`. Then run `make annotate` and `make gen`.
 
+**Read a slip of the PDF in the compiler (a reading).** Where the PDF means one thing and prints another
+(a misspelt header or type name, a footnote number run into its cell, a column named by the end of its
+name), a reading in `hsedc` reads it as meant and reports a Note at the cell, costing no annotation. Opal's
+slips are all read this way. [adding-a-rule.md](adding-a-rule.md#adding-a-reading) says where readings live
+and how to add one; then run `make gen` and review the ledger.
+
 **Bind a table nothing binds.** After `make ir-annotated`, run
 `stack exec hsedc -- orphans build/core-2.01.hsed.json` to list them (for Opal, give its IR with
 `--base build/core-2.01.hsed.json`, as the Makefile does; since M5a every Opal unit is bound, so an
@@ -237,3 +256,5 @@ token to the `doc` line, or add a table annotation if the rule cannot find the t
 4. Run its `hsedc` commands over Core with `--base`, giving a new `--target` for its generated modules.
 5. Expect findings where the PDF's tables differ from Opal's, and decide each as a reading in a rule or an
    erratum.
+
+Scott's plan is every SSC after M5: Pyrite 2.01, Ruby 1.00, Enterprise 1.01 and Key Per I/O (design §11).

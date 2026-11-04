@@ -47,8 +47,10 @@ it adds; `uidTable`'s C-UID-NAME, which `preconfig` gives an SSC's rows; `legend
 `preconfig`, importing `Rules.Legend`, gives at a preconfiguration cell), or to the reader under
 `Hsed.Spec.Readers` they give it through (the byte-layout rules' C-LAYOUT-TILE, C-GRID-NAME, W-PINS-NONE
 and C-PINS-WORDS; since M4b the cell reader's N-PRECONF-LABEL and W-PRECONF-NAME-LENGTH and the
-AccessControl and ACE reader's C-ACL-REFS and C-ACL-EXPR, which `preconfig` gives), and is listed by
-neither rule. A code the catalogue does not name is listed in `ERRATA.md` under "Not yet classified", and
+AccessControl and ACE reader's C-ACL-REFS and C-ACL-EXPR, which `preconfig` gives; since M5a the cell
+reader's N-PRECONF-NOTE and N-CELL-NORMALISED, which `preconfig` gives and, for a Column Type, `tableDesc`
+and `columnsAddition`), and is listed by neither rule. A code the catalogue does not name is listed in
+`ERRATA.md` under "Not yet classified", and
 `ReportSpec` fails while the committed run gives one, or gives a finding a severity its code's entry does
 not list. The integrator adds the new codes to design §2 Q2.
 
@@ -165,7 +167,13 @@ owned by the spec, then the rest of the base's), which `ownThenBase` cannot expr
 review*, which found it counted among the four); a rule reads another spec's data through these, never
 through a Context of its own. `RuleDef.contextChain` is a Context and its bases, nearest first, and
 `RuleDef.replacesOf` and `replacedIn` a binding's `replaces` and the base table each names (since the M4b
-review, which found six copies of the chain and the two helpers in one rule). A rule that
+review, which found six copies of the chain and the two helpers in one rule); since M5a `RuleDef.narrowsOf`
+and `narrowedIn` do the same for `narrows`, and a binding whose target lies in the base is classified over
+it: `Hsed.Spec.Rules.classifyOver` resolves `core N` in the base's classification, so that Opal T14-T16 take
+the shapes Core binds its T26, T4 and T128 to, in every command (`check`, `bind`, `explain`, `orphans`,
+`ledger`, `compile`; design E14, §13.26 (g)). What a narrowing holds (T14's rows within T26's, T15's tokens
+to T4's) is the narrowed rule's check, in its own module (`Rules.Codes`, `Rules.TokenEncoding`), since
+`RegistrySpec` forbids a generic module to name a rule. A rule that
 needs another rule's reading (an
 enumeration's range from its type row; a table description's UID from Table 240) imports that rule's
 module and calls its reader on the same `Context`; it never adds fields to the `Context`. A rule
@@ -464,9 +472,46 @@ its xref stream) to 400 bytes per anchor on average; never raise the budget sile
 scope binds nothing to its rule is `W-RULE-SCOPE-EMPTY`, and one inside another anchor's scope of the
 same rule `N-RULE-SCOPE-REDUNDANT`: both say the annotation is to move or go.
 
+## Adding a reading
+
+A reading reads a slip of the PDF as what the spec means, in `hsedc`, and reports it as a Note at the cell
+(or header, or caption) it reads, so that the generated code is what the PDF means and the ledger and
+`ERRATA.md` still show what it printed. It costs no annotation byte. An `erratum scott` annotation does the
+same from the PDF's side, but each must be in Scott's notes (`ErrataSpec`), which exist for Core alone; Scott
+decided on 2026-11-03 that Opal's slips are readings (design §13.34 (1)). A reading is spec data in code, so
+each is reviewed: it names the one slip it reads, cites its page, and leaves every near miss an Error.
+
+Where the readings live:
+
+| reading | where | Note |
+|---|---|---|
+| a misspelt header | `Hsed.Spec.Shape.headerTypos` (Opal T45's `ReEncyptRequest`) | N-HEADER-NORMALISED |
+| a misspelt caption | `Hsed.Spec.Shape.captionTypos` (Opal T32/T33's `DataRemovalMechansim`) | N-CAPTION-NORMALISED |
+| a misspelt cell or Column Type | `Hsed.Spec.Readers.Cell.cellTypos` (Opal T43's `uniteger_8`), applied by the cell reader and by `TableDesc.typeRead` | N-CELL-NORMALISED |
+| a footnote number run into its cell | `Hsed.Spec.Readers.Cell.noteMarkerCells`, keyed by spec, table, row, column and the cell as printed (Opal T44's `81`, T41's `SID or MSID1`) | N-PRECONF-NOTE |
+| a spelling in a pins bullet | `Hsed.Spec.Readers.Pins.reviewedSpellings` (Opal T3's `ACK/NACK`) | none (design §13.29 (n)) |
+| a value the TPer chooses | `Readers.Cell.vendorMarker` (`VU`, `MSID`, `SID or MSID`), `vendorAtLeast` (`<n> min`), `alternativeNames` (`K_AES_128[256]`) | |
+| a structure the PDF prints its own way | in the rule that reads it: `Preconfig.columnOf` (a header naming a column by the end of its name), the bare `NN NN` template, a template's letters, an SP's own SPTemplates UID (`Rules.Preconfig`) | N-PRECONF-HEADER, -TEMPLATE-UID, -TEMPLATE-LETTERS, -UID-SP |
+
+To add one:
+
+1. Confirm the slip on its page, and that it is the PDF's, not the extractor's (`make ir-annotated`, then
+   read the cell in `build/<spec>.hsed.json`). A slip the extractor makes (a superscript read as text) is
+   still read here until the IR records it (design §13.35).
+2. Prefer a list entry to new logic: add the slip as printed and as read to the list above that fits, with
+   a comment citing the table, the PDF page and, where another table says what is meant, that one too. A
+   list entry applies wherever its key matches, so key it as narrowly as the list allows.
+3. Give the Note its list already gives, or add a `CodeDef` to the codes of the module that owns the
+   reading (`cellCodes`, the rule's `ruleCodes`), kind `AsPrinted` or the catalogue's nearest; `RegistrySpec`
+   holds each code to one owner.
+4. Add spec examples that pin both the reading (the generated cell, and the Note at its page) and a near
+   miss that stays an Error (`CellSpec`, `PreconfigSpec`, `ShapeSpec`).
+5. Run `make gen`: the ledger's Note count rises, the Error it replaces goes, and the generated module shows
+   the value as read. Commit the reading, its tests and the generated output together.
+
 ## Checking it
 
 `make gen` (bind, check, compile, the ledger), `stack exec hsedc -- explain core <n>` (or `<section>/sig` for a
 signature block), `make gen-diff`
 after a second `make gen`, then `make check`. No spec data in code: tables, UIDs, names and typo lists
-come from the PDF or from an annotation.
+come from the PDF or from an annotation, the reviewed readings above aside, each citing its page.

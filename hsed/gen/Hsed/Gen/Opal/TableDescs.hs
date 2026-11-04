@@ -75,7 +75,7 @@ lockingInfoTableDesc = TableDesc
       , Col 0x07 "AlignmentRequired" False (TypeName "boolean" (Just ubooleanType))
       , Col 0x08 "LogicalBlockSize" False (TypeName "uinteger_4" (Just uuinteger_4Type))
       , Col 0x09 "AlignmentGranularity" False (TypeName "uinteger_8" (Just uuinteger_8Type))
-      , Col 0x0A "LowestAlignedLBA" False (TypeName "uniteger_8" Nothing)
+      , Col 0x0A "LowestAlignedLBA" False (TypeName "uinteger_8" (Just uuinteger_8Type))
       ]
   }
 

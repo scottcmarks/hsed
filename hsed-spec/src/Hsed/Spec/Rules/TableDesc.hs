@@ -120,7 +120,7 @@ import           Hsed.Spec.DSL             (SomeBinding (..), someBindingShape, 
 import           Hsed.Spec.Format          (nearest)
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
-import           Hsed.Spec.Readers.Cell    (CellValue (..), ColKind (..), TypeEnv (..), colKind, readCell, renderCell)
+import           Hsed.Spec.Readers.Cell    (CellValue (..), ColKind (..), TypeEnv (..), cellTypos, colKind, readCell, renderCell)
 import           Hsed.Spec.Readers.Text    (lowerIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), allEnums, parseEnumValue)
@@ -130,6 +130,9 @@ import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeN
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
 
+
+-- $setup
+-- >>> :set -XOverloadedStrings
 
 -- | The rule.
 tableDescRule :: RuleDef
@@ -194,7 +197,7 @@ data ColRead = ColRead
   , crNumber     :: !(Maybe Int)          -- ^ the Column Number cell read as @0x@ and hex digits
   , crName       :: !Text
   , crUnique     :: !Text                 -- ^ the IsUnique cell
-  , crType       :: !Text                 -- ^ the Column Type cell: a Type object's name
+  , crType       :: !Text                 -- ^ the Column Type cell: a Type object's name, as printed
   , crTypeRow    :: !(Maybe TypeRowRead)  -- ^ the type row whose Name it is
   }
 
@@ -216,8 +219,22 @@ readDescs ctx = map readDesc
       where rows = zip [0 ..] (btRead bt).rows
     col i cells texts = ColRead
       { crRow = i, crCells = cells, crNumberText = at 0, crNumber = parseColNumber (at 0)
-      , crName = at 1, crUnique = at 2, crType = at 3, crTypeRow = Map.lookup (at 3) types }
+      , crName = at 1, crUnique = at 2, crType = at 3, crTypeRow = Map.lookup (typeRead types (at 3)) types }
       where at k = fromMaybe "" (listToMaybe (drop k texts))
+
+-- | The Type object's name a Column Type cell is read as: the cell, or,
+--   where no type row defines it and 'cellTypos' lists it, the name it
+--   misspells (since M5a: Opal Table 43's @uniteger_8@ as @uinteger_8@,
+--   PDF 85; the reading's Note is 'columnFindings'').
+--
+-- >>> typeRead (Map.fromList [("uinteger_8", ())]) "uniteger_8"
+-- "uinteger_8"
+-- >>> typeRead (Map.fromList [("uinteger_8", ())]) "uinteger_4"
+-- "uinteger_4"
+typeRead :: Map Text a -> Text -> Text
+typeRead types t
+  | Map.member t types = t
+  | otherwise          = maybe t (\r -> if Map.member r types then r else t) (lookup t cellTypos)
 
 -- | A Column Number cell: @0x@ and hex digits.
 parseColNumber :: Text -> Maybe Int
@@ -277,7 +294,10 @@ data ColumnsFrom
 --     'ColumnsFrom' says, in row order;
 --   * @C-FMT-RESOLVE@: a type no type row of the spec or its base defines,
 --     a Warning naming the nearest type name (a base's with its spec): the
---     column is generated with its type's name and no UID.
+--     column is generated with its type's name and no UID;
+--   * @N-CELL-NORMALISED@: a type read as the name 'cellTypos' says it
+--     misspells ('typeRead'), a Note: the column is generated with that
+--     type (since M5a: Opal Table 43, PDF 85).
 columnFindings :: Context -> BoundTable -> ColumnsFrom -> [(Int, [CellIR])] -> [ColRead] -> [Finding]
 columnFindings ctx bt from short cols = shortRows <> contig <> cellChecks <> typeChecks
   where
@@ -326,6 +346,10 @@ columnFindings ctx bt from short cols = shortRows <> contig <> cellChecks <> typ
             <> maybe "" ("; nearest: " <>) (nearestType ctx (crType cr))
             <> "; generated with its name and no UID"))
       | cr <- cols, isNothing (crTypeRow cr) ]
+      <> [ here (crCells cr) (finding Note "N-CELL-NORMALISED"
+             (label cr <> "the column type " <> tshow (crType cr) <> " is read as " <> trName tr
+               <> ", a reviewed misspelling (Hsed.Spec.Readers.Cell.cellTypos)"))
+         | cr <- cols, Just tr <- [crTypeRow cr], trName tr /= crType cr ]
 
 -- | The type name nearest a column type no type row defines, among the
 --   spec's and its base's ('allTypeRows'), with the table that defines it:
@@ -449,7 +473,7 @@ tableDescDecl ctx p notes d (owner, tu) = (Gen.decl p name body) { Gen.declImpor
     n     = tuName tu
     name  = descDeclName n
     types = Map.fromListWith (\_ firstOne -> firstOne) [ (trName tr, (cxSpec c, tr)) | (c, tr) <- allTypeRows ctx ]
-    typed cr = Map.lookup (crType cr) types
+    typed cr = Map.lookup (typeRead types (crType cr)) types
     byOrigin m s names
       | s == sid  = Gen.ImportAll (Gen.moduleName sid m)
       | otherwise = Gen.ImportSome (Gen.moduleName s m) names
@@ -461,7 +485,7 @@ tableDescDecl ctx p notes d (owner, tu) = (Gen.decl p name body) { Gen.declImpor
       <> [ byOrigin typesModule s [typeUIDName (trName tr)] | cr <- drColumns d, Just (s, tr) <- [typed cr] ]
     colLine i cr = (if i == (0 :: Int) then "      [ " else "      , ")
       <> T.unwords [ "Col", colNumberLit (fromMaybe i (crNumber cr)), tshow (crName cr)
-                   , if crUnique cr == "Yes" then "True" else "False", typeNameExpr (crType cr) (snd <$> typed cr) ]
+                   , if crUnique cr == "Yes" then "True" else "False", typeNameExpr (typeRead types (crType cr)) (snd <$> typed cr) ]
     body =
       Gen.provenanceComment p : notes
       <> [ name <> " :: TableDesc"

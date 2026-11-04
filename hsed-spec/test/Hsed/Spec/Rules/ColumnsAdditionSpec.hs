@@ -20,8 +20,9 @@ columns), Core's three it extends (TPerInfo 9 columns, 0x08
 ProgrammaticResetEnable a boolean, PDF 49; Table 15, 0x0D and 0x0E
 uinteger_4, PDF 98-99; LockingInfo 11, PDF 85) and Core's other 42 as Core
 reads them. Its checks: none fails on the three, the numbers running on from
-the descriptions they extend, and T43's @uniteger_8@ (PDF 85) is the one
-C-FMT-RESOLVE Warning; C-COL-CONTIG, C-COL-CELL and C-COLS-TARGET each made
+the descriptions they extend, and T43's @uniteger_8@ (PDF 85) read as
+@uinteger_8@ (since M5a: cellTypos, an N-CELL-NORMALISED Note), a type no
+list names still the C-FMT-RESOLVE Warning; C-COL-CONTIG, C-COL-CELL and C-COLS-TARGET each made
 to fail by one edited cell or caption, the addition then left out. Its
 declarations in @Hsed.Gen.Opal.TableDescs@: the three extended descriptions,
 Core's columns as Core declares them and then the added ones, each citing its
@@ -171,11 +172,17 @@ spec = do
         coded "C-COL-CONTIG" fs `shouldBe` []
         coded "C-COL-CELL" fs `shouldBe` []
         coded "C-COLS-TARGET" fs `shouldBe` []
-      it "give exactly one C-FMT-RESOLVE, a Warning: T43's uniteger_8 (PDF 85), the nearest type Core's uinteger_8" $ do
-        coded "C-FMT-RESOLVE" fs `shouldBe`
-          [ "C-FMT-RESOLVE opal-2.30.pdf#page=85&T43: column 0x0A LowestAlignedLBA: the column type uniteger_8 names no Type object"
+      it "read T43's uniteger_8 (PDF 85) as uinteger_8, a reviewed misspelling: a Note and no C-FMT-RESOLVE (M5a)" $ do
+        coded "C-FMT-RESOLVE" fs `shouldBe` []
+        coded "N-CELL-NORMALISED" fs `shouldBe`
+          [ "N-CELL-NORMALISED opal-2.30.pdf#page=85&T43: column 0x0A LowestAlignedLBA: the column type \"uniteger_8\" is read as"
+            <> " uinteger_8, a reviewed misspelling (Hsed.Spec.Readers.Cell.cellTypos)" ]
+      it "give C-FMT-RESOLVE, a Warning, for a type no list names (T43's cell edited to uintger_8), the nearest type Core's uinteger_8" $ do
+        let fs' = checkIR (Just base) Scott (setCell "T43" 3 3 "uintger_8" opal)
+        coded "C-FMT-RESOLVE" fs' `shouldBe`
+          [ "C-FMT-RESOLVE opal-2.30.pdf#page=85&T43: column 0x0A LowestAlignedLBA: the column type uintger_8 names no Type object"
             <> " (no type row binds it); nearest: uinteger_8, core-2.01 T161; generated with its name and no UID" ]
-        [ Cm.severity f | f <- fs, Cm.code f == "C-FMT-RESOLVE" ] `shouldBe` [Cm.Warning]
+        [ Cm.severity f | f <- fs', Cm.code f == "C-FMT-RESOLVE" ] `shouldBe` [Cm.Warning]
       it "C-COL-CONTIG: a number that does not run on from the description's, and the addition left out" $ do
         errorsAt "T26" (setCell "T26" 0 0 "0x09" opal) `shouldBe`
           [ "C-COL-CONTIG opal-2.30.pdf#page=49&T26: column 0x09 ProgrammaticResetEnable: the column numbers run 0x00 to 0x08 in row order,"
@@ -226,7 +233,7 @@ spec = do
         drop 13 (colLines opalBlock) `shouldBe`
           [ "      , Col 0x0D \"MandatoryWriteGranularity\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
           , "      , Col 0x0E \"RecommendedAccessGranularity\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))" ]
-      it "extend LockingInfo with T43's four (PDF 85), 11 in all, LowestAlignedLBA with its type's name and no UID" $ do
+      it "extend LockingInfo with T43's four (PDF 85), 11 in all, LowestAlignedLBA a uinteger_8 (its uniteger_8 read through cellTypos)" $ do
         let opalBlock = block (sig "lockingInfoTableDesc") lns
         length (colLines opalBlock) `shouldBe` 11
         take 7 (colLines opalBlock) `shouldBe` colLines (block (sig "lockingInfoTableDesc") coreDescs)
@@ -234,7 +241,7 @@ spec = do
           [ "      , Col 0x07 \"AlignmentRequired\" False (TypeName \"boolean\" (Just ubooleanType))"
           , "      , Col 0x08 \"LogicalBlockSize\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
           , "      , Col 0x09 \"AlignmentGranularity\" False (TypeName \"uinteger_8\" (Just uuinteger_8Type))"
-          , "      , Col 0x0A \"LowestAlignedLBA\" False (TypeName \"uniteger_8\" Nothing)" ]
+          , "      , Col 0x0A \"LowestAlignedLBA\" False (TypeName \"uinteger_8\" (Just uuinteger_8Type))" ]
       it "declare the three extended descriptions and Opal's own DataRemovalMechanism, in table order, none other" $
         [ l | l <- lns, " :: TableDesc" `T.isSuffixOf` l ]
           `shouldBe` map sig ["tPerInfoTableDesc", "dataRemovalMechanismTableDesc", "lockingInfoTableDesc", "tableTableDesc"]

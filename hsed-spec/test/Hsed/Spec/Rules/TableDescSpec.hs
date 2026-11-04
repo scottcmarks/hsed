@@ -267,3 +267,18 @@ spec = withCore $ \pristine -> do
         `shouldBe` [ [ Gen.ImportSome "Hsed.Core.Table" ["Col (..)", "TableDesc (..)"], Gen.ImportSome "Hsed.Core.TypeName" ["TypeName (..)"]
                      , Gen.ImportAll "Hsed.Gen.Opal.TableUIDs", Gen.ImportSome "Prelude" ["Bool (..)", "Maybe (..)"]
                      , Gen.ImportSome "Hsed.Gen.Core.Types" ["uuidType"], Gen.ImportAll "Hsed.Gen.Opal.Types" ] ]
+
+  describe "on Opal under the M5a sidecar, read over Core (Table 43, PDF 85)" $ withOpal $ \opalPristine -> do
+    opal <- runIO (annotated opalPristine m5aOpalHsa)
+    cr   <- runIO (either (throwString . show) pure (compileIR (Just ctx) Scott opal))
+    let fs  = [ f | f <- checkIR (Just ctx) Scott opal, Cm.anchor f == Just "T43" ]
+        lockingInfo = takeWhile (/= "") (dropWhile (/= "lockingInfoTableDesc :: TableDesc")
+                        (T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.TableDescs" (crModules cr)))))
+    it "reads LowestAlignedLBA's uniteger_8 as uinteger_8 (cellTypos): a Note, not C-FMT-RESOLVE" $ do
+      coded "C-FMT-RESOLVE" fs `shouldBe` []
+      coded "N-CELL-NORMALISED" fs `shouldBe`
+        [ "N-CELL-NORMALISED opal-2.30.pdf#page=85&T43: column 0x0A LowestAlignedLBA: the column type \"uniteger_8\" is read as uinteger_8,"
+          <> " a reviewed misspelling (Hsed.Spec.Readers.Cell.cellTypos)" ]
+    it "generates the column with the type it reads, Core's uinteger_8 and its UID" $
+      filter ("LowestAlignedLBA" `T.isInfixOf`) lockingInfo `shouldBe`
+        [ "      , Col 0x0A \"LowestAlignedLBA\" False (TypeName \"uinteger_8\" (Just uuinteger_8Type))" ]

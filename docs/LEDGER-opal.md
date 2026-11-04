@@ -42,7 +42,6 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 
 | severity | code | findings |
 |---|---|---:|
-| Warning | C-FMT-RESOLVE | 1 |
 | Warning | W-ENUM-LABEL-REPEATED | 2 |
 | Warning | W-FEATURE-UNLISTED | 3 |
 | Warning | W-LEGEND-OFFSCALE | 10 |
@@ -51,6 +50,7 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 | Warning | W-PRECONF-NAME-LENGTH | 2 |
 | Warning | W-UNBOUND | 26 |
 | Note | N-CAPTION-NORMALISED | 2 |
+| Note | N-CELL-NORMALISED | 1 |
 | Note | N-FEATURE-HEADER | 1 |
 | Note | N-FEATURE-LENGTH | 1 |
 | Note | N-HEADER-NORMALISED | 9 |

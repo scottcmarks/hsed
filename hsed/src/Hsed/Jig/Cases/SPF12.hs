@@ -43,9 +43,10 @@ Its sessions need the Locking SP Manufactured, the common prerequisite of
 so the simulator alone runs it (design 9.3; 13.34 (8)), on its Set and the
 jig's TPER_RESET (since M5b). The jig's extension is M5's reset clause
 through the jig: a power cycle of the simulator sets ReadLocked and
-WriteLocked where LockOnReset lists Power Cycle, as the factory's does
-(Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86), and the extension
-unlocks the range again.
+WriteLocked on every range whose LockOnReset lists Power Cycle, as the
+factory's all do (Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86),
+the global range's observed, and the extension puts each range's locks
+back to what it read before the power cycle.
 -}
 module Hsed.Jig.Cases.SPF12
   ( spf12case1nomedia
@@ -55,6 +56,7 @@ import           RIO
 import qualified RIO.Text            as T
 
 import           Hsed.Core.CellBlock (columnRange)
+import           Hsed.Core.Table     (Cell (..))
 import           Hsed.Core.Token     (Token (..))
 import           Hsed.Core.Types     (enumValue)
 import           Hsed.Core.UID       (UID)
@@ -71,8 +73,9 @@ import           Hsed.Jig.Catalogue  (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq     (Section (..))
 import           Hsed.Jig.Script     (MethodOutcome (..), Script, SessionHandle (..), StartArgs, Verdict (..), asAuthority, attempt,
                                       describeStatus, exchanged, expectMethodStatus, getCells, namedColumn, observe, opened,
-                                      powerCycle, sessionGone, setCells, stackReset, startSession, tperInfoObject, tperReset,
-                                      unmet, withSession)
+                                      peekSim, powerCycle, sessionGone, setCells, stackReset, startSession, tperInfoObject,
+                                      tperReset, unmet, withSession)
+import           Hsed.Sim.State      (cellOf, lockingRows)
 import           Hsed.Wire           (IfStatus (..), hex)
 
 
@@ -85,7 +88,7 @@ spf12case1nomedia = Case
   , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedWrite, NeedSimOnly]
   , cRun        = run
-  , cExtensions = [("a power cycle sets ReadLocked and WriteLocked where LockOnReset lists Power Cycle (Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86: M5's reset clause through the jig)", powerCycleLocks)]
+  , cExtensions = [("a power cycle sets ReadLocked and WriteLocked on every range whose LockOnReset lists Power Cycle (Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86: M5's reset clause through the jig), each range's locks put back", powerCycleLocks)]
   }
 
 -- | An object of an SP and the cells it held before the case set them, as
@@ -171,7 +174,7 @@ steps admin1 = do
   step2 h
   settled =<< withSession admin1 (\h' -> do
     rc <- rangeColumns
-    (r, w) <- locks step4 h' rc
+    (r, w) <- locks step4 h' uLocking_GlobalRange rc
     unless (r == true && w == true) $
       unmet (step4 <> ": ReadLocked " <> boolean r <> ", WriteLocked " <> boolean w <> ", not TRUE TRUE (Test Cases PDF 66; Opal 2.30 3.2.3 h, PDF 29)")
     observe "step 4" "Get Locking_GlobalRange's ReadLocked and WriteLocked after TPER_RESET: TRUE TRUE (Opal 2.30 3.2.3 h, PDF 29: LockOnReset lists Programmatic)"
@@ -215,26 +218,55 @@ restore who args kept = readIORef kept >>= \case
       observe "restore" (kName k <> " set back to what the case read first, as " <> who <> " (Scott's answer Q4)")
     pure Pass
 
--- | The extension: a power cycle of the simulator ('powerCycle'), after
---   which, as Admin1, the global range's ReadLocked and WriteLocked read
---   TRUE TRUE, its LockOnReset listing Power Cycle as the factory's does
---   (Opal 2.30 Table 45, PDF 86; Core 5.7.2.2.10, PDF 275: set True whatever
---   ReadLockEnabled and WriteLockEnabled), and are Set FALSE again, as the
---   factory left them.
+-- | The extension, M5's reset clause through the jig: as Admin1, every
+--   range's ReadLocked, WriteLocked and LockOnReset read and kept; a power
+--   cycle of the simulator ('powerCycle'); then, as Admin1 again, the
+--   global range's ReadLocked and WriteLocked read TRUE TRUE, its
+--   LockOnReset listing Power Cycle as the factory's does (Opal 2.30 Table
+--   45, PDF 86; Core 5.7.2.2.10, PDF 275: set True whatever ReadLockEnabled
+--   and WriteLockEnabled), every other range listing Power Cycle likewise
+--   (the factory's all, Table 45) and one not listing it as it was, and the
+--   locks of each range the power cycle set put back to what was read, as
+--   the factory left them, so that the cases after find the TPer as it was
+--   (design 13.34 (10)). The ranges are the simulator's Locking rows, read
+--   behind the script's seam ('lockingRanges').
 powerCycleLocks :: Script Verdict
 powerCycleLocks = do
   admin1 <- asAuthority "Admin1" uSP_Locking LockingSP.uAuthority_Admin1
+  rc     <- rangeColumns
+  ranges <- lockingRanges
+  kept   <- newIORef []
+  settled =<< withSession admin1 (\h -> do
+    for_ ranges $ \(range, u) -> do
+      (r, w, lor) <- locksAndReset ("Get " <> range <> "'s ReadLocked, WriteLocked and LockOnReset before the power cycle") h u rc
+      modifyIORef' kept ((range, u, r, w, listsPowerCycle lor) :)
+    pure Pass)
   powerCycle >>= \case
     Right Good -> observe "power cycle" ("the simulator's power cycle answered " <> describeStatus Good <> ": every session aborted (Opal 2.30 3.3.5.1 item 1, PDF 31)")
     answered   -> unmet ("the power cycle " <> either id (("answered " <>) . describeStatus) answered <> ", not " <> describeStatus Good)
+  before <- reverse <$> readIORef kept
   withSession admin1 $ \h -> do
-    rc <- rangeColumns
-    (r, w) <- locks name h rc
+    (r, w) <- locks name h uLocking_GlobalRange rc
     unless (r == true && w == true) $
       unmet (name <> ": ReadLocked " <> boolean r <> ", WriteLocked " <> boolean w <> ", not TRUE TRUE (Core 5.7.2.2.10, PDF 275)")
     observe "after the power cycle" "ReadLocked TRUE, WriteLocked TRUE: LockOnReset lists Power Cycle at the factory (Opal 2.30 Table 45, PDF 86; Core 5.7.2.2.10, PDF 275)"
-    setSuccess "Set Locking_GlobalRange's ReadLocked and WriteLocked FALSE, as the factory left them" h uLocking_GlobalRange
-               [(rReadLocked rc, false), (rWriteLocked rc, false)]
+    put <- forM before $ \(range, u, r0, w0, listed) -> do
+      let after    = "Get " <> range <> "'s ReadLocked and WriteLocked after the power cycle"
+          expected = if listed then (true, true) else (r0, w0)
+      (r1, w1) <- locks after h u rc
+      unless ((r1, w1) == expected) $
+        unmet (after <> ": ReadLocked " <> boolean r1 <> ", WriteLocked " <> boolean w1 <> ", not " <> boolean (fst expected) <> " " <> boolean (snd expected)
+               <> (if listed then " (its LockOnReset lists Power Cycle; Core 5.7.2.2.10, PDF 275)" else " (its LockOnReset does not list Power Cycle: as before it)"))
+      if (r1, w1) == (r0, w0)
+        then pure Nothing
+        else do
+          setSuccess ("Set " <> range <> "'s ReadLocked and WriteLocked back to " <> boolean r0 <> " " <> boolean w0 <> ", as read before the power cycle") h u
+                     [(rReadLocked rc, r0), (rWriteLocked rc, w0)]
+          pure (Just range)
+    let locked = catMaybes put
+    observe "ranges" (tshow (length locked) <> " of " <> tshow (length before) <> " range(s) locked by the power cycle, each listing Power Cycle (Opal 2.30 Table "
+                      <> "45, PDF 86), their ReadLocked and WriteLocked set back to what the extension read first, as the factory left them: "
+                      <> T.intercalate ", " locked)
     pure Pass
   where name = "Get Locking_GlobalRange's ReadLocked and WriteLocked after the power cycle"
 
@@ -259,13 +291,30 @@ rangeColumns = Range <$> col "ReadLockEnabled" <*> col "WriteLockEnabled" <*> co
 rangeList :: Range -> [Natural]
 rangeList rc = [rReadLockEnabled rc, rWriteLockEnabled rc, rReadLocked rc, rWriteLocked rc, rLockOnReset rc]
 
--- | Get the global range's ReadLocked and WriteLocked in a session, the
---   step named: SUCCESS, and the two values.
-locks :: Text -> SessionHandle -> Range -> Script (Value, Value)
-locks name h rc = do
-  outcome <- getCells h uLocking_GlobalRange (columnRange (rReadLocked rc) (rWriteLocked rc)) >>= exchanged name
+-- | Get a range's ReadLocked and WriteLocked in a session, the step named:
+--   SUCCESS, and the two values; and with its LockOnReset, the three.
+locks :: Text -> SessionHandle -> UID -> Range -> Script (Value, Value)
+locks name h range rc = do
+  outcome <- getCells h range (columnRange (rReadLocked rc) (rWriteLocked rc)) >>= exchanged name
   expectMethodStatus name SUCCESS outcome
   (,) <$> columnIn name (rReadLocked rc) (moResults outcome) <*> columnIn name (rWriteLocked rc) (moResults outcome)
+
+locksAndReset :: Text -> SessionHandle -> UID -> Range -> Script (Value, Value, Value)
+locksAndReset name h range rc = do
+  outcome <- getCells h range (columnRange (rReadLocked rc) (rLockOnReset rc)) >>= exchanged name
+  expectMethodStatus name SUCCESS outcome
+  (,,) <$> columnIn name (rReadLocked rc) (moResults outcome) <*> columnIn name (rWriteLocked rc) (moResults outcome)
+       <*> columnIn name (rLockOnReset rc) (moResults outcome)
+
+-- | The Locking table's ranges as the simulator holds them, each row's UID
+--   with its name: Locking_GlobalRange, then Locking_Range1 and each range
+--   after it (Opal 2.30 Table 45, PDF 86), read behind the script's seam
+--   ('peekSim'; design 9.3: the simulator's alone, as the case is).
+lockingRanges :: Script [(Text, UID)]
+lockingRanges = peekSim >>= \case
+  Nothing -> unmet "the Locking table's ranges: read from the simulator's state, the simulator's alone (design 9.3)"
+  Just st -> pure (zip names [ u | r <- lockingRows st, Just (UIDCell u) <- [cellOf 0 r] ])
+  where names = "Locking_GlobalRange" : [ "Locking_Range" <> tshow n | n <- [1 :: Int ..] ]
 
 -- | Get one column of an object in a session, the step named: SUCCESS, and
 --   the value the result holds in the column.
@@ -313,6 +362,15 @@ boolean v
 
 -- | LockOnReset {Power Cycle, Programmatic}, a reset_types set as a method
 --   carries it (Core 5.1.2 i, PDF 100: a set as a list of its elements'
---   values), the values Opal 2.30 Table 16's, 0 and 3 (PDF 32).
+--   values), the values Opal 2.30 Table 16's, 0 and 3 (PDF 32); a reset
+--   type's value; and whether a LockOnReset value lists Power Cycle.
 resetTypes :: Value
-resetTypes = L (List [ D (Datum (Unsigned (fromIntegral (enumValue t)))) | t <- [Opal_reset_types_Power_Cycle, Opal_reset_types_Programmatic] ])
+resetTypes = L (List (map resetType [Opal_reset_types_Power_Cycle, Opal_reset_types_Programmatic]))
+
+resetType :: Opal_reset_types -> Value
+resetType t = D (Datum (Unsigned (fromIntegral (enumValue t))))
+
+listsPowerCycle :: Value -> Bool
+listsPowerCycle = \case
+  L (List vs) -> resetType Opal_reset_types_Power_Cycle `elem` vs
+  _           -> False

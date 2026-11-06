@@ -28,14 +28,17 @@ After a manufactured run of M4a's ten cases and M5b's seven, the simulator's
 Locking table, its MBRControl row and its TPerInfo row equal the initial
 state's cell for cell by value (a boolean the fold labels @F@ or @FALSE@
 and a Set writes @False@: "Hsed.Sim.Cells"), and no session is open: the
-restores of SPF-12:1/no-media hold (Scott's answer Q4). At the default
-Original Factory State, Manufactured-Inactive, the five are skipped on
-LockingManufactured, nothing issued for them.
+restores of SPF-12:1/no-media hold (Scott's answer Q4), and so does its
+extension's putting back of the locks its power cycle set on every range
+listing Power Cycle. At the default Original Factory State,
+Manufactured-Inactive, the five are skipped on LockingManufactured, saying
+what @--locking-ofs manufactured@ does, nothing issued for them.
 
-The verbs the cases are written in are group G3's (M5b), the simulator's
-Set group G1's and its transactions group G2's, merged into claude/m5b
-before this group's: an example that reaches a verb still a stub is
-pending, saying so ('awaiting'), and runs once the merge retires the stub.
+The cases are written in the jig's verbs ("Hsed.Jig.Script"), on the
+simulator's Set ("Hsed.Sim.Base") and its one level of transactions
+("Hsed.Sim.State", "Hsed.Sim.Session"), M5b's groups G3, G1 and G2 merged
+into claude/m5b before this group's (G4). The host's polls are shortened
+for the runs here ('quick'), the simulator answering in process.
 -}
 module Hsed.Jig.CasesTableSpec (spec) where
 
@@ -61,7 +64,7 @@ import           Hsed.Sim.State         (lockingRows, mbrControl, tableRows)
 import           Hsed.Sim.Types         (LifeCycle (..), SimParams (..), TPerState (..), defaultSimParams, initialState)
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..))
 import           Hsed.Transport.Opened  (openedInProc)
-import           Hsed.Wire              (Unit (..))
+import           Hsed.Wire              (ExchangeOpts (..), Unit (..), defaultExchangeOpts)
 
 
 keys :: Text -> [CaseKey]
@@ -88,9 +91,16 @@ manufactured :: Unit -> SimParams
 manufactured u = defaultSimParams { spUnits = u, spLockingOFS = Manufactured }
 
 -- | The five on the simulator at manufactured, in a unit, holding a
---   response for so many IF-RECVs.
+--   response for so many IF-RECVs; the host's polls shortened, as the
+--   simulator in process answers at once and a hold counts IF-RECVs, not
+--   time ("Hsed.Jig.Script".@drain@: the run's @roExchange@, the default
+--   unless a test shortens it), so that the suite keeps its time budget
+--   (design 14: hsed-test within 15 s).
 onSim :: Unit -> Int -> RunOptions
-onSim u hold = defaultRunOptions { roTarget = TSim, roTests = five, roSim = manufactured u, roHold = hold }
+onSim u hold = defaultRunOptions { roTarget = TSim, roTests = five, roSim = manufactured u, roHold = hold, roExchange = quick }
+
+quick :: ExchangeOpts
+quick = defaultExchangeOpts { xPollMicros = 1000 }
 
 -- | The four configurations the acceptance runs in: bytes and blocks, a
 --   response released at once or held for an IF-RECV.
@@ -174,14 +184,6 @@ answeredCalls json =
 issued :: A.Value -> [A.Value]
 issued json = [ e | e <- elements (at "transcript" json), at "entry" e == str "issued" ]
 
--- | Pending where a verdict names a verb still another group's stub (the
---   verbs group G3's, the Set group G1's, the transactions group G2's;
---   M5b), which the integration's merges retire; nothing otherwise.
-awaiting :: A.Value -> IO ()
-awaiting json = case [ r | r <- reasons json, "group G3's (M5b)" `T.isInfixOf` r || "group G1's (M5b)" `T.isInfixOf` r || "group G2's (M5b)" `T.isInfixOf` r ] of
-  []    -> pure ()
-  r : _ -> pendingWith (T.unpack ("until groups G2, G1 and G3 merge into claude/m5b, before this group's (the integration's order): " <> r))
-
 -- | Whether two cells are the same by value: an enumeration's value whatever
 --   its label (the fold labels a boolean @F@ or @FALSE@, a Set @False@:
 --   "Hsed.Sim.Cells"), a list's elements each, any other cell as it is.
@@ -214,7 +216,6 @@ spec = do
     for_ configurations $ \c@(u, hold) ->
       it ("passes in " <> configured c <> ", every extension passing: SPF-02:2 observing the insufficient transfer length then 1024 bytes, SPF-11 the mirror 0, SUCCESS, Success/Failure 0 and FALSE, SPF-12:1/no-media TRUE TRUE after TPER_RESET, ETC-09 and ETC-14 the abort and step 4's session") $ do
         (code, json, md) <- jig (onSim u hold)
-        awaiting json
         verdicts json `shouldBe` [ (str k, str "pass") | k <- fiveNames ]
         code `shouldBe` ExitSuccess
         extensionVerdicts json `shouldBe` [ (str k, str "pass") | k <- ["SPF-02:2", "SPF-11", "SPF-11", "SPF-12:1/no-media", "ETC-09", "ETC-14"] ]
@@ -238,7 +239,6 @@ spec = do
     it "with a response held for three IF-RECVs, SPF-02:2 passes in both units, its short IF-RECV asked again while responses are to come (Test Cases 4.1 a, PDF 26)" $
       for_ [UnitBytes, UnitBlocks512] $ \u -> do
         (code, json, _) <- jig (onSim u 3) { roTests = keys "SPF-02:2" }
-        awaiting json
         verdicts json `shouldBe` [(str "SPF-02:2", str "pass")]
         code `shouldBe` ExitSuccess
         t45s json `shouldSatisfy` elem "responses_to_come"
@@ -251,9 +251,8 @@ spec = do
         let params = manufactured UnitBytes
         (sim, control) <- openedInProc params (InProcOpts UnitBytes 0)
         t <- newTranscript
-        code <- silently (runOpened defaultRunOptions { roTests = oldPlusSeven, roSim = params, roReportDir = dir </> "report" } t (SimTarget sim control))
+        code <- silently (runOpened defaultRunOptions { roTests = oldPlusSeven, roSim = params, roReportDir = dir </> "report", roExchange = quick } t (SimTarget sim control))
         json <- reportIn dir
-        awaiting json
         verdicts json `shouldSatisfy` all ((== str "pass") . snd)
         code `shouldBe` ExitSuccess
         st <- scPeek control
@@ -268,7 +267,8 @@ spec = do
     it "skips the five on LockingManufactured, each saying so, nothing issued for them, exit 1" $ do
       (code, json, _) <- jig (onSim UnitBytes 0) { roSim = defaultSimParams }
       verdicts json `shouldBe` [ (str k, str "skipped") | k <- fiveNames ]
-      caseReasons json `shouldBe` replicate 5 "prerequisite unmet: LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State (design 9.1; M5)"
+      caseReasons json `shouldBe` replicate 5 ("prerequisite unmet: LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State; "
+                                               <> "--locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)")
       reasons json `shouldSatisfy` all ("prerequisite unmet: LockingManufactured: " `T.isInfixOf`)
       issued json `shouldBe` []
       at "if_send_issued" json `shouldBe` Just (A.Number 0)

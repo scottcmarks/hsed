@@ -157,7 +157,7 @@ module Hsed.Jig.Script
   , stackReset
   , opalV2Of
   , withSession
-    -- * The verbs of M5b's cases (group G3's)
+    -- * The verbs of M5b's cases
   , asAuthority
   , setCells
   , startTransaction

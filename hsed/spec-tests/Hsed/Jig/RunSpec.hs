@@ -494,7 +494,7 @@ spec = do
         _   -> False
       L.findIndex ("left out of the cases" `T.isPrefixOf`) ns `shouldSatisfy` \i -> i < L.findIndex ("UCT-01 on the tper" `T.isPrefixOf`) ns
       md `shouldSatisfy` T.isInfixOf "left out of the cases a run with no --tests selects"
-    it "a plain run at --locking-ofs manufactured: the seventeen selected, ETC-20 left out in the note (the five table cases are group G4's)" $ do
+    it "a plain run at --locking-ofs manufactured: the seventeen selected, ETC-20 left out in the note (the five table cases pass in Hsed.Jig.CasesTableSpec)" $ do
       (_, json, _) <- jig manufactured
       map fst (verdicts json) `shouldBe` [ str (renderCaseKey k) | k <- eighteen, k `notElem` keys "ETC-20" ]
       notes json `shouldSatisfy` any (\t -> "left out of the cases a run with no --tests selects" `T.isPrefixOf` t && ("ETC-20: " <> needsInactive) `T.isSuffixOf` t)
@@ -505,7 +505,7 @@ spec = do
                                               <> "State; --locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)" ]
         `shouldBe` map renderCaseKey seven
       [ k | (k, v) <- verdicts json, v == str "pass" ] `shouldBe` map (str . renderCaseKey) eleven
-    it "--tests of all eighteen at manufactured: ETC-20 alone skipped, on its own prerequisite; ETC-07, ETC-21 and ETC-21/adminsp pass (the five table cases are group G4's)" $ do
+    it "--tests of all eighteen at manufactured: ETC-20 alone skipped, on its own prerequisite; ETC-07, ETC-21 and ETC-21/adminsp pass (the five table cases in Hsed.Jig.CasesTableSpec)" $ do
       (_, json, _) <- jig manufactured { roTests = eighteen }
       [ (k, r) | (k, [r]) <- reasonsOf json, "prerequisite unmet" `T.isPrefixOf` r ]
         `shouldBe` [("ETC-20", "prerequisite unmet: LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")]

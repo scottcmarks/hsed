@@ -48,6 +48,7 @@ import           Hsed.Jig.Transcript   (newTranscript)
 import           Hsed.Sim.Types        (LifeCycle (..), SimParams (..), TPerState (..), defaultSimParams)
 import           Hsed.Transport.InProc (InProcOpts (..), SimControl (..))
 import           Hsed.Transport.Opened (openedInProc)
+import           Hsed.Wire             (ExchangeOpts (..), defaultExchangeOpts)
 import           Hsed.Wire.Internal    (Unit (..))
 
 
@@ -63,13 +64,18 @@ configured :: (Unit, Int) -> String
 configured (u, hold) = show u <> (if hold > 0 then ", a response held for an IF-RECV" else "")
 
 -- | Cases on the simulator at an Original Factory State, in a
---   configuration.
+--   configuration; the host's polls shortened, as the simulator in process
+--   answers at once and a hold counts IF-RECVs, not time
+--   ("Hsed.Jig.Script".@drain@: the run's @roExchange@, the default unless
+--   a test shortens it), so that the suite keeps its time budget (design
+--   14: hsed-test within 15 s).
 onSim :: LifeCycle -> (Unit, Int) -> Text -> RunOptions
 onSim ofs (u, hold) ks = defaultRunOptions
-  { roTarget = TSim
-  , roTests  = keys ks
-  , roSim    = defaultSimParams { spUnits = u, spLockingOFS = ofs }
-  , roHold   = hold
+  { roTarget   = TSim
+  , roTests    = keys ks
+  , roSim      = defaultSimParams { spUnits = u, spLockingOFS = ofs }
+  , roHold     = hold
+  , roExchange = defaultExchangeOpts { xPollMicros = 1000 }
   }
 
 -- | A run into a temporary directory, quietly: its exit code and its JSON

@@ -87,12 +87,15 @@ cited =
   ]
 
 -- | The cases a law names that a later rung's jig runs, with that rung
---   (design section 11; the M5 plan's rungs): SPF-12's first case at M5b
---   (its steps 1-5, no media); what needs the medium, the MBR's shadowing or
---   a power cycle the jig cannot yet issue at M6.
+--   (design section 11; the M5 plan's rungs): SPF-12's first case whole at
+--   M6, its steps 6 and 7 media I/O (its steps 1 to 5 are the jig's variant
+--   SPF-12:1/no-media, in the catalogue since M5b, which the laws name too:
+--   Scott's answer Q2); and at M6 what needs the medium, the MBR's shadowing
+--   or a power cycle, which M5b's jig issues to the simulator alone, in an
+--   extension of SPF-12:1/no-media.
 later :: [(CaseKey, String)]
 later =
-  [ (CaseKey (SPF 12) (Just 1) Nothing Nothing, "M5b")
+  [ (CaseKey (SPF 12) (Just 1) Nothing Nothing, "M6")
   , (CaseKey (SPF 12) (Just 2) Nothing Nothing, "M6")
   , (CaseKey (UCT 10) Nothing Nothing Nothing, "M6")
   , (CaseKey (UCT 11) Nothing Nothing Nothing, "M6")

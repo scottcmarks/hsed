@@ -119,7 +119,9 @@ ignorePacket = Law
 -- | Core Table 45 (PDF 83), bound by its comment @stateTable
 --   "Sync.table45"@ ("Hsed.Gen.Core.StateTables".@table45@): the ComPacket
 --   header fields an IF-RECV is answered with in each state. SPF-02 case 1
---   and ETC-02 observe it. The property:
+--   and ETC-02 observe it, and since M5b SPF-02 case 2 (row 2, a response
+--   ready and the transfer too short for it, then the response at its
+--   MinTransfer; Test Cases PDF 53). The property:
 --
 --   * the generated rows are 'T45Row''s, one each, in order, and each is
 --     the state it names ('rowState');
@@ -158,7 +160,7 @@ table45 = Law
                         (answerOf c (cExt cs) len (expected row d) d)
                ]
       ]
-  , lawCases = [caseOf (SPF 2) 1, whole (ETC 2)]
+  , lawCases = [caseOf (SPF 2) 1, caseOf (SPF 2) 2, whole (ETC 2)]
   }
   where
     quantities = L.nub [ q | r <- states StateTables.table45, Quantity q <- settings r ]

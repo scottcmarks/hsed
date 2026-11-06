@@ -129,8 +129,10 @@ tperResetEnabled st = st { tsSPs = Map.adjust enable uSP_Admin (tsSPs st) }
 --   columns of the Locking table to be set to True"; an empty set changes
 --   neither (its third). Opal 3.2.3 h (PDF 29) makes TPER_RESET's type
 --   Programmatic (3, Opal Table 16, PDF 32), and 4.3.5.2.2 (PDF 88) makes
---   {0} and {0, 3} supported. SPF-12 case 1 (TPER_RESET) and UCT-10 (a power
---   cycle, step 9, Test Cases PDF 39-40) observe it. The property: for any
+--   {0} and {0, 3} supported. SPF-12 case 1 (TPER_RESET; its steps 1 to 5,
+--   step 4's ReadLocked and WriteLocked TRUE, Test Cases PDF 66, the jig's
+--   variant SPF-12:1/no-media since M5b, Scott's answer Q2) and UCT-10 (a
+--   power cycle, step 9, Test Cases PDF 39-40) observe it. The property: for any
 --   state and any of the TPer's resets, each Locking row of each SP not
 --   Manufactured-Inactive whose LockOnReset lists the reset's type is
 --   ReadLocked and WriteLocked True after it, whatever its ReadLockEnabled
@@ -144,7 +146,7 @@ lockOnReset = Law
   { lawName  = "Reset.lockOnReset"
   , lawHash  = "9594d522ccb0"
   , lawProp  = Just (resetColumnLaw uLockingTable "LockOnReset" [("ReadLocked", True), ("WriteLocked", True)])
-  , lawCases = [caseOf (SPF 12) 1, whole (UCT 10)]
+  , lawCases = [caseOf (SPF 12) 1, noMedia, whole (UCT 10)]
   }
 
 -- | Core 5.7.2.5.4 (PDF 278, its second paragraph): "The MBRDoneOnReset
@@ -228,7 +230,8 @@ tries = Law
 --   PDF 30: "keep all statically allocated ComIDs in the Active state"), so
 --   that, with no session, it is Issued (Core 3.3.3, PDF 56-57: Issued, no
 --   session started on it; Associated, one or more open). SPF-12 case 1's
---   second StartSession (Test Cases PDF 66) observes it. The property: after
+--   second StartSession (its step 3, Test Cases PDF 66; the jig's variant
+--   SPF-12:1/no-media since M5b) observes it. The property: after
 --   any of the TPer's resets no session is open and every static ComID is
 --   Issued and awaiting IF-SEND; after STACK_RESET on a ComID that ComID is
 --   Issued and awaiting IF-SEND with no session, and every other ComID's
@@ -251,7 +254,7 @@ comIdIssued = Law
             actual c = (lifeOf c after, awaiting c after, ofComId after c)
         in counterexample (show reset) $
              map actual (Map.keys (tsComIds after)) === map expected (Map.keys (tsComIds before))
-  , lawCases = [caseOf (SPF 12) 1]
+  , lawCases = [caseOf (SPF 12) 1, noMedia]
   }
   where
     awaiting c s = maybe False ((== S1) . cSync) (Map.lookup c (tsComIds s))
@@ -315,3 +318,9 @@ whole t = CaseKey t Nothing Nothing Nothing
 -- | One case of a test.
 caseOf :: TestId -> Int -> CaseKey
 caseOf t c = CaseKey t (Just c) Nothing Nothing
+
+-- | SPF-12 case 1's steps 1 to 5, the jig's variant @no-media@ (since M5b;
+--   steps 6 and 7, media I/O, and so the case whole, M6's: Scott's answer
+--   Q2, design 11 M5b; "Hsed.Jig.Catalogue").
+noMedia :: CaseKey
+noMedia = CaseKey (SPF 12) (Just 1) Nothing (Just "no-media")

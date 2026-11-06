@@ -41,6 +41,7 @@ etc15 = Case
   { cKey        = CaseKey (ETC 15) Nothing Nothing Nothing
   , cSection    = ErrorCases
   , cWaives     = lockingSPUntouched : noSessionOpened
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedErrorPath]
   , cRun        = run
   , cExtensions = []

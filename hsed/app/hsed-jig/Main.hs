@@ -103,7 +103,9 @@ runOptions = options <**> laterMilestones
              <> help "sim (the default), /dev/diskN, replay:FILE, sim+/dev/diskN or sim+replay:FILE")
       <*> option (eitherReader (first T.unpack . parseCaseKeys . T.pack))
             (long "tests" <> metavar "KEYS" <> value (roTests defaultRunOptions)
-             <> help "comma-separated case keys, UCT-01,ETC-02,ETC-03,SPF-02:1,UCT-02,UCT-03:1a-1c,ETC-04,ETC-08,ETC-15,ETC-21/adminsp (default: every case of the catalogue)")
+             <> help ("comma-separated case keys, the catalogue's UCT-01,UCT-02,UCT-03:1a-1c,SPF-02:1,SPF-02:2,SPF-11,"
+                      <> "SPF-12:1/no-media,ETC-02,ETC-03,ETC-04,ETC-07,ETC-08,ETC-09,ETC-14,ETC-15,ETC-20,ETC-21,ETC-21/adminsp "
+                      <> "(default: every case of the catalogue)"))
       <*> option (eitherReader units)
             (long "units" <> metavar "UNITS" <> value (spUnits sim0) <> showDefaultWith unitName
              <> help "simulator: what transfer lengths count, bytes or blocks512")

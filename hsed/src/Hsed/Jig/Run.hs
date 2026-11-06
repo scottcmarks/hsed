@@ -59,7 +59,11 @@ safety violation outranks a stop, and a stop a failure: 3, then 130, then
 
 The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
-test selects every case of it the catalogue has. Every command of the run
+test selects every case of it the catalogue has; a run with no @--tests@
+selects every case of the catalogue but those its default leaves out, each
+noted with why before the first case ('leftOutByDefault': since M5b, on the
+simulator, the cases whose Locking SP prerequisite its Original Factory
+State does not meet, Scott's answer Q1; group G3's). Every command of the run
 goes into one transcript, created before the target is opened: the
 simulator's transport records what it exchanges, and a drive comes behind
 the Guard ("Hsed.Jig.Target", "Hsed.Jig.Guard".'GuardedDrive'), every
@@ -90,19 +94,22 @@ simulator's state, an answer a step could not read) into the run's, masked
 in the reports unless @--show-msid@ (design 9.3 item 5).
 
 A drive runs design 9.3's cases alone ('driveCases': UCT-01, UCT-02,
-UCT-03:1a-1c, SPF-02:1; M4c), each of the others skipped, saying so; and a
-case that needs more than Level 0 Discovery is skipped on a replay, which
-answers Level 0 Discovery alone, and on a drive the run binds nothing on
-(no case it selected from the list needs more).
+UCT-03:1a-1c, SPF-02:1; M4c), each of the others skipped, saying so, a case
+that writes to the TPer first among them (since M5b: drives stay read-only
+until M6, design 9.3; 13.34 (8)); and a case that needs more than Level 0
+Discovery is skipped on a replay, which answers Level 0 Discovery alone, and
+on a drive the run binds nothing on (no case it selected from the list needs
+more).
 
-A case's prerequisites are its section's list, in order (Test Cases 3.2.3,
-PDF 25): one it waives is printed with its reason; on the simulator the run
+A case's prerequisites are its section's list, in order, then its own (Test
+Cases 3.2.3, PDF 25; since M5b, ETC-20's Locking SP Manufactured-Inactive):
+one it waives is printed with its reason; on the simulator the run
 establishes the synchronous protocol idle (draining every static ComID not
 in Awaiting IF-SEND), establishes that no session is open (STACK_RESET on
 every ComID whose sessions a case before left open, Core 3.3.4.7.5, PDF 65,
 noted in the transcript), takes the credentials known (vacuous for a case
-that authenticates no authority; for one that does, the authority's PIN
-read from the simulator's state, which the case may then send or vary), each
+that authenticates no authority; for one that does, the authority's PIN read
+from the simulator's state, which the case may then send or vary), each
 HostChallenge the current PIN likewise, and every session read-write (every
 StartSession the jig sends has Write True, Test Cases 4.1 e, PDF 26). On a
 drive, for a case that needs Level 0 alone, SyncIdle and NoSessions are
@@ -112,10 +119,10 @@ for any other, where the run admits STACK_RESET (@roStackResetBeforeCases@,
 Scott's decision of 2026-11-02, the default), one STACK_RESET on the base
 ComID before the case establishes both, noted: every session on it aborted,
 its stack in its initial state, its host properties back to their defaults
-(Core 3.3.4.7.5 items 1, 4, 6 and 7, PDF 65); where it does not, SyncIdle
-is checked by one IF-RECV on the base, which must find nothing to return
-(Table 45's (0, 0, 0), 3.3.10.5 S1 b, PDF 84), and NoSessions is unmet
-where this run left a session open, and otherwise waived as unobservable
+(Core 3.3.4.7.5 items 1, 4, 6 and 7, PDF 65); where it does not, SyncIdle is
+checked by one IF-RECV on the base, which must find nothing to return (Table
+45's (0, 0, 0), 3.3.10.5 S1 b, PDF 84), and NoSessions is unmet where this
+run left a session open, and otherwise waived as unobservable
 ("Hsed.Jig.Prereq".'Hsed.Jig.Prereq.sessionsUnobservable'). On a drive
 CredentialsKnown and HostChallengeIsCurrentPin are vacuous for a case that
 authenticates no authority and unmet for one that does, every session is
@@ -143,6 +150,8 @@ module Hsed.Jig.Run
   , runOpenedStopping
   , cases
   , selectedCases
+  , chosenCases
+  , leftOutByDefault
     -- * A drive's run
   , driveCases
   , driveAllowedFor
@@ -159,17 +168,23 @@ import qualified RIO.Text               as T
 import           RIO.Time               (UTCTime, getCurrentTime)
 
 import           Hsed.Core.UID          (UID)
-import           Hsed.Gen.Core.UIDs     (uAuthority_SID)
+import           Hsed.Gen.Core.UIDs     (uAuthority_SID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Jig.Capture       (captureLevel0)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Cases.ETC02   (etc02)
 import           Hsed.Jig.Cases.ETC03   (etc03)
 import           Hsed.Jig.Cases.ETC04   (etc04)
+import           Hsed.Jig.Cases.ETC07   (etc07)
 import           Hsed.Jig.Cases.ETC08   (etc08)
+import           Hsed.Jig.Cases.ETC09   (etc09)
+import           Hsed.Jig.Cases.ETC14   (etc14)
 import           Hsed.Jig.Cases.ETC15   (etc15)
-import           Hsed.Jig.Cases.ETC21   (etc21adminsp)
-import           Hsed.Jig.Cases.SPF02   (spf02case1)
+import           Hsed.Jig.Cases.ETC20   (etc20)
+import           Hsed.Jig.Cases.ETC21   (etc21, etc21adminsp)
+import           Hsed.Jig.Cases.SPF02   (spf02case1, spf02case2)
+import           Hsed.Jig.Cases.SPF11   (spf11)
+import           Hsed.Jig.Cases.SPF12   (spf12case1nomedia)
 import           Hsed.Jig.Cases.UCT01   (uct01)
 import           Hsed.Jig.Cases.UCT02   (uct02)
 import           Hsed.Jig.Cases.UCT03   (uct03steps1a1c)
@@ -213,15 +228,19 @@ import           System.Posix.Signals   (Handler (..), installHandler, sigHUP, s
 -- | The cases the jig runs, one for each entry of the catalogue, in its
 --   order.
 cases :: [Case]
-cases = [uct01, uct02, uct03steps1a1c, spf02case1, etc02, etc03, etc04, etc08, etc15, etc21adminsp]
+cases =
+  [ uct01, uct02, uct03steps1a1c, spf02case1, spf02case2, spf11, spf12case1nomedia, etc02, etc03, etc04, etc07, etc08, etc09
+  , etc14, etc15, etc20, etc21, etc21adminsp ]
 
--- | The authority a case authenticates at StartSession, by the case's key,
---   with its name: ETC-21/adminsp alone, SID (Opal 2.30 Table 24, PDF 48);
+-- | The authorities a case authenticates at StartSession, by the case's
+--   key, in order, each with its name, the SP it authenticates to and its
+--   UID: ETC-21/adminsp's SID to the Admin SP (Opal 2.30 Table 24, PDF 48);
+--   the Locking SP's cases' Admin1 (Table 40, PDF 82) are group G3's (M5b);
 --   every other case opens its sessions as Anybody, with no authority, or
 --   none at all. What CredentialsKnown and HostChallengeIsCurrentPin are
 --   about (Test Cases 5.2 items 3 and 4, 7.2 item 3; PDF 29 and 76).
-authenticating :: [(CaseKey, (Text, UID))]
-authenticating = [(cKey etc21adminsp, ("SID", uAuthority_SID))]
+authenticating :: [(CaseKey, [(Text, UID, UID)])]
+authenticating = [(cKey etc21adminsp, [("SID", uSP_Admin, uAuthority_SID)])]
 
 -- | Run the jig: its gates in order (a key the catalogue lacks, @--recover@
 --   with cases or a pair, a drive without @--expect-serial@, a Level 0 length
@@ -235,9 +254,9 @@ runJig :: RunOptions -> IO ExitCode
 runJig opts0 = do
   started <- getCurrentTime
   root <- runningAsRoot
-  case selectedCases (roTests opts0) of
+  case chosenCases opts0 of
     Left e -> complain e $> ExitFailure 2
-    Right chosen
+    Right (chosen, leftOut)
       | Just why <- recoverProblem opts0 -> complain why $> ExitFailure 2
       | devs@(_ : _) <- devices (roTarget opts0), isNothing (roExpectSerial opts0) -> do
           traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs --expect-serial SERIAL: a drive is opened only as "
@@ -261,7 +280,7 @@ runJig opts0 = do
                 withStopSignals stop $ tryAny (openTarget opts admits t) >>= \case
                   Left e           -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> tshow e) $> ExitFailure 1
                   Right (Left e)   -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> e) $> ExitFailure 1
-                  Right (Right tg) -> runOn opts started chosen notes t stop tg `finally` closeTarget tg
+                  Right (Right tg) -> runOn opts started chosen leftOut notes t stop tg `finally` closeTarget tg
 
 -- | Run the selected cases on a target the caller opened and closes: what
 --   'runJig' does once its target is open, without its gates (root, the
@@ -277,11 +296,11 @@ runOpened opts t tg = newIORef Nothing >>= \stop -> runOpenedStopping opts t sto
 --   so that a test stops the run as a signal would, at a moment it
 --   chooses.
 runOpenedStopping :: RunOptions -> Transcript -> IORef (Maybe Text) -> Target -> IO ExitCode
-runOpenedStopping opts t stop tg = case selectedCases (roTests opts) of
-  Left e       -> complain e $> ExitFailure 2
-  Right chosen -> do
+runOpenedStopping opts t stop tg = case chosenCases opts of
+  Left e                  -> complain e $> ExitFailure 2
+  Right (chosen, leftOut) -> do
     started <- getCurrentTime
-    runOn opts started chosen [] t stop tg
+    runOn opts started chosen leftOut [] t stop tg
 
 -- | Why @--recover@ cannot run as asked, if it cannot: it runs alone (no
 --   case with it), on one end (no pair), and to its end (no
@@ -421,6 +440,28 @@ selectedCases keys = do
     whole k = isNothing (ckCase k) && isNothing (ckSteps k) && isNothing (ckVariant k)
     caseOf k = maybe (Left ("hsed-jig: the catalogue's " <> renderCaseKey k <> " has no case")) Right (L.find ((== k) . cKey) cases)
 
+-- | The cases a run selects, in the catalogue's order ('selectedCases' of
+--   its @--tests@), less, where it gives none, those the default leaves
+--   out, each with why ('leftOutByDefault'), which the run notes before its
+--   first case; a key the catalogue lacks, why.
+chosenCases :: RunOptions -> Either Text ([Case], [(CaseKey, Text)])
+chosenCases opts = do
+  chosen <- selectedCases (roTests opts)
+  let out = [ (cKey c, why) | null (roTests opts), c <- chosen, Just why <- [leftOutByDefault opts c] ]
+  pure ([ c | c <- chosen, cKey c `notElem` map fst out ], out)
+
+-- | Why a run with no @--tests@ leaves a case of the catalogue out, if it
+--   does (Scott's answer Q1, design 11 M5b): on a target with a simulator's
+--   end, a case whose Locking SP prerequisite the simulator's Original
+--   Factory State (@--locking-ofs@) does not meet, a case that does not
+--   waive LockingManufactured needing the Locking SP Manufactured and one
+--   that owns LockingManufacturedInactive needing it Manufactured-Inactive;
+--   an explicit @--tests@ runs what it names. Group G3's (M5b): until then
+--   none, a run with no @--tests@ selecting every case of the catalogue, as
+--   at M5a.
+leftOutByDefault :: RunOptions -> Case -> Maybe Text
+leftOutByDefault _ _ = Nothing
+
 -- | The options with the profile read into the simulator's parameters.
 withProfile :: RunOptions -> IO (Either Text RunOptions)
 withProfile opts = case roProfile opts of
@@ -512,18 +553,22 @@ endDescribe e = case reTarget (endEnv e) of
   PairTarget _ _ -> Nothing
 
 -- | Run the cases on the ends (with @--recover@, the recovery on the one
---   end in their place), then, unless the run was stopped, compare and
+--   end in their place; the cases the default left out noted first), then,
+--   unless the run was stopped, compare and
 --   capture Level 0; count the IF-SENDs each drive was issued, gather each
 --   drive's policy, the commands it was issued outside it and those the
 --   Guard refused (a problem of the run), why the run was stopped and any
 --   session it left open, the pre-flight's notes, each end's Properties with
 --   the host's and, for a pair, the two compared, and the secrets the ends
 --   read; write the reports; the exit code ('runExit').
-runOn :: RunOptions -> UTCTime -> [Case] -> [Text] -> Transcript -> IORef (Maybe Text) -> Target -> IO ExitCode
-runOn opts started chosen preflightNotes t stop tg = do
+runOn :: RunOptions -> UTCTime -> [Case] -> [(CaseKey, Text)] -> [Text] -> Transcript -> IORef (Maybe Text) -> Target -> IO ExitCode
+runOn opts started chosen leftOut preflightNotes t stop tg = do
   logOptions <- logOptionsHandle stderr False
   withLogFunc (setLogMinLevel LevelInfo logOptions) $ \lf -> do
     ends <- endsOf opts t lf stop tg
+    unless (null leftOut || roRecover opts) $
+      record t (Note 0 ("left out of the cases a run with no --tests selects: "
+                        <> T.intercalate "; " [ renderCaseKey k <> ", " <> why | (k, why) <- leftOut ]))
     let named = length ends > 1
     (results, recovered) <-
       if roRecover opts
@@ -718,17 +763,20 @@ runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
 --   allow list's IF-SENDs where the run binds its base ComID with methods to
 --   admit ('driveAllowedFor': a case it selected from design 9.3's drive
 --   list needs them), a replay never (it answers Level 0 Discovery alone,
---   "Hsed.Transport.Replay", whatever the run admits); never an error path
+--   "Hsed.Transport.Replay", whatever the run admits); never a write to the
+--   TPer's state (since M5b: drives stay read-only until M6), an error path
 --   nor what the simulator alone can run; and, its needs met, design 9.3's
---   drive cases alone ('driveCases').
+--   drive cases alone ('driveCases'). A write is the first a drive or a
+--   replay is found to lack.
 lacking :: Target -> Case -> Maybe Text
-lacking tg c = listToMaybe ([ why | n <- [NeedSimOnly, NeedErrorPath, NeedIfSend, NeedSimControl, NeedIfRecv, NeedLevel0], n `elem` cNeeds c
-                                  , Just why <- [lack n] ]
+lacking tg c = listToMaybe ([ why | n <- [NeedWrite, NeedSimOnly, NeedErrorPath, NeedIfSend, NeedSimControl, NeedIfRecv, NeedLevel0]
+                                  , n `elem` cNeeds c, Just why <- [lack n] ]
                             <> offTheList)
   where
     lack n = case tg of
       SimTarget _ _   -> Nothing
       DriveTarget g   -> case n of
+        NeedWrite      -> Just "writes: drives stay read-only until M6 (design 9.3; 13.34 (8))"
         NeedLevel0     -> Nothing
         NeedIfRecv     -> beyondLevel0 g "needs IF-RECV beyond Level 0 Discovery"
         NeedIfSend     -> beyondLevel0 g "needs IF-SEND"
@@ -747,13 +795,14 @@ lacking tg c = listToMaybe ([ why | n <- [NeedSimOnly, NeedErrorPath, NeedIfSend
         ["not among the cases a drive runs at M4c (design 9.3: " <> T.intercalate ", " (map renderCaseKey driveCases) <> ")"]
       _ -> []
 
--- | A case's prerequisites in its section's order: each waived, or
---   established or checked on this end; the waivers, or why one is unmet.
+-- | A case's prerequisites in its section's order, then its own (Test
+--   Cases 3.2.3, PDF 25: in sequential order): each waived, or established
+--   or checked on this end; the waivers, or why one is unmet.
 prerequisites :: Case -> Script (Either Text [Waiver])
-prerequisites c = go (common (cSection c))
+prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
   where
     go [] = pure (Right [])
-    go ((p, _) : rest) = case L.find ((== p) . wPrereq) (cWaives c) of
+    go (p : rest) = case L.find ((== p) . wPrereq) (cWaives c) of
       Just w  -> fmap (w :) <$> go rest
       Nothing -> establish c p >>= \case
         Left why -> pure (Left why)
@@ -766,9 +815,11 @@ prerequisites c = go (common (cSection c))
 --   session on it aborted, no CloseSession prepared), noted, and reads the
 --   state again; LockingManufactured reads the Locking SP's life cycle, its
 --   row of the Admin SP's SP table ("Hsed.Sim.State".'spLifeCycle'), which
---   its Original Factory State seeds; CredentialsKnown is vacuous for a case
---   that authenticates no authority ('authenticating'), and for one that
---   does reads the authority's PIN from the state
+--   its Original Factory State seeds, and LockingManufacturedInactive, a
+--   case's own (since M5b, ETC-20's), the same, met where it is
+--   Manufactured-Inactive; CredentialsKnown is vacuous for a case that
+--   authenticates no authority ('authenticating'), and for one that does
+--   reads each authority's PIN from the state, in order
 --   ("Hsed.Jig.Script".'simCredential'), a secret of the run;
 --   HostChallengeIsCurrentPin likewise (a case's challenge is that PIN, or a
 --   variation it makes on purpose); ReadWriteSessions is met, every session
@@ -795,7 +846,7 @@ prerequisites c = go (common (cSection c))
 --   CredentialsKnown and HostChallengeIsCurrentPin are vacuous for a case
 --   that authenticates no authority, as on the simulator, and unmet for one
 --   that does; ReadWriteSessions is met; LockingManufactured, which every
---   drive case waives, is not observable.
+--   drive case waives, and LockingManufacturedInactive are not observable.
 establish :: Case -> Prereq -> Script (Either Text (Maybe Waiver))
 establish c p = asks reTarget >>= \case
   SimTarget _ control -> liftIO (scPeek control) >>= onSim control
@@ -804,7 +855,7 @@ establish c p = asks reTarget >>= \case
     | otherwise -> settled onDrive
   PairTarget _ _ -> pure (Left "a pair's ends run a case one at a time")
   where
-    authority = L.lookup (cKey c) authenticating
+    authorities = fromMaybe [] (L.lookup (cKey c) authenticating)
     met = pure (Right Nothing)
     credentialsVacuous = "CredentialsKnown: vacuous, the case authenticates no authority (a session as Anybody needs no credential, Core 5.3.4.1.2.1, PDF 211)"
     challengeVacuous   = "HostChallengeIsCurrentPin: vacuous, the case sends no HostChallenge"
@@ -829,20 +880,28 @@ establish c p = asks reTarget >>= \case
       LockingManufactured
         | spLifeCycle uSP_Locking st == Just (lifeCycleValue Manufactured) -> met
         | otherwise -> pure (Left "LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State (design 9.1; M5)")
-      CredentialsKnown -> case authority of
-        Nothing -> Right Nothing <$ note credentialsVacuous
-        Just (name, u) -> case simCredential u st of
-          Nothing -> pure (Left ("CredentialsKnown: the simulator's Admin SP holds no credential for " <> name))
-          Just cr -> do
-            asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
-            note ("CredentialsKnown: " <> name <> "'s PIN read from the simulator's state, " <> tshow (B.length (crPIN cr))
-                  <> " bytes, TryLimit " <> tshow (crTryLimit cr) <> ", Tries " <> tshow (crTries cr) <> " (masked in the reports unless --show-msid)")
-            met
-      HostChallengeIsCurrentPin -> case authority of
-        Nothing        -> Right Nothing <$ note challengeVacuous
-        Just (name, _) -> Right Nothing <$ note ("HostChallengeIsCurrentPin: " <> name <> "'s current PIN is read from the simulator's state; a "
-                                                 <> "challenge other than it is the case's own doing")
+      LockingManufacturedInactive
+        | spLifeCycle uSP_Locking st == Just (lifeCycleValue ManufacturedInactive) -> met
+        | otherwise -> pure (Left "LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")
+      CredentialsKnown
+        | null authorities -> Right Nothing <$ note credentialsVacuous
+        | otherwise        -> firstUnmet (map (credentialKnown st) authorities)
+      HostChallengeIsCurrentPin
+        | null authorities -> Right Nothing <$ note challengeVacuous
+        | otherwise        -> Right Nothing <$ for_ authorities (\(name, _, _) ->
+            note ("HostChallengeIsCurrentPin: " <> name <> "'s current PIN is read from the simulator's state; a challenge other than it "
+                  <> "is the case's own doing"))
       ReadWriteSessions -> Right Nothing <$ note readWrite
+    -- an authority's credential read from the simulator's state, a secret of the run, noted; or why not (the texts for an SP
+    -- other than the Admin SP group G3's, M5b)
+    credentialKnown st (name, sp, u) = case simCredential sp u st of
+      Nothing -> pure (Just ("CredentialsKnown: the simulator's Admin SP holds no credential for " <> name))
+      Just cr -> do
+        asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
+        Nothing <$ note ("CredentialsKnown: " <> name <> "'s PIN read from the simulator's state, " <> tshow (B.length (crPIN cr))
+                         <> " bytes, TryLimit " <> tshow (crTryLimit cr) <> ", Tries " <> tshow (crTries cr) <> " (masked in the reports unless --show-msid)")
+    -- each in order, the first unmet ending them
+    firstUnmet = foldr (\s rest -> s >>= maybe rest (pure . Left)) met
     -- the ComIDs sessions hold
     holding s = [ comid | comid <- Map.keys (tsComIds s), lifeOf comid s == Just Associated ]
     -- a drive's prerequisite under 'attempt': a script stopped short is unmet, saying why; Interrupted goes on
@@ -856,14 +915,15 @@ establish c p = asks reTarget >>= \case
     onDrive = case p of
       SyncIdle   -> admitsStackReset >>= \admits -> if admits then reset else probe
       NoSessions -> admitsStackReset >>= \admits -> if admits then reset else sessionsNow
-      CredentialsKnown -> case authority of
-        Nothing -> Right Nothing <$ note credentialsVacuous
-        Just _  -> pure (Left "CredentialsKnown: no authority is authenticated on a drive (design 9.3)")
-      HostChallengeIsCurrentPin -> case authority of
-        Nothing -> Right Nothing <$ note challengeVacuous
-        Just _  -> pure (Left "HostChallengeIsCurrentPin: no authority is authenticated on a drive (design 9.3)")
+      CredentialsKnown
+        | null authorities -> Right Nothing <$ note credentialsVacuous
+        | otherwise        -> pure (Left "CredentialsKnown: no authority is authenticated on a drive (design 9.3)")
+      HostChallengeIsCurrentPin
+        | null authorities -> Right Nothing <$ note challengeVacuous
+        | otherwise        -> pure (Left "HostChallengeIsCurrentPin: no authority is authenticated on a drive (design 9.3)")
       ReadWriteSessions -> Right Nothing <$ note readWrite
       LockingManufactured -> pure (Left "LockingManufactured: not observable on a drive at M4c: every M4c case waives it (design 9.1)")
+      LockingManufacturedInactive -> pure (Left "LockingManufacturedInactive: not observable on a drive (design 9.1)")
     -- SyncIdle and NoSessions as the case's own set has them, in order: what one STACK_RESET establishes
     resettable = [ q | (q, _) <- common (cSection c), q `elem` [SyncIdle, NoSessions], q `notElem` map wPrereq (cWaives c) ]
     reset

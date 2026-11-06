@@ -15,8 +15,10 @@ Each section of the Test Cases 1.02 lists prerequisites common to its cases
 every ComID, the Locking SP Manufactured, the credentials known, each
 HostChallenge the current PIN, sessions read-write, no session open. A
 case's own set is its section's list less what it waives ('Waiver'), each
-waiver printed with its reason and page (design 9.1); the runner
-establishes or checks the rest, in order (Test Cases 3.2.3, PDF 25).
+waiver printed with its reason and page (design 9.1), then the
+prerequisites of its own the jig checks for it (since M5b: ETC-20's Locking
+SP Manufactured-Inactive, PDF 91, in no section's list); the runner
+establishes or checks them, in order (Test Cases 3.2.3, PDF 25).
 
 A test's family names its section ('sectionOf': Use Case Tests are section
 5, Specific Functionality 6, Error Cases 7), and a section's list its number
@@ -55,7 +57,8 @@ import           RIO
 import           Hsed.Jig.Catalogue (TestId (..))
 
 
--- | A common prerequisite.
+-- | A prerequisite: a common one, in a section's list ('common'), or one a
+--   case owns.
 data Prereq
   = SyncIdle                   -- ^ every ComID's synchronous protocol in Awaiting IF-SEND
   | LockingManufactured        -- ^ the Locking SP Manufactured
@@ -63,6 +66,9 @@ data Prereq
   | HostChallengeIsCurrentPin  -- ^ each StartSession's HostChallenge the authority's current PIN
   | ReadWriteSessions          -- ^ every session read-write
   | NoSessions                 -- ^ no session open at the start
+  | LockingManufacturedInactive
+    -- ^ the Locking SP Manufactured-Inactive: a case's own (ETC-20's prerequisite 1, Test Cases PDF 91), in no
+    --   section's list (since M5b)
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 -- | A section of the Test Cases, with its own list.

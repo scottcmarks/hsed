@@ -65,6 +65,7 @@ uct03steps1a1c = Case
   { cKey        = CaseKey (UCT 3) Nothing (Just "1a-1c") Nothing
   , cSection    = UseCases
   , cWaives     = [lockingSPUntouched]
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedIfSend]
   , cRun        = run
   , cExtensions =

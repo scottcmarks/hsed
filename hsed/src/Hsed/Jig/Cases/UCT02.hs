@@ -58,6 +58,7 @@ uct02 = Case
   { cKey        = CaseKey (UCT 2) Nothing Nothing Nothing
   , cSection    = UseCases
   , cWaives     = lockingSPUntouched : noSessionOpened
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedIfSend]
   , cRun        = run
   , cExtensions = [("the host's properties echoed exactly: 4096, 4076, 4040 (Opal 2.30 Table 17's maxima are VU)", echoed)]

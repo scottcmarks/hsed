@@ -44,6 +44,7 @@ etc04 = Case
   { cKey        = CaseKey (ETC 4) Nothing Nothing Nothing
   , cSection    = ErrorCases
   , cWaives     = [lockingSPUntouched]
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedIfSend]
   , cRun        = run
   , cExtensions = []

@@ -67,6 +67,7 @@ uct01 = Case
   { cKey        = CaseKey (UCT 1) Nothing Nothing Nothing
   , cSection    = UseCases
   , cWaives     = lockingSPUntouched : noSessionOpened
+  , cOwnPrereqs = []
   , cNeeds      = [NeedLevel0]
   , cRun        = run
   , cExtensions = []

@@ -48,6 +48,7 @@ etc08 = Case
   { cKey        = CaseKey (ETC 8) Nothing Nothing Nothing
   , cSection    = ErrorCases
   , cWaives     = lockingSPUntouched : noSessionOpened
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedErrorPath]
   , cRun        = run
   , cExtensions = []

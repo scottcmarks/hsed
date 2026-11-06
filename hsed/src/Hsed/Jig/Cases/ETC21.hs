@@ -5,18 +5,20 @@
 
 {-|
 Module      : Hsed.Jig.Cases.ETC21
-Description : ETC-21, the Admin SP variant: StartSession as SID with a wrong HostChallenge
+Description : ETC-21, StartSession with a wrong HostChallenge: as printed, Admin1 to the Locking SP; the Admin SP variant, SID
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 ETC-21 (Test Cases 1.02, PDF 92) authenticates Admin1 to a Manufactured
-Locking SP with a wrong HostChallenge, which waits for M5; its variant of
-the jig's own, @ETC-21/adminsp@, does the same to the Admin SP as SID: the
-SID's PIN plus a byte, which SyncSession answers NOT_AUTHORIZED (Core
-5.1.5.2, PDF 138; 5.3.4.1.10, PDF 217), an abort accepted (Test Cases 7.1,
-PDF 76), and no session is left open. The simulator alone runs it: a drive's
+Locking SP with a wrong HostChallenge, which SyncSession answers
+NOT_AUTHORIZED: the case as printed, the simulator's alone since M5b (its
+step group G3's, design 11 M5b). Its variant of the jig's own,
+@ETC-21/adminsp@, does the same to the Admin SP as SID: the SID's PIN plus a
+byte, which SyncSession answers NOT_AUTHORIZED (Core 5.1.5.2, PDF 138;
+5.3.4.1.10, PDF 217), an abort accepted (Test Cases 7.1, PDF 76), and no
+session is left open. The simulator alone runs it: a drive's
 policy never admits SID (design 9.3), and the PIN comes from the simulator's
 state ("Hsed.Jig.Script".@simCredential@; the run's CredentialsKnown reads
 the same and keeps it among the secrets). Its own prerequisite is
@@ -26,7 +28,8 @@ jig's extension is the Tries rule (Core 5.3.4.1.1.2, PDF 210: a failure
 counts while TryLimit is not 0, never past it).
 -}
 module Hsed.Jig.Cases.ETC21
-  ( etc21adminsp
+  ( etc21
+  , etc21adminsp
   ) where
 
 import qualified RIO.Map            as Map
@@ -42,12 +45,29 @@ import           Hsed.Jig.Script    (Credential (..), Script, StartArgs (..), Ve
 import           Hsed.Sim.Types     (TPerState (..))
 
 
--- | The case.
+-- | The case as printed: Admin1 to the Locking SP, its own prerequisite
+--   C_PIN_Admin1's TryLimit 0 or Tries below it (PDF 92). Its sessions need
+--   the Locking SP Manufactured, the common prerequisite of 7.2 (PDF 76);
+--   the simulator alone runs it, its PIN read from the simulator's state
+--   (design 9.3). Its step is group G3's (M5b).
+etc21 :: Case
+etc21 = Case
+  { cKey        = CaseKey (ETC 21) Nothing Nothing Nothing
+  , cSection    = ErrorCases
+  , cWaives     = []
+  , cOwnPrereqs = []
+  , cNeeds      = [NeedIfRecv, NeedSimOnly]
+  , cRun        = pure (Fail ["not yet written: group G3's (M5b)"])
+  , cExtensions = []
+  }
+
+-- | The Admin SP variant.
 etc21adminsp :: Case
 etc21adminsp = Case
   { cKey        = CaseKey (ETC 21) Nothing Nothing (Just "adminsp")
   , cSection    = ErrorCases
   , cWaives     = [lockingSPUntouched]
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedSimOnly]
   , cRun        = run
   , cExtensions = [("the Tries rule: a failure counts while TryLimit is not 0, never past it (Core 5.3.4.1.1.2, PDF 210)", tries)]
@@ -76,7 +96,7 @@ run = peekSim >>= \case
 
 -- | SID's credential in the simulator's Admin SP.
 credential :: TPerState -> Script Credential
-credential = maybe (unmet "the simulator's Admin SP holds no credential for SID (Opal 2.30 Table 24, PDF 48)") pure . simCredential uAuthority_SID
+credential = maybe (unmet "the simulator's Admin SP holds no credential for SID (Opal 2.30 Table 24, PDF 48)") pure . simCredential uSP_Admin uAuthority_SID
 
 -- | Why the case's own prerequisite does not hold, if it does not: a
 --   TryLimit other than 0 that Tries has reached (Test Cases PDF 92; Core

@@ -151,6 +151,19 @@ module Hsed.Jig.Script
   , stackReset
   , opalV2Of
   , withSession
+    -- * The verbs of M5b's cases (group G3's)
+  , asAuthority
+  , setCells
+  , startTransaction
+  , endTransaction
+  , sendInSession
+  , ifRecvWith
+  , framesOf
+  , expectNoResponseOrCloseSession
+  , sessionGone
+  , simCell
+  , tperReset
+  , powerCycle
     -- * What the verbs build on
   , baseComId
   , recvLength
@@ -172,6 +185,11 @@ module Hsed.Jig.Script
   , opened
   , closingStep
   , adminSPAsAnybody
+  , startSessionCall
+  , sessionSubpackets
+  , byteRows
+  , dataStoreTable
+  , tperInfoObject
   , namedColumn
   , peekSim
   , Credential (..)
@@ -192,20 +210,21 @@ import           RIO
 import qualified RIO.Text               as T
 
 import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), MethodResponse (..))
-import           Hsed.Core.CellBlock    (CellBlock, cellBlockValue)
+import           Hsed.Core.CellBlock    (CellBlock (..), RowAddress (..), cellBlockValue, noCells)
 import           Hsed.Core.Code         (CodeRow (..), codeRow)
 import           Hsed.Core.Feature      (Feature (..), decodeFeature)
 import           Hsed.Core.Layout       (Layout (..), LayoutError)
 import           Hsed.Core.Method       (MethodSignature (..), SigResponse (..), Signature (..), fromCall, invocation,
                                          paramErrorText, positional)
+import           Hsed.Core.Preconfig    (PreCell (Given), PreconfRow (prCells), PreconfTable (ptRows))
 import           Hsed.Core.Properties   (HostRequirement (..), PropertyRequirement (..), requirement)
 import           Hsed.Core.Record       (DecodedRecord (..), LayoutRecord (..), decodeRecord, decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Stream       (Atom (..), Fault (..), Returned (..), atoms, hostPolicy, returnedItems)
 import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Core.Sync         (Setting (..), StateRow (..), StateTable (..), settingOf)
-import           Hsed.Core.Table        (Cell (..), Col (..), TableDesc (..), columnNamed)
+import           Hsed.Core.Table        (Cell (..), Col (..), Pre (Pre), TableDesc (..), columnNamed)
 import           Hsed.Core.Token        (IsToken (..), Token (..))
-import           Hsed.Core.UID          (UID)
+import           Hsed.Core.UID          (UID, hNull, uidLower, (+:+))
 import           Hsed.Core.Value        (Datum (..), IsValue (..), List (..), Name (..), NamedValue (..), Value (..), (.:))
 import           Hsed.Gen.Core.Codes    (StatusCode (..), cStatusCodes, pattern NO_SESSIONS_AVAILABLE, pattern SP_BUSY, pattern SUCCESS)
 import           Hsed.Gen.Core.Layouts  (ComPacket (..), ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
@@ -216,6 +235,8 @@ import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Gen.Core.TableDescs (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
+import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSPTPerInfoTablePreconfiguration)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
                                          driveLatched, driveRecv, driveSend, driveTransport, uintegerOf)
@@ -679,9 +700,9 @@ propertiesAnswerOf packets = do
 --   ('rcSessionUnread'), and the next case's NoSessions and the reports
 --   find it.
 startSession :: StartArgs -> Script (Either ExchangeError SyncAnswer)
-startSession (StartArgs sp authority challenge write) = do
+startSession args = do
   c <- baseComId
-  bytes <- framed "the StartSession ComPacket" (controlComPacket c (generate call))
+  bytes <- framed "the StartSession ComPacket" (controlComPacket c (generate (startSessionCall args)))
   exchange <- exchangeOn c bytes
   let answer = syncAnswerOf c <$> exchange
   case answer of
@@ -691,21 +712,27 @@ startSession (StartArgs sp authority challenge write) = do
       when here $ asks reStop >>= \ref -> atomicModifyIORef' ref (\was -> (was <|> Just (interruptedIn h), ()))
     _ -> for_ (unreadSession exchange answer) (uncurry (sessionUnread c))
   pure answer
-  where
-    call = invocation uSMUID Methods.StartSession
-      { Methods.startSessionHostSessionID         = value (fromIntegral hostSessionNumber :: Natural)
-      , Methods.startSessionSPID                  = value (token sp)
-      , Methods.startSessionWrite                 = value (if write then 1 else 0 :: Natural)
-      , Methods.startSessionHostChallenge         = value <$> challenge
-      , Methods.startSessionHostExchangeAuthority = Nothing
-      , Methods.startSessionHostExchangeCert      = Nothing
-      , Methods.startSessionHostSigningAuthority  = value . token <$> authority
-      , Methods.startSessionHostSigningCert       = Nothing
-      , Methods.startSessionSessionTimeout        = Nothing
-      , Methods.startSessionTransTimeout          = Nothing
-      , Methods.startSessionInitialCredit         = Nothing
-      , Methods.startSessionSignedHash            = Nothing
-      }
+
+-- | SMUID.StartSession as 'startSession' sends it (Core 5.2.3.1, PDF 149):
+--   HSN 1 (Test Cases 4.1 h, PDF 26), the SP, Write as asked (True in every
+--   case, 4.1 e), the HostChallenge and HostSigningAuthority where given;
+--   the call alone, for a case that sends it in a payload of its own
+--   (since M5b: ETC-07's, an EndList before its Call, Test Cases PDF 80).
+startSessionCall :: StartArgs -> MethodCall
+startSessionCall (StartArgs sp authority challenge write) = invocation uSMUID Methods.StartSession
+  { Methods.startSessionHostSessionID         = value (fromIntegral hostSessionNumber :: Natural)
+  , Methods.startSessionSPID                  = value (token sp)
+  , Methods.startSessionWrite                 = value (if write then 1 else 0 :: Natural)
+  , Methods.startSessionHostChallenge         = value <$> challenge
+  , Methods.startSessionHostExchangeAuthority = Nothing
+  , Methods.startSessionHostExchangeCert      = Nothing
+  , Methods.startSessionHostSigningAuthority  = value . token <$> authority
+  , Methods.startSessionHostSigningCert       = Nothing
+  , Methods.startSessionSessionTimeout        = Nothing
+  , Methods.startSessionTransTimeout          = Nothing
+  , Methods.startSessionInitialCredit         = Nothing
+  , Methods.startSessionSignedHash            = Nothing
+  }
 
 -- | Why a StartSession's exchange may have left a session the host does not
 --   know of, and whether a command of it failed in the transport or went
@@ -996,6 +1023,99 @@ closingStep name h v = do
             <> either id (\n -> "Success/Failure " <> tshow n) outcome)
 
 
+-- * The verbs of M5b's cases (group G3's)
+
+-- The verbs the Locking SP's cases are written in (design 11 M5b, 9.1),
+-- their types fixed for the groups to work apart: each a stub that stops
+-- the script saying whose it is, the bodies group G3's, the cases that use
+-- them groups G3's and G4's.
+
+-- | StartSession's arguments for an authority of an SP, named, read-write,
+--   its HostChallenge the authority's current PIN, read from the
+--   simulator's state ('simCredential'; Test Cases 5.2 item 4 and 6.2 item
+--   4, PDF 29 and 49); the simulator's alone, a drive's PIN being unknown
+--   (design 9.3). Group G3's (M5b).
+asAuthority :: Text -> UID -> UID -> Script StartArgs
+asAuthority _ _ _ = unmet "asAuthority: group G3's (M5b)"
+
+-- | Set on an object in a session (Core 5.3.3.7, PDF 201-203): ObjectUID.Set
+--   with no Where, its Values a RowValues list of the column numbers and
+--   values given (5.3.3.7.2.2, PDF 202-203), in one packet of the session
+--   (Test Cases Table 6, PDF 27): its results, an empty list, and its status
+--   (5.3.3.7.3, PDF 203); a session the TPer aborted instead is no outcome.
+--   Group G3's (M5b).
+setCells :: SessionHandle -> UID -> [(Natural, Value)] -> Script (Either ExchangeError MethodOutcome)
+setCells _ _ _ = unmet "setCells: group G3's (M5b)"
+
+-- | Start Transaction alone in a packet of a session, its status 0x00 (Core
+--   3.2.2.3.3.4, PDF 37), the whole exchange: the status of the TPer's
+--   mirror, 0x00 where the level opened; a session the TPer aborted (its
+--   CloseSession, or nothing) is no status. Group G3's (M5b).
+startTransaction :: SessionHandle -> Script (Either ExchangeError Natural)
+startTransaction _ = unmet "startTransaction: group G3's (M5b)"
+
+-- | End Transaction alone in a packet of a session with a status, 0x00
+--   committing the innermost level, 0x01 aborting it (Core 3.2.2.3.3.5 and
+--   Table 16, PDF 37-38), the whole exchange: the status of the TPer's
+--   mirror. Group G3's (M5b).
+endTransaction :: SessionHandle -> Natural -> Script (Either ExchangeError Natural)
+endTransaction _ _ = unmet "endTransaction: group G3's (M5b)"
+
+-- | A method call in a packet of a session, the IF-SEND alone ('rawIfSend'),
+--   its answer left for IF-RECVs of the case's own (SPF-02 case 2's,
+--   Test Cases PDF 53). Group G3's (M5b).
+sendInSession :: SessionHandle -> MethodCall -> Script Response
+sendInSession _ _ = unmet "sendInSession: group G3's (M5b)"
+
+-- | IF-RECV of a number of bytes on a ComID, rounded up to the end's unit
+--   ('transferFor'): SPF-02 case 2's insufficient transfer length, then its
+--   MinTransfer (Test Cases PDF 53; Core Table 45, PDF 83). Group G3's
+--   (M5b).
+ifRecvWith :: Word16 -> Word32 -> Script Response
+ifRecvWith _ _ = unmet "ifRecvWith: group G3's (M5b)"
+
+-- | The packets of a ComPacket of a ComID that an IF-RECV delivered ('t45On':
+--   a ComPacket of that ComID and a static ComID's extension), for
+--   'returnedOf' to read; or why not. Group G3's (M5b).
+framesOf :: Word16 -> Response -> Either Text [PacketFrame]
+framesOf _ _ = Left "framesOf: group G3's (M5b)"
+
+-- | Expect an exchange to have returned no packets, the TPer's (0, 0, 0),
+--   or the TPer's CloseSession alone, a session abort with it (Test Cases
+--   7.1, PDF 76; ETC-09 and ETC-14, PDF 82 and 87), the expectation named,
+--   which of the two noted. Group G3's (M5b).
+expectNoResponseOrCloseSession :: Text -> Either ExchangeError [PacketFrame] -> Script ()
+expectNoResponseOrCloseSession _ _ = unmet "expectNoResponseOrCloseSession: group G3's (M5b)"
+
+-- | A session the TPer aborted forgotten by the run's context
+--   ('rcSession'), noted with why, so that the next case's NoSessions finds
+--   none of this run's open (Core 3.3.7.1.5, PDF 75). Group G3's (M5b).
+sessionGone :: SessionHandle -> Text -> Script ()
+sessionGone _ _ = unmet "sessionGone: group G3's (M5b)"
+
+-- | A cell of the simulator's state, by the SP's, the table's and the
+--   row's UIDs and the column's name, found in the description the SP holds
+--   ("Hsed.Sim.State".'Hsed.Sim.State.cellNamedIn'); 'Nothing' on a drive,
+--   or where the state holds no such cell. Group G3's (M5b).
+simCell :: UID -> UID -> UID -> Text -> Script (Maybe Cell)
+simCell _ _ _ _ = unmet "simCell: group G3's (M5b)"
+
+-- | TPER_RESET (Opal 2.30 3.2.3 and Table 13, PDF 28-29): an IF-SEND of
+--   protocol 0x02 to ComID 0x0004, of a non-zero length, its data ignored,
+--   no IF-RECV answering it; the simulator's alone, nothing sent to a drive
+--   (design 9.3). Group G3's (M5b).
+tperReset :: Script (Either Text IfStatus)
+tperReset = unmet "tperReset: group G3's (M5b)"
+
+-- | A power cycle of the simulator through its transport's event
+--   ("Hsed.Wire".@inject@, which takes a @'ReadWrite@ transport alone, so
+--   that a drive can be given none), every session aborted and the resets'
+--   rules applied (Core 3.3.7.1.5, PDF 76; 5.2.2.4.4, PDF 148). Group G3's
+--   (M5b).
+powerCycle :: Script (Either Text IfStatus)
+powerCycle = unmet "powerCycle: group G3's (M5b)"
+
+
 -- * What the verbs build on
 
 -- | The base ComID: the one recorded (UCT-01's), else the Opal SSC V2
@@ -1173,6 +1293,37 @@ opened name answer = do
 adminSPAsAnybody :: StartArgs
 adminSPAsAnybody = StartArgs uSP_Admin Nothing Nothing True
 
+-- | A ComPacket of one packet of a session of these data subpackets, one
+--   for each payload (ETC-14's MaxSubpackets + 1, Test Cases PDF 87), the
+--   packet's Session the session's TSN then HSN (Core 3.3.7.1.2, PDF 73),
+--   the headers otherwise as Table 6 has them (PDF 27): 'controlSubpackets'
+--   in a session.
+sessionSubpackets :: SessionHandle -> [ByteString] -> Either LayoutError ByteString
+sessionSubpackets h payloads = encodeComPacket $
+  ComPacketFrame (ComPacketHeader (shComId h) staticExtension 0 0)
+                 [PacketFrame (PacketHeader (shTSN h) (shHSN h) 0 0 0) [ DataSubPacket (DataSubPacketHeader dataKind) p | p <- payloads ]]
+
+-- | A cell_block of a byte table's rows from one to another, a startRow of
+--   a row number and an endRow, no Table and no column component (Core
+--   5.1.4.2.3, PDF 129-130): SPF-02 case 2's DataStore rows 0 to 1023 (Test
+--   Cases PDF 53).
+byteRows :: Natural -> Natural -> CellBlock
+byteRows s e = noCells { cbStartRow = Just (RowNumber s), cbEndRow = Just e }
+
+-- | The Locking SP's DataStore byte table, by the UID of the table it is:
+--   its Table table row's UID's lower half followed by 00 00 00 00 (Core
+--   3.2.5.3 b.i, PDF 51-52; Opal 2.30 Table 36, PDF 54), 00 00 10 01 00 00
+--   00 00.
+dataStoreTable :: UID
+dataStoreTable = uidLower LockingSP.uTable_DataStore +:+ hNull
+
+-- | The Admin SP's TPerInfo object, the one row of Opal 2.30 Table 27 (PDF
+--   50), from the generated preconfiguration, 00 00 02 01 00 03 00 01: not
+--   Core Table 244's (PDF 305), on which the Admin SP's AccessControl table
+--   grants nothing.
+tperInfoObject :: Maybe UID
+tperInfoObject = listToMaybe [ u | Pre r _ <- ptRows adminSPTPerInfoTablePreconfiguration, Just (Given (UIDCell u)) <- [L.lookup 0 (prCells r)] ]
+
 -- | The number of a column found by name in a generated table description
 --   ("Hsed.Gen.Core.TableDescs"), the script stopping where the description
 --   lacks it.
@@ -1188,7 +1339,7 @@ peekSim = asks reTarget >>= \case
   SimTarget _ control -> Just <$> liftIO (scPeek control)
   _                   -> pure Nothing
 
--- | An authority's credential as the simulator's Admin SP holds it: its
+-- | An authority's credential as an SP of the simulator holds it: its
 --   C_PIN object's PIN, TryLimit and Tries (Core 5.3.4.1.1.2, PDF 210).
 data Credential = Credential
   { crPIN      :: !ByteString
@@ -1197,17 +1348,19 @@ data Credential = Credential
   }
   deriving (Eq, Show)
 
--- | An authority's credential read from the simulator's state: the Admin
---   SP's Authority row of the UID, its Credential a reference to a C_PIN
---   object (Opal 2.30 Table 24, PDF 48), that object's PIN, TryLimit and
---   Tries (Table 25, PDF 48-49; a limit the row does not give is 0), the
---   columns found by name in the generated descriptions; 'Nothing' for an
---   authority the Admin SP lacks or one with no credential.
-simCredential :: UID -> TPerState -> Maybe Credential
-simCredential authority st = do
-  authorityRow <- rowWithUID uSP_Admin (tdTableUID authorityTableDesc) authority st
+-- | An authority's credential read from the simulator's state, by the SP's
+--   UID and the authority's: the SP's Authority row of the UID, its
+--   Credential a reference to a C_PIN object of the SP (the Admin SP's, Opal
+--   2.30 Table 24, PDF 48; the Locking SP's since M5b, Table 40, PDF 82-83),
+--   that object's PIN, TryLimit and Tries (Tables 25 and 41, PDF 48-49 and
+--   84; a limit the row does not give is 0), the columns found by name in
+--   the generated descriptions; 'Nothing' for an authority the SP lacks or
+--   one with no credential.
+simCredential :: UID -> UID -> TPerState -> Maybe Credential
+simCredential sp authority st = do
+  authorityRow <- rowWithUID sp (tdTableUID authorityTableDesc) authority st
   RefCell _ credential <- cellNamed authorityTableDesc "Credential" authorityRow
-  pinRow <- rowWithUID uSP_Admin (tdTableUID c_PINTableDesc) credential st
+  pinRow <- rowWithUID sp (tdTableUID c_PINTableDesc) credential st
   BytesCell pin <- cellNamed c_PINTableDesc "PIN" pinRow
   pure (Credential pin (count "TryLimit" pinRow) (count "Tries" pinRow))
   where

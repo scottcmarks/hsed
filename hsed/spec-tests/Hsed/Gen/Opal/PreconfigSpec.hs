@@ -519,9 +519,9 @@ spec = describe "the generated Admin and Locking SPs and the simulator's" $ do
 
   describe "what the jig and Level 0 read of it" $ do
     it "SID's credential (Script.simCredential): the MSID, or the parameters' PIN, with the parameters' TryLimit and no tries (Opal 2.30 4.2.1.8, PDF 49)" $ do
-      simCredential uAuthority_SID (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
-      simCredential uAuthority_SID (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
-      simCredential uAuthority_Anybody (initialState defaultSimParams) `shouldBe` Nothing
+      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
+      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
+      simCredential uSP_Admin uAuthority_Anybody (initialState defaultSimParams) `shouldBe` Nothing
     it "the SPs' life cycles, which Level 0's Locking descriptor reads: the Admin SP Manufactured, the Locking SP Manufactured-Inactive or the parameters' (Table 29, PDF 50)" $ do
       map (`spLifeCycle` initialState defaultSimParams) [uSP_Admin, uSP_Locking]
         `shouldBe` map (Just . lifeCycleValue) [Manufactured, ManufacturedInactive]

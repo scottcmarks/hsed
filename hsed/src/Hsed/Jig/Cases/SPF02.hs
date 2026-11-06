@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Jig.Cases.SPF02
-Description : SPF-02 case 1, IF-RECV with nothing to return
+Description : SPF-02, IF-RECV behaviour: case 1, nothing to return; case 2, an insufficient transfer length
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -15,7 +15,15 @@ row 6, PDF 83). The jig's extension on the simulator: an IF-SEND of one
 data subpacket of Empty atoms leaves the ComID in S1 and the next IF-RECV
 answers the same (Core 3.3.10.6 S2:S1 d.c, PDF 86), reported apart from the
 TCG verdict, Empty atoms being out of the Test Cases' bounds (4.1, PDF 26).
-Case 2 is M5's.
+
+Case 2 (PDF 52-53, since M5b): a session to the Locking SP as Admin1, a Get
+of the DataStore's rows 0 to 1023 whose answer an IF-RECV of one 512-byte
+unit cannot carry, Table 45's "Response ready, insufficient transfer length
+request" (Core Table 45, PDF 83), then the answer at its MinTransfer, and
+CLOSE_SESSION. Its session needs the Locking SP Manufactured, the common
+prerequisite of 6.2 (PDF 49), so the simulator alone runs it (design 9.3,
+11 M5b). Its steps are group G4's (M5b), on the simulator's Get of a byte
+table (group G1's).
 
 The case's own prerequisite, In Awaiting IF-SEND, is the common SyncIdle
 the runner establishes. The extension's subpacket is four Empty atoms (the
@@ -26,6 +34,7 @@ state before the IF-RECV.
 -}
 module Hsed.Jig.Cases.SPF02
   ( spf02case1
+  , spf02case2
   ) where
 
 import qualified RIO.List              as L
@@ -52,9 +61,22 @@ spf02case1 = Case
   { cKey        = CaseKey (SPF 2) (Just 1) Nothing Nothing
   , cSection    = SpecificFunctionality
   , cWaives     = lockingSPUntouched : noSessionOpened
+  , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv]
   , cRun        = run
   , cExtensions = [("Empty atoms: an IF-SEND of them leaves the ComID in S1 (Core 3.3.10.6 S2:S1 d.c, PDF 86)", emptyAtoms)]
+  }
+
+-- | Case 2 (Test Cases PDF 52-53). Its steps are group G4's (M5b).
+spf02case2 :: Case
+spf02case2 = Case
+  { cKey        = CaseKey (SPF 2) (Just 2) Nothing Nothing
+  , cSection    = SpecificFunctionality
+  , cWaives     = []
+  , cOwnPrereqs = []
+  , cNeeds      = [NeedIfRecv, NeedSimOnly]
+  , cRun        = pure (Fail ["not yet written: group G4's (M5b)"])
+  , cExtensions = []
   }
 
 -- | Step 1: an IF-RECV on the base ComID succeeds, its ComPacket header all

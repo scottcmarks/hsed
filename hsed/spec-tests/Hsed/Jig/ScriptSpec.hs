@@ -279,8 +279,8 @@ getResult :: ByteString -> MethodResponse
 getResult pin = MethodResponse [L (List [N ((3 :: Natural) .: pin)])] 0
 
 -- | Tokens in one packet of the control session.
-framesOf :: ByteString -> [PacketFrame]
-framesOf tokens = [PacketFrame (PacketHeader 0 0 0 0 0) [DataSubPacket (DataSubPacketHeader 0) tokens]]
+controlFrames :: ByteString -> [PacketFrame]
+controlFrames tokens = [PacketFrame (PacketHeader 0 0 0 0 0) [DataSubPacket (DataSubPacketHeader 0) tokens]]
 
 -- | A STACK_RESET response for 0x1004, success; its pending reply; No
 --   Response Available (Core Tables 36, 37 and 31).
@@ -369,16 +369,16 @@ spec = do
   describe "returnedOf, the host's reading of an answer" $ do
     it "decodes a SyncSession (a Session Manager response, an invocation), a Get result (a method response) and the TPer's End of Session" $ do
       let sync = syncSession 1 4096 SUCCESS
-      returnedOf (framesOf sync) `shouldBe` Right [ReturnedCall (either error id (parseByteString sync))]
-      returnedOf (framesOf (generate (getResult "MSID"))) `shouldBe` Right [ReturnedResults (getResult "MSID")]
-      returnedOf (framesOf (generate EndOfSession)) `shouldBe` Right [ReturnedEndOfSession]
+      returnedOf (controlFrames sync) `shouldBe` Right [ReturnedCall (either error id (parseByteString sync))]
+      returnedOf (controlFrames (generate (getResult "MSID"))) `shouldBe` Right [ReturnedResults (getResult "MSID")]
+      returnedOf (controlFrames (generate EndOfSession)) `shouldBe` Right [ReturnedEndOfSession]
       returnedOf [] `shouldBe` Right []
     it "reads the subpackets of every packet in order" $
-      returnedOf (framesOf (generate (getResult "a")) <> framesOf (generate EndOfSession))
+      returnedOf (controlFrames (generate (getResult "a")) <> controlFrames (generate EndOfSession))
         `shouldBe` Right [ReturnedResults (getResult "a"), ReturnedEndOfSession]
     it "refuses tokens that do not read (a TCG-reserved tag) and a response cut short" $ do
-      returnedOf (framesOf "\xF4") `shouldSatisfy` isLeft
-      returnedOf (framesOf (generate Call)) `shouldSatisfy` isLeft
+      returnedOf (controlFrames "\xF4") `shouldSatisfy` isLeft
+      returnedOf (controlFrames (generate Call)) `shouldSatisfy` isLeft
 
   describe "startSession" $ do
     it "sends StartSession with HSN 1 and Write 1 (Test Cases 4.1 e and h), no authority for Anybody, and reads SyncSession back as the session" $ do
@@ -547,7 +547,7 @@ spec = do
       v2 `shouldBe` Fail ["1b: the method answered NOT_AUTHORIZED (1), not SUCCESS (0)"]
     it "expectNoResponse passes no packets alone" $ do
       (v1, _, _) <- scripted True (attempt (Pass <$ expectNoResponse "step 2" (Right [])))
-      (v2, _, _) <- scripted True (attempt (Pass <$ expectNoResponse "step 2" (Right (framesOf propertiesCall))))
+      (v2, _, _) <- scripted True (attempt (Pass <$ expectNoResponse "step 2" (Right (controlFrames propertiesCall))))
       (v3, _, _) <- scripted True (attempt (Pass <$ expectNoResponse "step 2" (Left TimedOut)))
       v1 `shouldBe` Pass
       v2 `shouldSatisfy` isFail
@@ -586,9 +586,9 @@ spec = do
       fmap level0DiscoveryOpalSSCV2FeatureBaseComID (opalV2Of l0) `shouldBe` Just 0x1004
       fmap level0DiscoveryOpalSSCV2FeatureInitialC_PIN_SIDPINIndicator (opalV2Of l0) `shouldBe` Just 0
     it "simCredential reads SID's: the MSID's PIN by default, the parameters' when given, with TryLimit and Tries; none for Anybody" $ do
-      simCredential uAuthority_SID (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
-      simCredential uAuthority_SID (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
-      simCredential uAuthority_Anybody (initialState defaultSimParams) `shouldBe` Nothing
+      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
+      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
+      simCredential uSP_Admin uAuthority_Anybody (initialState defaultSimParams) `shouldBe` Nothing
     it "peekSim gives the state on the simulator alone" $ do
       (a, _, _) <- scripted True peekSim
       (b, _, _) <- scripted False peekSim

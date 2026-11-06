@@ -76,10 +76,13 @@ import           Hsed.Gen.Core.Layouts   (ComPacketHeader (..), DataSubPacket (.
 import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs (uC_PINTable)
-import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uProperties, uSMUID, uSP_Admin,
-                                          uStartSession)
+import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uLocking_GlobalRange, uMethodID_Get, uProperties,
+                                          uSMUID, uSP_Admin, uStartSession)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Guard
+import           Hsed.Jig.Script         (SessionHandle (..), StartArgs (..), byteRows, dataStoreTable, sessionComPacket, sessionSubpackets,
+                                          startSessionCall, tperInfoObject)
 import           Hsed.Jig.Transcript
 import           Hsed.Packet             (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
 import           Hsed.Transport.Drive    (RawDrive (..))
@@ -474,6 +477,48 @@ spec = do
     it "admits nothing of protocol 1 by itself" $ do
       through guardedSend recovery (sendOf props) >>= (`shouldSatisfy` refused)
       through guardedRecv recovery (Request IfRecv 1 0x1004 2048 mempty) >>= (`shouldSatisfy` passed)
+
+  describe "M5b's commands (design 11 M5b, 9.3): refused under the read-only list, with STACK_RESET and without, and under the recovery list, each Blocked and never issued; the Guard unchanged" $ do
+    let session = SessionHandle 0x1004 4096 1
+        inSession tokens = blockOn 0x1004 (either (error . show) id (sessionComPacket session tokens))
+        setOn :: UID -> [(Natural, Value)] -> ByteString
+        setOn object cells = generate (invocation object (Methods.Set Nothing (Just (L (List [ N (c .: v) | (c, v) <- cells ])))))
+        setBytes = generate (invocation dataStoreTable (Methods.Set (Just (value (0 :: Natural))) (Just (value ("bytes" :: ByteString)))))
+        transaction t st = generate t <> generate (Unsigned st)
+        commands :: [(Text, Request)]
+        commands =
+          [ ("StartSession to the Locking SP as Anybody", sendOf (startSession lockingSP Nothing))
+          , ("StartSession as Admin1 with a challenge", sendOf (generate (startSessionCall (StartArgs lockingSP (Just LockingSP.uAuthority_Admin1) (Just "a PIN") True))))
+          , ("StartSession as SID with a challenge", sendOf (generate (startSessionCall (StartArgs uSP_Admin (Just uAuthority_SID) (Just "a PIN") True))))
+          , ("ETC-07's EndList before the Call", sendOf (generate EndList <> startSession lockingSP Nothing))
+          , ("Set on User1 (setCells')", inSession (setOn LockingSP.uAuthority_User1 [(5, value (1 :: Natural))]))
+          , ("Set on the Global Range", inSession (setOn uLocking_GlobalRange [(7, value (0 :: Natural)), (8, value (0 :: Natural))]))
+          , ("Set on TPerInfo", inSession (setOn (fromMaybe (error "no TPerInfo row") tperInfoObject) [(8, value (1 :: Natural))]))
+          , ("Set on the DataStore", inSession setBytes)
+          , ("Start Transaction 0", inSession (transaction StartTransaction 0))
+          , ("End Transaction 0", inSession (transaction EndTransaction 0))
+          , ("End Transaction 1", inSession (transaction EndTransaction 1))
+          , ("two Start Transactions in a session packet", inSession (transaction StartTransaction 0 <> transaction StartTransaction 0))
+          , ("Get of the DataStore's rows 0 to 1023", inSession (getOf dataStoreTable (byteRows 0 1023)))
+          , ("ETC-14's two-subpacket session packet", blockOn 0x1004 (either (error . show) id (sessionSubpackets session [setBytes, setBytes])))
+          , ("TPER_RESET's request", Request IfSend 2 tperResetComId 512 (B.replicate 512 0)) ]
+        policies :: [(Text, Policy)]
+        policies = [("the read-only list", readOnly), ("the read-only list with STACK_RESET", readOnlyAndReset), ("the recovery list", AllowList 0x1004 recoverMethods)]
+    it "decide refuses each of the fifteen under each policy" $
+      for_ policies $ \(policyName, p) -> for_ commands $ \(name, q) ->
+        (policyName, name, isLeft (decide p q)) `shouldBe` (policyName, name, True)
+    it "guardedSend refuses each: no exchange, one Blocked entry" $
+      for_ policies $ \(policyName, p) -> for_ commands $ \(name, q) ->
+        through guardedSend p q >>= \r -> (policyName, name, refused r) `shouldBe` (policyName, name, True)
+    it "a drive behind the Guard, bound to 0x1004 with the read-only list and STACK_RESET, refuses each, its raw transport never called" $ do
+      t <- newTranscript
+      (n, _, raw) <- rawDrive (Right ())
+      g <- guardDrive t (readOnlyMethods <> [AllowStackReset]) Nothing raw
+      driveBind g 0x1004 `shouldReturn` Right ()
+      decisions <- for commands (driveSend g . snd)
+      map isLeft decisions `shouldBe` replicate (length commands) True
+      readIORef n `shouldReturn` 0
+      entries t >>= \es -> length [ () | Blocked {} <- es ] `shouldBe` length commands
 
   describe "guardedSend and guardedRecv" $
     it "each refuse the other's direction, whatever the policy" $ do

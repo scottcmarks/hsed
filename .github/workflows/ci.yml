@@ -104,7 +104,9 @@ jobs:
   # annotation round trip holds for each spec, Core and Opal (gates c-e, docs/spec-as-source.md
   # section 5.4): the annotated PDF is pristine + the committed .upd, renders identically under
   # Ghostscript and MuPDF (sips is macOS-only and skipped here), reads back the same through pikepdf,
-  # pypdf and pymupdf, and dump(apply(upd)) == hsa, annotate(hsa) == upd.
+  # pypdf and pymupdf, and dump(apply(upd)) == hsa, annotate(hsa) == upd. And the unit tests of
+  # tools/compare_reports.py, the comparison of two jig runs' reports, over hand-made reports (no jig
+  # is run).
   extract:
     runs-on: ubuntu-latest
     steps:
@@ -115,6 +117,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ghostscript
       - run: make venv
       - run: make extract-test
+      - run: make compare-test
       - run: make regen-diff
       - run: make annotate
       - run: make pdf-checks

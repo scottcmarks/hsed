@@ -40,7 +40,7 @@ COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/
 # what gen writes and gen-diff holds to the committed files
 GENERATED   := hsed-spec/bindings hsed/gen docs/LEDGER.md docs/LEDGER-opal.md
 
-.PHONY: check test werror werror-cold extract extract-test regen-diff annotate pdf-checks venv \
+.PHONY: check test werror werror-cold extract extract-test compare-test regen-diff annotate pdf-checks venv \
         hsedc ir-annotated bind hsedc-check compile gen gen-diff splices
 
 # The targets share files (spec/ir is rewritten by extract and read by annotate; build/*.hsed.* by
@@ -49,7 +49,7 @@ GENERATED   := hsed-spec/bindings hsed/gen docs/LEDGER.md docs/LEDGER-opal.md
 .NOTPARALLEL:
 
 ## everything CI runs (gen-diff before test, so the suites compile what gen wrote)
-check: extract-test regen-diff annotate pdf-checks gen-diff test
+check: extract-test compare-test regen-diff annotate pdf-checks gen-diff test
 
 ## both Haskell test suites
 test:
@@ -93,6 +93,11 @@ extract: $(VENV)
 ## word-complete sections)
 extract-test: $(VENV)
 	$(PY) -I -m unittest discover -s tools/extract -p 'test_*.py'
+
+## unit tests of tools/compare_reports.py, which compares two jig runs' reports (JSON, Markdown and JUnit) or two
+## sets of the standard runs tools/jig-runs.sh makes, over small hand-made reports: no jig is run
+compare-test: $(VENV)
+	$(PY) -I -m unittest discover -s tools -p 'test_compare_reports.py'
 
 ## the committed extractions must be what the extractor produces today
 regen-diff: extract

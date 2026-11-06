@@ -19,18 +19,21 @@ lacks fails to compile. This test holds the generated list and the
 hand-written laws the comments bind ("Hsed.Law.Sync".@laws@) to each other:
 by name, both ways; each entry's law is the law of its name, and states the
 hash its paragraph or table has in the IR (the first 12 hex digits the entry
-carries). The resets' laws ("Hsed.Law.Reset".@laws@, M5a) are bound by no
-comment yet, their paragraphs unlabelled prose no anchor names (design 13.29
-(j); the plan's D7): each is held to the paragraph its code cites, by name,
-page and hash, and its binding pends. Then it runs each law's property under
-QuickCheck, over the simulator, the resets' 1000 cases each, and finds each
-case a law names in the jig's catalogue; a case a later rung's jig runs
-pends with that rung (design section 11). A law without a property fails, as
-does a case that neither the catalogue nor a later rung has. The states the laws
-quantify over ("Hsed.Sim.Gen".@genState@) open at most one session per SP,
-the Locking SP Manufactured where one is open to it and in either life
-else, the shipping default Manufactured-Inactive among them, and start from
-"Hsed.Sim.Types".@initialState@'s TPer for their parameters (@foldedAt@).
+carries). The resets' laws ("Hsed.Law.Reset".@laws@, M5a) and the
+transactions' ("Hsed.Law.Txn".@laws@, M5b) are bound by no comment yet,
+their paragraphs unlabelled prose no anchor names (design 13.29 (j); the
+plan's D7): each is held to the paragraph its code cites, by name, page and
+hash, and its binding pends. Then it runs each law's property under
+QuickCheck, over the simulator, the resets' and the transactions' 1000 cases
+each, and finds each case a law names in the jig's catalogue; a case a later
+rung's jig runs pends with that rung (design section 11). A law without a
+property fails, as does a case that neither the catalogue nor a later rung
+has. The states the laws quantify over ("Hsed.Sim.Gen".@genState@) open at
+most one session per SP, the Locking SP Manufactured where one is open to
+it and in either life else, the shipping default Manufactured-Inactive among
+them, a session of some holding a transaction level whose copy differs from
+the committed SP (M5b), and start from "Hsed.Sim.Types".@initialState@'s TPer
+for their parameters (@foldedAt@).
 -}
 module Hsed.LawsSpec (spec) where
 
@@ -53,14 +56,16 @@ import           Hsed.Jig.Catalogue    (CaseKey (..), CatalogueEntry (..), TestI
 import           Hsed.Law              (Law (..), LawRef (..))
 import qualified Hsed.Law.Reset        as Reset
 import qualified Hsed.Law.Sync         as Sync
+import qualified Hsed.Law.Txn          as Txn
 import           Hsed.Sim.Gen          (foldedAt, genState)
 import           Hsed.Sim.Reset        (ResetKind (..), resetListed)
+import           Hsed.Sim.State        (txnDepth)
 import           Hsed.Sim.Types        (LifeCycle (..), SPState (..), Session (..), SimParams (..), TPerState (..), defaultSimParams,
                                         initialComIds, initialState, maxComPacketSizeName)
 
 
 -- | Every hand-written law: those of each module of "Hsed.Law" (M3: Sync's;
---   M5a: Reset's).
+--   M5a: Reset's; M5b: Txn's).
 handWritten :: [Law]
 handWritten = bound <> unbound
 
@@ -69,9 +74,9 @@ bound :: [Law]
 bound = Sync.laws
 
 -- | The laws no comment binds yet, their paragraphs unlabelled prose
---   (design 13.29 (j)): the resets' (M5a).
+--   (design 13.29 (j)): the resets' (M5a) and the transactions' (M5b).
 unbound :: [Law]
-unbound = Reset.laws
+unbound = Reset.laws <> Txn.laws
 
 -- | The paragraph each unbound law cites, by its spec, section, PDF page
 --   (1-based) and the first 12 hex digits of its hash in the IR
@@ -84,6 +89,16 @@ cited =
   , ("Reset.properties",     ("core-2.01 5.2.2.4.4", 148, "759d1a8f5208"))
   , ("Reset.tries",          ("core-2.01 5.3.4.1.1.2, its sixth paragraph", 210, "5431c0205778"))
   , ("Reset.comIdIssued",    ("opal-2.30 3.3.5.1 item 1", 31, "6c1ce772d278"))
+  , ("Txn.mirrorStart",      ("core-2.01 3.2.2.3.3.4, its third paragraph", 37, "9de1edf4c4c6"))
+  , ("Txn.nestingLimit",     ("core-2.01 3.2.2.3.3.4, its fourth paragraph", 37, "bf0b5ba552ce"))
+  , ("Txn.endStatus",        ("core-2.01 3.2.2.3.3.5, its last paragraph on the page", 37, "f8d962966136"))
+  , ("Txn.immediate",        ("core-2.01 3.3.7.3 item a", 77, "b63e825173c6"))
+  , ("Txn.visibleWithin",    ("core-2.01 3.3.7.3, the paragraph after its two ways", 77, "94b5fe4d5b75"))
+  , ("Txn.commitTopLevel",   ("core-2.01 3.3.7.3 item b", 77, "fc73da1d9758"))
+  , ("Txn.hardwareOnCommit", ("core-2.01 3.3.7.3, its hardware settings paragraph", 77, "42e10a6c398f"))
+  , ("Txn.abortedSession",   ("core-2.01 3.3.7.3, its first normative sentence", 77, "7b6ae99fbdd6"))
+  , ("Txn.rollback",         ("core-2.01 3.3.7.3, the paragraph after its steps", 78, "26cb73b09478"))
+  , ("Txn.failedMethod",     ("core-2.01 3.3.7.3, its failed-method paragraph", 78, "de557e6e406b"))
   ]
 
 -- | The cases a law names that a later rung's jig runs, with that rung
@@ -134,8 +149,8 @@ spec = do
       [ (lrAnchor r, lrPage r) | r <- Generated.laws ] `shouldBe`
         [ ("core-2.01:3.3.10.2.1#3a", 82), ("core-2.01:3.3.10.6#dc", 86), ("core-2.01:3.3.10.7#a", 86), ("core-2.01:T45", 83) ]
 
-  describe "the laws no comment binds yet (Hsed.Law.Reset, design 13.29 (j))" $ do
-    it "are the five the M5 plan names, each citing its paragraph: Core 5.7.2.2.10 (PDF 275), 5.7.2.5.4 (PDF 278), 5.2.2.4.4 (PDF 148), 5.3.4.1.1.2 (PDF 210), Opal 3.3.5.1 item 1 (PDF 31)" $
+  describe "the laws no comment binds yet (Hsed.Law.Reset and Hsed.Law.Txn, design 13.29 (j))" $ do
+    it "are the fifteen the M5 plan names, the resets' five, each citing its paragraph (Core 5.7.2.2.10, PDF 275; 5.7.2.5.4, PDF 278; 5.2.2.4.4, PDF 148; 5.3.4.1.1.2, PDF 210; Opal 3.3.5.1 item 1, PDF 31), and the transactions' ten (Core 3.2.2.3.3.4-5, PDF 37; 3.3.7.3, PDF 77-78)" $
       [ (lawName l, lawHash l) | l <- unbound ] `shouldBe` [ (n, h) | (n, (_, _, h)) <- cited ]
     it "are named in no comment, and none shares a hash with a bound law" $ do
       [ lawName l | l <- unbound, lawName l `elem` map lrName Generated.laws ] `shouldBe` []
@@ -185,6 +200,16 @@ spec = do
                                            Just (UIntCell n) -> n > 0
                                            _                 -> False)
              , counterexample "both lives" $ length (L.nub (map (spLockingOFS . tsParams) sts)) == 2
+             ]
+    prop "hold, in some states, a session with one transaction level open whose copy differs from the committed SP, never more than one level or one such session, and in some none (M5b)" $
+      forAll (vectorOf 60 genState) $ \sts ->
+        let levelled st = [ (s, copy) | s <- Map.elems (tsSessions st), copy : _ <- [sesTxn s] ]
+            differs st  = any (\(s, copy) -> Map.lookup (sesSP s) (tsSPs st) /= Just copy) (levelled st)
+            depths st   = map txnDepth (Map.elems (tsSessions st))
+        in counterexample (show (map depths sts)) $ conjoin
+             [ counterexample "a level open with a changed copy" $ any differs sts
+             , counterexample "none open" $ any (null . levelled) sts
+             , counterexample "at most one level, in at most one session" $ all (\st -> sum (depths st) <= 1) sts
              ]
     it "start from initialState's TPer for their parameters, the SPs folded once per OFS (foldedAt; the M5a review), whatever unit, ComIDs, discard and MaxComPacketSize" $
       forM_ [ (u, n, d, roomier, ofs) | u <- [minBound .. maxBound], n <- [1 .. 3], d <- [False, True], roomier <- [False, True]

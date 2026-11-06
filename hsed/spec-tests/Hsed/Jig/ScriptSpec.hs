@@ -415,7 +415,7 @@ spec = do
       a1 `shouldSatisfy` \case
         Right (NoSync why) -> "no response" `T.isInfixOf` why
         _                  -> False
-      let close = generate (closeSessionCall (Session 0x1004 4096 1 uSP_Admin True [uAuthority_Anybody] mempty))
+      let close = generate (closeSessionCall (Session 0x1004 4096 1 uSP_Admin True [uAuthority_Anybody] mempty []))
       (a2, _, _) <- harness [Good] [controlAnswer close] (startSession adminSPAsAnybody)
       a2 `shouldSatisfy` \case
         Right (NoSync why) -> "CloseSession" `T.isInfixOf` why
@@ -437,7 +437,7 @@ spec = do
       refused `shouldBe` Right (MethodOutcome [] NOT_AUTHORIZED)
       (none, _, _) <- harness [Good] [answerOf 0 0 0] (getCells first' uC_PIN_MSID (columnRange 3 3))
       none `shouldSatisfy` isLeft
-      let close = generate (closeSessionCall (Session 0x1004 4096 1 uSP_Admin True [] mempty))
+      let close = generate (closeSessionCall (Session 0x1004 4096 1 uSP_Admin True [] mempty []))
       (aborted, _, _) <- harness [Good] [controlAnswer close] (getCells first' uC_PIN_MSID (columnRange 3 3))
       aborted `shouldSatisfy` \case
         Left (Malformed why) -> "CloseSession" `T.isInfixOf` why

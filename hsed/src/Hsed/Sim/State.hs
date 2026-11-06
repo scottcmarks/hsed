@@ -21,9 +21,17 @@ regular sessions and the resets share (design 8.1-8.2, M4a):
   ComID's life derived from them (3.3.3, PDF 56: Associated while a session
   is open, else what the ComID holds);
 * an SP's tables: a table's rows and its description as the SP holds them,
-  the row of an object by its UID (column 0x00), a row changed, a cell by
-  column number, a column by name in a generated description, and a row's
-  cell by its column's name in the description the SP holds;
+  the row of an object by its UID (column 0x00), a row changed (in the
+  TPer, or in an SP as a session sees it, M5b's Set), a cell by column
+  number, a column by name in a generated description, and a row's cell by
+  its column's name in the description the SP holds;
+* a session's transactions (since M5b; design 11 M5b, Scott's answer Q5):
+  the session as the TPer now holds it, its SP as it sees it and put back
+  as it changes it, how many levels it has open, and a level opened,
+  committed or dropped, each level a working copy of the SP in the
+  session ("Hsed.Sim.Types".@sesTxn@), the committed SP in @tsSPs@ (Core
+  3.3.7.3, PDF 77-78); the bodies are group G2's (M5b), until then M5a's
+  behaviour, every session outside a transaction;
 * the Locking SP's tables (since M5a): its Locking table's rows, the
   global range and each range after it, its MBRControl row, and the size of
   a byte table it holds, the MBR or the DataStore (Opal 2.30 Tables 36, 45
@@ -45,11 +53,20 @@ module Hsed.Sim.State
   , resolveSession
   , sessionsOn
   , lifeOf
+    -- * A session's transactions (M5b)
+  , liveSession
+  , spView
+  , putSPView
+  , txnDepth
+  , beginTxn
+  , commitTxn
+  , dropTxn
     -- * Tables and cells
   , tableRows
   , descOf
   , rowWithUID
   , updateRow
+  , updateRowIn
   , cellOf
   , columnOf
   , cellNamedIn
@@ -91,8 +108,9 @@ import           Hsed.Sim.Types
 --   ('tsNextTSN', 'firstTSN' first, back to it past the last, skipping one a
 --   session of the ComID still holds, so that every session on a ComID has
 --   a TSN of its own, 3.3.7.1.1, PDF 72) and the session keeps the ComID's
---   host properties as they are (5.2.2.4, PDF 144-145). The session, and
---   the TPer with it open.
+--   host properties as they are (5.2.2.4, PDF 144-145), no transaction open
+--   (3.3.7.3, PDF 77: one is opened by the host's Start Transaction). The
+--   session, and the TPer with it open.
 openSession :: Word16 -> Word32 -> UID -> Bool -> [UID] -> TPerState -> (Session, TPerState)
 openSession c hsn sp write authorities st =
   (session, st { tsSessions = Map.insert (c, tsn) session (tsSessions st), tsNextTSN = next })
@@ -109,6 +127,7 @@ openSession c hsn sp write authorities st =
       , sesWrite       = write
       , sesAuthorities = authorities
       , sesHostProps   = maybe initialHostProperties cHostProps (Map.lookup c (tsComIds st))
+      , sesTxn         = []
       }
 
 -- | Close the session of a ComID and TSN, if open (Core 3.3.7.1.5, PDF 75:
@@ -143,6 +162,59 @@ lifeOf c st = life <$> Map.lookup c (tsComIds st)
       | otherwise                = Associated
 
 
+-- * A session's transactions (M5b)
+
+-- | The session as the TPer now holds it, by its ComID and TSN: a 'Session'
+--   read before an item of a payload changed it (a transaction level opened
+--   by an item before) is stale; 'Nothing' once the session is closed or
+--   aborted.
+liveSession :: Session -> TPerState -> Maybe Session
+liveSession ses st = Map.lookup (sesComId ses, sesTSN ses) (tsSessions st)
+
+-- | The session's SP as the session sees it: within a transaction the
+--   innermost level's copy (Core 3.3.7.3, PDF 77: changes made within a
+--   transaction are visible within it), else the committed SP the TPer
+--   holds; 'Nothing' for an SP the TPer lacks. Group G2's (M5b): until then
+--   the committed SP alone, as at M5a.
+spView :: Session -> TPerState -> Maybe SPState
+spView ses st = Map.lookup (sesSP ses) (tsSPs st)
+
+-- | The session's SP put back as a method changed it: within a transaction
+--   into the innermost level's copy, committed when the top-level one is
+--   (Core 3.3.7.3 b, PDF 77), else committed at once (3.3.7.3 a, PDF 77).
+--   Group G2's (M5b): until then committed at once, as at M5a.
+putSPView :: Session -> SPState -> TPerState -> TPerState
+putSPView ses sps st = st { tsSPs = Map.insert (sesSP ses) sps (tsSPs st) }
+
+-- | How many transaction levels a session has open (Core 3.3.7.3.1, PDF
+--   78), none outside a transaction.
+txnDepth :: Session -> Int
+txnDepth = length . sesTxn
+
+-- | A transaction level opened in a session by the host's Start
+--   Transaction (Core 3.2.2.3.3.4, PDF 37): a copy of the SP as the session
+--   sees it ('spView') pushed. Group G2's (M5b): until then the TPer
+--   unchanged, no level opened.
+beginTxn :: Session -> TPerState -> TPerState
+beginTxn _ = id
+
+-- | A session's innermost transaction level committed by the host's End
+--   Transaction of status 0x00 (Core 3.2.2.3.3.5, PDF 37): at the top level
+--   its copy becomes the committed SP (3.3.7.3 b, PDF 77), deeper its
+--   parent's (3.3.7.3.1, PDF 78: the nested level's changes part of its
+--   parent's). Group G2's (M5b): until then the TPer unchanged.
+commitTxn :: Session -> TPerState -> TPerState
+commitTxn _ = id
+
+-- | A session's innermost transaction level aborted, its copy dropped, so
+--   that the SP is as it was when the level opened (Core 3.3.7.3, PDF 78:
+--   rolled back; 3.2.2.3.3.5, PDF 37-38: the host's End Transaction of a
+--   status other than 0x00). Group G2's (M5b): until then the TPer
+--   unchanged.
+dropTxn :: Session -> TPerState -> TPerState
+dropTxn _ = id
+
+
 -- * Tables and cells
 
 -- | The rows of an SP's table, by the SP's and the table's UIDs; none for a
@@ -160,13 +232,18 @@ descOf sp table st = Map.lookup sp (tsSPs st) >>= Map.lookup table . spsDescs
 rowWithUID :: UID -> UID -> UID -> TPerState -> Maybe Row
 rowWithUID sp table u st = L.find ((== Just (UIDCell u)) . cellOf 0) (tableRows sp table st)
 
--- | A row of an SP's table changed, found by its UID; the TPer as it was
---   when there is no such row.
+-- | A row of an SP's table changed, found by its UID ('updateRowIn' in the
+--   SP the TPer holds); the TPer as it was when there is no such row.
 updateRow :: UID -> UID -> UID -> (Row -> Row) -> TPerState -> TPerState
-updateRow sp table u f st = st { tsSPs = Map.adjust changed sp (tsSPs st) }
-  where
-    changed sps = sps { spsTables = Map.adjust (map change) table (spsTables sps) }
-    change r    = if cellOf 0 r == Just (UIDCell u) then f r else r
+updateRow sp table u f st = st { tsSPs = Map.adjust (updateRowIn table u f) sp (tsSPs st) }
+
+-- | A row of an SP's table changed, by the table's UID and the row's UID
+--   (its column 0x00), in an SP: the TPer's or a session's view of it
+--   ('spView', where M5b's Set writes, 'putSPView' putting it back); the SP
+--   as it was when the table holds no such row.
+updateRowIn :: UID -> UID -> (Row -> Row) -> SPState -> SPState
+updateRowIn table u f sps = sps { spsTables = Map.adjust (map change) table (spsTables sps) }
+  where change r = if cellOf 0 r == Just (UIDCell u) then f r else r
 
 -- | A row's cell in a column, if the row gives one.
 cellOf :: ColNum -> Row -> Maybe Cell

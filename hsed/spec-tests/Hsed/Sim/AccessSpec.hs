@@ -48,7 +48,7 @@ adminSP = fromMaybe (error "the default TPer has no Admin SP") (Map.lookup uSP_A
 -- | A session on the Admin SP with these authorities authenticated at its
 --   startup.
 sessionWith :: [UID] -> Session
-sessionWith auths = Session (spBaseComId defaultSimParams) firstTSN 1 uSP_Admin True auths initialHostProperties
+sessionWith auths = Session (spBaseComId defaultSimParams) firstTSN 1 uSP_Admin True auths initialHostProperties []
 
 -- | Two authorities and an ACE of no table but this test's.
 a, b, e1, e2, anObject :: UID

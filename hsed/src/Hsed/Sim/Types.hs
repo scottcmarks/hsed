@@ -123,8 +123,17 @@ data ComIdState = ComIdState
 --   TSN and HSN (the packet's Session, TSN then HSN, 3.3.7.1.2, PDF 73), the
 --   SP it is open to, whether it is read-write, the authorities
 --   authenticated at its startup and their classes (3.3.7.1.4, PDF 74-75;
---   3.4.2.2, PDF 89), and the host's properties as its ComID had them when
---   it started, which it keeps (5.2.2.4, PDF 144-145).
+--   3.4.2.2, PDF 89), the host's properties as its ComID had them when it
+--   started, which it keeps (5.2.2.4, PDF 144-145), and, since M5b, its open
+--   transactions: the session's SP as each open level sees it, innermost
+--   first, none outside a transaction (3.3.7.3, PDF 77: changes made within a
+--   transaction visible within it, persistent when the top-level one
+--   commits; 3.3.7.3.1, PDF 78: nested levels), at most MaxTransactionLimit
+--   of them ("Hsed.Sim.Params".@txnLimit@: 1, the least Opal 2.30 Table 17
+--   allows, PDF 34). The committed SPs stay in 'tsSPs', which Level 0, the
+--   resets and every other session read; a session aborted or closed takes
+--   its levels with it, rolled back (design 11 M5b, Scott's answer Q5;
+--   "Hsed.Sim.State"'s transactions).
 data Session = Session
   { sesComId       :: !Word16
   , sesTSN         :: !Word32
@@ -133,6 +142,7 @@ data Session = Session
   , sesWrite       :: !Bool
   , sesAuthorities :: ![UID]
   , sesHostProps   :: !(Map Text Natural)
+  , sesTxn         :: ![SPState]
   }
   deriving (Eq, Show)
 
@@ -156,8 +166,9 @@ data SPState = SPState
 -- | A byte table (Core 3.2.5.2, PDF 51: rows of one unnamed byte each),
 --   held sparsely: its size in bytes (its Table row's Rows, Core 5.3.2.3.8,
 --   PDF 157), the byte every byte not written reads as, and what was
---   written, by offset, each extent's bytes. Since M5a's scaffold; the
---   methods that read and write one are M5b's.
+--   written, by offset, each extent's bytes. Since M5a's scaffold; Get
+--   reads one at M5b ("Hsed.Sim.Bytes".@byteRange@), and Set on one is
+--   M6's.
 data ByteTable = ByteTable
   { btSize    :: !Natural
   , btFill    :: !Word8

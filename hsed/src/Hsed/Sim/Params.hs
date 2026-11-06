@@ -68,6 +68,8 @@ module Hsed.Sim.Params
   , maxMethodsName
   , maxSessionsName
   , defSessionTimeoutName
+  , maxTransactionLimitName
+  , txnLimit
   , tperRequirements
   , hostRequirements
   , supportedHostProperties
@@ -458,10 +460,11 @@ reservedComId c = not (any ("non-reserved" `T.isInfixOf`) (maybe [] codeCells (c
 --   the simulator and the jig read, by name: the largest ComPacket an end
 --   takes, the largest ComPacket response, packet and token, packets per
 --   ComPacket, subpackets per packet, method invocations or responses per
---   subpacket, sessions across the TPer's ComIDs, and a session's default
---   timeout.
+--   subpacket, sessions across the TPer's ComIDs, a session's default
+--   timeout, and the transactions a session may have open at once (since
+--   M5b, 'txnLimit').
 maxComPacketSizeName, maxResponseComPacketSizeName, maxPacketSizeName, maxIndTokenSizeName, maxPacketsName, maxSubpacketsName,
-  maxMethodsName, maxSessionsName, defSessionTimeoutName :: Text
+  maxMethodsName, maxSessionsName, defSessionTimeoutName, maxTransactionLimitName :: Text
 maxComPacketSizeName         = "MaxComPacketSize"
 maxResponseComPacketSizeName = "MaxResponseComPacketSize"
 maxPacketSizeName            = "MaxPacketSize"
@@ -471,6 +474,24 @@ maxSubpacketsName            = "MaxSubpackets"
 maxMethodsName               = "MaxMethods"
 maxSessionsName              = "MaxSessions"
 defSessionTimeoutName        = "DefSessionTimeout"
+maxTransactionLimitName      = "MaxTransactionLimit"
+
+-- | The TPer's transaction nesting limit, its MaxTransactionLimit as the
+--   parameters report it: the most transactions a session may have open at
+--   once (Core Table 167, PDF 142; 3.3.7.3.1, PDF 78), a Start Transaction
+--   past it aborting the session (3.2.2.3.3.4, PDF 37); 'Nothing' where the
+--   TPer does not report it, a TPer that supports no transactions (3.3.7.3.1,
+--   PDF 78: it SHALL NOT report the property), whose transaction control
+--   tokens are invalid (3.2.2.4.1 item 4, PDF 38). The default parameters
+--   report 1, the least Opal 2.30 Table 17 has a TPer report (PDF 34), the
+--   one level the simulator nests (design 11 M5b, Scott's answer Q5).
+--
+-- >>> txnLimit defaultSimParams
+-- Just 1
+-- >>> txnLimit defaultSimParams { spTPerProperties = [] }
+-- Nothing
+txnLimit :: SimParams -> Maybe Natural
+txnLimit p = L.lookup maxTransactionLimitName (spTPerProperties p) >>= \v -> if v >= 0 then Just (fromInteger v) else Nothing
 
 -- | Opal 2.30 Table 17 (PDF 33-34), Properties Requirements, the TPer's
 --   column, as generated ("Hsed.Gen.Opal.Properties".@propertyRequirements@):

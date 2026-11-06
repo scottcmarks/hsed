@@ -188,7 +188,7 @@ spec = do
       length (lockingRows st0) `shouldBe` 9
       length (lockingRows (initialState defaultSimParams { spLockingRanges = 12 })) `shouldBe` 13
       lockingRows st0 `shouldBe` tableRows uSP_Locking uLockingTable st0
-    it "give MBRControl's one row (Table 46, PDF 87), none for a TPer without the Locking SP" $ do
+    it "give MBRControl's one row (Table 46, PDF 88), none for a TPer without the Locking SP" $ do
       mbrControl st0 `shouldBe` listToMaybe (tableRows uSP_Locking uMBRControlTable st0)
       isJust (mbrControl st0) `shouldBe` True
       mbrControl st0 { tsSPs = Map.delete uSP_Locking (tsSPs st0) } `shouldBe` Nothing

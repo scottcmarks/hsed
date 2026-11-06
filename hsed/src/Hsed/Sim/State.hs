@@ -281,7 +281,7 @@ lockingRows :: TPerState -> [Row]
 lockingRows = tableRows uSP_Locking uLockingTable
 
 -- | The Locking SP's MBRControl row, its one row (Opal 2.30 Table 46, PDF
---   87); none for a TPer without it.
+--   88); none for a TPer without it.
 --
 -- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
 -- >>> isJust (mbrControl (initialState defaultSimParams))

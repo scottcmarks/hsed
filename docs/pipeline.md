@@ -6,12 +6,13 @@ stage reads and writes and which command runs it. The design of record is
 [spec-as-source.md](spec-as-source.md): this guide points into it rather than restating it. To add a rule
 to the compiler, see [adding-a-rule.md](adding-a-rule.md); for the IR's format, see [ir-v1.md](ir-v1.md).
 
-State as of 2026-11-03 (M5a): the chain runs end to end for Core 2.01 and for all of Opal 2.30, every
+State as of 2026-11-06 (M5b): the chain runs end to end for Core 2.01 and for all of Opal 2.30, every
 Opal table and signature block bound: its Admin SP and Locking SP, Properties, feature descriptors, and
 Tables 14-16 over Core's. The simulator holds both SPs, the Locking SP Manufactured-Inactive or
-Manufactured. The Locking SP's
-jig cases are M5b's and mh_transport over a LAN is M5c's. Writes to a real drive, the Linux leg and a
-Haskell-native PDF reader are M6's (design §11).
+Manufactured, with Get on its byte tables, a minimal object Set and one level of transactions. The jig
+runs eighteen cases, the Locking SP's eight on the simulator alone, selecting per Original Factory
+State. mh_transport over a LAN is M5c's. Writes to a real drive, the Linux leg and a Haskell-native PDF
+reader are M6's (design §11).
 
 ## The chain at a glance
 
@@ -121,7 +122,7 @@ so Opal's tables can refer to Core's (design §5.2).
    wrong annotation fails as a Haskell type error that points at its PDF page.
 2. **`hsedc check`** classifies every numbered table, binds it to its rule and runs the rules' checks.
    Each finding is an Error, Warning or Note with a code (e.g. `C-PRECONF-HEADER`), and any Error stops the
-   run. Today: Core 0 Errors, 31 Warnings, 51 Notes; Opal 0, 37, 49.
+   run. Today: Core 0 Errors, 31 Warnings, 51 Notes; Opal 0, 38, 49.
 3. **`hsedc compile`** writes the generated modules and the reports in `build/report/`: `findings.md`,
    `coverage.md`, `ERRATA.md` and `ledger.md`, the last copied to `docs/LEDGER*.md`.
 
@@ -170,7 +171,11 @@ A TPer built from the generated modules (design §8):
 - Level 0 Discovery and its feature descriptors;
 - the synchronous protocol and ComID management (protocol 2);
 - the Session Manager (Properties, StartSession, sessions);
-- method dispatch through each SP's AccessControl;
+- method dispatch through each SP's AccessControl: Get on object and byte tables (the MBR and the
+  DataStore), and since M5b a minimal Set of boolean and reset_types columns (anything else answers FAIL,
+  the simulator's gaps until M6);
+- since M5b one level of transactions, a session's open level a working copy of its SP, the committed
+  state what every other session, Level 0 and the resets read, an abort dropping the copy (design §8.1);
 - the resets.
 
 Neither SP's tables are written by hand: `Hsed.Sim.Preconfig` folds the generated
@@ -189,7 +194,8 @@ The jig runs Opal Family Test Cases against a target and writes three reports: J
 to `build/report/` by default (design §9).
 
 ```
-stack exec hsed-jig -- --target sim                            # every case on the simulator
+stack exec hsed-jig -- --target sim                            # the cases the Original Factory State meets
+stack exec hsed-jig -- --target sim --locking-ofs manufactured  # the Locking SP Manufactured: its cases too
 stack exec hsed-jig -- --target sim --tests UCT-02,UCT-03:1a-1c
 stack exec hsed-jig -- --target replay:spec/fixtures/disk6-level0.bin
 stack exec hsed-jig -- --target sim+replay:spec/fixtures/disk6-level0.bin   # the Pair: compare the two
@@ -198,10 +204,19 @@ stack exec hsed-jig -- level0 decode spec/fixtures/disk6-level0.bin --against sp
 ```
 
 **The cases:** each case is a module under `hsed/src/Hsed/Jig/Cases/`, listed in `Hsed.Jig.Catalogue`.
-Ten exist: UCT-01, UCT-02, UCT-03:1a-1c, ETC-02, ETC-03, ETC-04, ETC-08, ETC-15, ETC-21/adminsp and
-SPF-02:1. A case declares its prerequisites (`Hsed.Jig.Prereq`) and what it needs of its target. It is
-written in `Hsed.Jig.Script`'s verbs: `startSession`, `get`, `properties`, `stackReset` and the like,
-each sending generated method calls.
+Eighteen exist: M4's ten, UCT-01, UCT-02, UCT-03:1a-1c, SPF-02:1, ETC-02, ETC-03, ETC-04, ETC-08, ETC-15
+and ETC-21/adminsp, and since M5b the Locking SP's eight, SPF-02:2, SPF-11, SPF-12:1/no-media, ETC-07,
+ETC-09, ETC-14, ETC-20 and ETC-21, which run on the simulator alone. A case declares its prerequisites
+(`Hsed.Jig.Prereq`: its section's common ones, and its own) and what it needs of its target (a write
+stays off a drive until M6). It is written in `Hsed.Jig.Script`'s verbs: `startSession`, `getCells`,
+`setCells`, `startTransaction`, `endTransaction`, `properties`, `stackReset`, `tperReset`, `powerCycle`
+and the like, each sending generated method calls or the simulator's own events.
+
+**What a plain run selects** (Scott's answer Q1, design §9.1): with no `--tests`, a run on the
+simulator selects the cases whose Locking SP prerequisite the configured `--locking-ofs` meets (by
+default everything but the seven that need it Manufactured; with `--locking-ofs manufactured`
+everything but ETC-20), and notes the cases it left out and why before the first case. `--tests` runs
+exactly what it names; a whole-test key (`ETC-21`) selects every case of that test.
 
 **A real drive** (`--target /dev/diskN`, root, a kext-enabled build) is covered in design §9.3.
 - The Guard admits only Level 0 until the drive's own Level 0 gives its base ComID; after that, only a
@@ -214,10 +229,17 @@ each sending generated method calls.
 
 | Command | What it does |
 |---|---|
-| `make check` | extract-test, regen-diff, annotate, pdf-checks, gen-diff, then every test suite (hsed-core, hsed-spec with its bindings, hsed and the doctests) |
+| `make check` | extract-test, compare-test, regen-diff, annotate, pdf-checks, gen-diff, then every test suite (hsed-core, hsed-spec with its bindings, hsed and the doctests) |
+| `make compare-test` | the unit tests of `tools/compare_reports.py` over hand-made reports, no jig run (in `make check` and in CI) |
 | `make werror` | CI's `-Werror` build and tests, in their own work dir |
 | `make werror-cold` | the same from nothing |
+| `tools/jig-runs.sh [-t KEYS] OUTDIR` | the fifteen standard jig runs (nine on the simulator and a replay of a Level 0 response synthesized from `spec/fixtures/disk6-query.txt`, six at `--locking-ofs manufactured`) into OUTDIR, their exits and transcript entries in `runs.tsv`, the jig's version and the replay's SHA-256 in `runs.info`; simulator and replay targets alone, never a drive (design §9.2) |
+| `.venv/bin/python -I tools/compare_reports.py A B` | two runs' reports, or two sets `jig-runs.sh` wrote run by run, compared after the version, the start and the report directory are normalised, with allowances for what a change means to differ (design §9.2) |
 | `tools/land.sh` | pushes `feature/types` to GitHub, then bumps and pushes the home repo's pointer to hsed on wapex (design §10.4) |
+
+A rung's regression is the fifteen runs with `--tests` of the cases the base ran, made at the base and
+at the head and compared with no allowance; the references are kept outside the repository and made
+again with the script, since a plain run's selection changes with the catalogue (design §9.2).
 
 ## 11. Common changes
 
@@ -244,9 +266,12 @@ token to the `doc` line, or add a table annotation if the rule cannot find the t
 **Add a jig case.**
 1. Write `Hsed/Jig/Cases/<Key>.hs` from the Test Cases PDF's steps, citing its pages.
 2. List it in `Hsed.Jig.Catalogue`.
-3. Give it its prerequisites and needs.
+3. Give it its prerequisites (its section's, and any of its own) and needs (a write, the simulator alone,
+   an error path), which decide where it runs and what a plain run selects.
 4. Add its spec under `hsed/spec-tests/Hsed/Jig/`, run on the simulator.
 5. If it can reach a drive, decide what the Guard admits for it (design §9.3).
+6. Make the standard runs before and after with `tools/jig-runs.sh` and compare them with
+   `tools/compare_reports.py`, the `--tests` sets of the cases that existed before (design §9.2).
 
 **Add another SSC (for example Pyrite).** Nobody has done this yet. Opal is the precedent:
 1. Add its PDF to `tcg/`.

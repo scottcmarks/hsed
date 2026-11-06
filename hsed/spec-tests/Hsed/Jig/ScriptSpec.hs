@@ -57,11 +57,29 @@ is out, run to their end; @--interrupt-in-session@ stops a run once
 StartSession opens a session on its drive's end or its one end, never on a
 pair's simulator. The answers an end's IF-RECVs brought after a mark are
 made secrets of the run, each up to its zero padding, and noted.
+
+The verbs of M5b's cases (design 11 M5b), over the same scripted TPer:
+Set goes out as ObjectUID.Set of the RowValues given in a packet of the
+session and comes back as its empty result and status; Start and End
+Transaction go out alone with their status and come back as the TPer's
+mirror, or as no status on its CloseSession, nothing, or another token;
+a session packet of several subpackets carries the TSN and HSN; an answer
+of nothing or of the TPer's CloseSession alone is accepted and noted,
+anything else refused; an IF-RECV of so many bytes is rounded up to the
+end's unit; the packets of a delivered ComPacket are read; TPER_RESET is
+one unit of zeros on protocol 2 to ComID 0x0004, forgetting the run's
+session and host properties on Good; a power cycle goes through the
+transport's event, noted twice; both refuse a drive's end with nothing
+recorded; STACK_RESET answering 0 forgets the session on its ComID; a
+session the TPer aborted is forgotten, noted; a cell of the simulator's
+state is read by name; an authority's StartSession carries its PIN, a
+secret; and TPerInfo's object is the state's row.
 -}
 module Hsed.Jig.ScriptSpec (spec) where
 
 import qualified RIO.ByteString            as B
 import qualified RIO.List                  as L
+import qualified RIO.Map                   as Map
 import           RIO
 import qualified RIO.Text                  as T
 import           Test.Hspec
@@ -69,13 +87,15 @@ import           Test.Hspec
 import           Hsed.Core.Call            (MethodCall (..), MethodHeader (..), MethodResponse (..), Parameters (..),
                                             optionalParameter)
 import           Hsed.Core.CellBlock       (cellBlockValue, columnRange)
-import           Hsed.Core.Method          (fromCall, invocationWith)
+import           Hsed.Core.Method          (fromCall, invocation, invocationWith)
 import           Hsed.Core.Properties      (Property (..))
 import           Hsed.Core.Record          (DecodedRecord (..), decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Stream          (Returned (..))
 import           Hsed.Core.StreamItem      (StreamItem (..))
 import           Hsed.Core.Sync            (StateTable (..))
+import           Hsed.Core.Table           (Cell (..), TableDesc (..))
 import           Hsed.Core.Token           (IsToken (..), Token (..))
+import           Hsed.Core.UID             (uid)
 import           Hsed.Core.Value           (IsValue (..), List (..), Value (..), (.:))
 import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED,
                                             pattern NO_SESSIONS_AVAILABLE, pattern SP_BUSY, pattern SUCCESS, statusValue)
@@ -85,9 +105,12 @@ import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..)
 import qualified Hsed.Gen.Core.Methods     as Methods
 import qualified Hsed.Gen.Core.Properties  as P
 import           Hsed.Gen.Core.StateTables (table45)
-import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uAuthority_SID, uProperties, uSMUID, uSP_Admin)
+import           Hsed.Gen.Core.TableDescs  (authorityTableDesc)
+import           Hsed.Gen.Core.TableUIDs   (uTPerInfoTable)
+import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uAuthority_SID, uProperties, uSMUID, uSP_Admin, uTPerInfo_Row)
 import           Hsed.Gen.Opal.Features    (Level0DiscoveryOpalSSCV2Feature (..))
-import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Case             (Case (..))
 import           Hsed.Jig.Cases.ETC02      (etc02)
 import           Hsed.Jig.Cases.ETC08      (etc08Payload)
@@ -103,11 +126,11 @@ import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (.
 import           Hsed.Sim.Level0           (level0Response)
 import           Hsed.Sim.SessionManager   (closeSessionCall)
 import           Hsed.Sim.Sync             (T45Row (..))
-import           Hsed.Sim.Types            (Session (..), SimParams (..), defaultSimParams, initialState)
+import           Hsed.Sim.Types            (SPState (..), Session (..), SimParams (..), TPerState (..), defaultSimParams, initialState)
 import           Hsed.Transport.Drive      (RawDrive (..))
 import           Hsed.Transport.InProc     (SimControl (..))
-import           Hsed.Wire                 (ExchangeError (..), ExchangeOpts (..), defaultExchangeOpts, newChannel)
-import           Hsed.Wire.Internal        (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Transport (..),
+import           Hsed.Wire                 (ExchangeError (..), ExchangeOpts (..), defaultExchangeOpts, newChannel, tperResetComId)
+import           Hsed.Wire.Internal        (Describe (..), Dir (..), Event (..), IfStatus (..), Request (..), Response (..), Transport (..),
                                             Unit (..))
 
 
@@ -148,10 +171,14 @@ answerOn c ext l o m = Response Good (either (error . show) id (encodeRecord (Co
 
 -- | A simulator's end whose IF-SENDs are answered from one list of statuses
 --   and IF-RECVs from one of responses (past either, Good and nothing), the
---   base ComID 0x1004 recorded: what a script came to, every request the
---   transport saw, and the transcript.
+--   base ComID 0x1004 recorded, in bytes: what a script came to, every
+--   request the transport saw, and the transcript.
 harness :: [IfStatus] -> [Response] -> Script a -> IO (a, [Request], [TEntry])
-harness sends recvs s = do
+harness = harnessOn UnitBytes
+
+-- | 'harness' on an end of a unit, bytes or 512-byte blocks.
+harnessOn :: Unit -> [IfStatus] -> [Response] -> Script a -> IO (a, [Request], [TEntry])
+harnessOn u sends recvs s = do
   sent <- newIORef sends
   rcvd <- newIORef recvs
   seen <- newIORef []
@@ -167,13 +194,36 @@ harness sends recvs s = do
               IfSend -> (`Response` mempty) <$> next sent Good
               IfRecv -> next rcvd (Response Good mempty)
         , tInject   = \_ -> pure Good
-        , tUnit     = UnitBytes
-        , tDescribe = Describe "tper" "a test" UnitBytes Nothing Nothing Nothing Nothing
+        , tUnit     = u
+        , tDescribe = Describe "tper" "a test" u Nothing Nothing Nothing Nothing
         , tClose    = pure ()
         }
       target = SimTarget tr (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
   a <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef seen <*> entries t
+
+-- | The run's context changed, as a case leaves it.
+withCtx :: (RunCtx -> RunCtx) -> Script ()
+withCtx f = asks reCtx >>= (`modifyIORef'` f)
+
+-- | The run's context, read.
+ctxNow :: Script RunCtx
+ctxNow = asks reCtx >>= readIORef
+
+-- | The data subpackets' payloads of the IF-SENDs of protocol 1 among
+--   requests.
+sentPayloads :: [Request] -> [ByteString]
+sentPayloads qs = [ dataSubPacketPayload sp | q <- qs, dir q == IfSend, proto q == 1, Right (DecodedFrame (ComPacketFrame _ ps) _ _) <- [decodeComPacket (payload q)]
+                                            , p <- ps, sp <- pfSubPackets p ]
+
+-- | The TPer's CloseSession, its abort of the first session.
+closeSession :: ByteString
+closeSession = generate (closeSessionCall (Session 0x1004 4096 1 uSP_Admin True [] mempty []))
+
+-- | A STACK_RESET response for 0x1004 that answers Success/Failure 1, the
+--   stack not reset (Core Table 36, PDF 66).
+stackFailed :: Response
+stackFailed = Response Good (either (error . show) id (encodeRecord (STACK_RESETCommandResponse 0x10040000 1)))
 
 -- | 'harness' counting the IF-RECVs alone.
 replying :: [IfStatus] -> [Response] -> Script a -> IO (a, Int, [TEntry])
@@ -741,3 +791,160 @@ spec = do
       (v, _, es) <- replying [Good, SynchronousProtocolViolation] [Response Good "not a ComPacket"] (attempt (cRun etc02))
       v `shouldBe` Pass
       [ t | Note _ t <- es, "ETC-02's drain of 0x1004 after its steps, outside its verdict" `T.isPrefixOf` t ] `shouldSatisfy` (not . null)
+
+  describe "the verbs of M5b's cases (design 11 M5b)" $ do
+    it "setCells sends ObjectUID.Set with no Where and the RowValues given, in a packet of the session, and reads the empty result and status (Core 5.3.3.7, PDF 202-203)" $ do
+      let cells = [(5, value (1 :: Natural)), (2, value ("User1" :: ByteString))]
+      (outcome, qs, _) <- harness [Good] [sessionAnswer first' (generate (MethodResponse [] 0))] (setCells first' LockingSP.uAuthority_User1 cells)
+      outcome `shouldBe` Right (MethodOutcome [] SUCCESS)
+      sentSessions qs `shouldBe` [(4096, 1)]
+      map (fromCall @Methods.Set) (sentCalls qs)
+        `shouldBe` [Just (Right (Methods.Set Nothing (Just (L (List [N ((5 :: Natural) .: (1 :: Natural)), N ((2 :: Natural) .: ("User1" :: ByteString))])))))]
+      map (_invokingID . _header) (sentCalls qs) `shouldBe` [LockingSP.uAuthority_User1]
+    it "setCells reads NOT_AUTHORIZED with an empty result, and the TPer's CloseSession or nothing as no outcome" $ do
+      (refused, _, _) <- harness [Good] [sessionAnswer first' (generate (MethodResponse [] (statusValue NOT_AUTHORIZED)))] (setCells first' LockingSP.uAuthority_User1 [(5, value (1 :: Natural))])
+      refused `shouldBe` Right (MethodOutcome [] NOT_AUTHORIZED)
+      (aborted, _, _) <- harness [Good] [controlAnswer closeSession] (setCells first' LockingSP.uAuthority_User1 [(5, value (1 :: Natural))])
+      aborted `shouldSatisfy` \case
+        Left (Malformed why) -> "CloseSession" `T.isInfixOf` why
+        _                    -> False
+      (none, _, _) <- harness [Good] [answerOf 0 0 0] (setCells first' LockingSP.uAuthority_User1 [(5, value (1 :: Natural))])
+      none `shouldSatisfy` isLeft
+    it "startTransaction sends Start Transaction with status 0 alone in a packet of the session, FB 00, and reads the TPer's mirror's status (Core 3.2.2.3.3.4, PDF 37)" $ do
+      (r, qs, _) <- harness [Good] [sessionAnswer first' (generate StartTransaction <> generate (Unsigned 0))] (startTransaction first')
+      r `shouldBe` Right 0
+      sentPayloads qs `shouldBe` [B.pack [0xFB, 0x00]]
+      sentSessions qs `shouldBe` [(4096, 1)]
+    it "endTransaction sends End Transaction with the status given, FC 00 to commit and FC 01 to abort, and reads the mirror (3.2.2.3.3.5, PDF 37-38)" $ do
+      (r0, qs0, _) <- harness [Good] [sessionAnswer first' (generate EndTransaction <> generate (Unsigned 0))] (endTransaction first' 0)
+      (r1, qs1, _) <- harness [Good] [sessionAnswer first' (generate EndTransaction <> generate (Unsigned 1))] (endTransaction first' 1)
+      (r0, r1) `shouldBe` (Right 0, Right 1)
+      (sentPayloads qs0, sentPayloads qs1) `shouldBe` ([B.pack [0xFC, 0x00]], [B.pack [0xFC, 0x01]])
+    it "reads the TPer's CloseSession, no response, and an answer without the token's mirror as no status" $ do
+      (aborted, _, _) <- harness [Good] [controlAnswer closeSession] (startTransaction first')
+      aborted `shouldSatisfy` \case
+        Left (Malformed why) -> "CloseSession" `T.isInfixOf` why
+        _                    -> False
+      (none, _, _) <- harness [Good] [answerOf 0 0 0] (startTransaction first')
+      none `shouldSatisfy` \case
+        Left (Malformed why) -> "no response" `T.isInfixOf` why
+        _                    -> False
+      (other, _, _) <- harness [Good] [sessionAnswer first' (generate EndTransaction <> generate (Unsigned 0))] (startTransaction first')
+      other `shouldSatisfy` \case
+        Left (Malformed why) -> "no Start Transaction mirror" `T.isInfixOf` why
+        _                    -> False
+    it "sessionSubpackets: one packet of the session, its TSN then its HSN, as many Data subpackets as payloads (ETC-14's n + 1, PDF 87)" $ do
+      let bytes = either (error . show) id (sessionSubpackets first' [propertiesCall, propertiesCall])
+      B.length bytes `mod` 4 `shouldBe` 0
+      decodeComPacket bytes `shouldBe` Right (DecodedFrame
+        (ComPacketFrame (ComPacketHeader 0x1004 0 0 0)
+                        [PacketFrame (PacketHeader 4096 1 0 0 0) [DataSubPacket (DataSubPacketHeader 0) propertiesCall, DataSubPacket (DataSubPacketHeader 0) propertiesCall]])
+        [] mempty)
+    it "expectNoResponseOrCloseSession passes no packets, noted, and the TPer's CloseSession alone, noted as an abort (Test Cases 7.1, PDF 76); refuses a response, a CloseSession with a result, an answer that does not read, and a failed exchange" $ do
+      (v1, _, es1) <- scripted True (attempt (Pass <$ expectNoResponseOrCloseSession "step 3" (Right [])))
+      (v1, [ t | Note _ t <- es1 ]) `shouldBe` (Pass, ["step 3: the TPer answered (0, 0, 0), all responses returned, no further data (Core Table 45, PDF 83)"])
+      (v2, _, es2) <- scripted True (attempt (Pass <$ expectNoResponseOrCloseSession "step 3" (Right (controlFrames closeSession))))
+      (v2, [ t | Note _ t <- es2 ]) `shouldBe` (Pass, ["step 3: the TPer answered its CloseSession alone: a session abort, which Test Cases 7.1 (PDF 76) accepts"])
+      for_ [ Right (controlFrames propertiesCall), Right (controlFrames (closeSession <> generate (getResult "a"))), Right (controlFrames "\xF4"), Left TimedOut ] $ \answer -> do
+        (v, _, _) <- scripted True (attempt (Pass <$ expectNoResponseOrCloseSession "step 3" answer))
+        v `shouldSatisfy` isFail
+    it "ifRecvWith asks an IF-RECV of protocol 1 on the ComID of the bytes rounded up to the end's unit: 512 bytes as 512 bytes or one block, 1091 as 1091 bytes or three blocks (Test Cases PDF 53)" $ do
+      (_, qsB, _) <- harness [] [] (ifRecvWith 0x1004 512 >> ifRecvWith 0x1004 1091)
+      map (\q -> (dir q, proto q, comId q, lenBytes q)) qsB `shouldBe` [(IfRecv, 1, 0x1004, 512), (IfRecv, 1, 0x1004, 1091)]
+      (_, qsK, _) <- harnessOn UnitBlocks512 [] [] (ifRecvWith 0x1004 512 >> ifRecvWith 0x1004 1091)
+      map lenBytes qsK `shouldBe` [512, 1536]
+    it "framesOf gives the packets of a ComPacket of the ComID an IF-RECV delivered, none for (0, 0, 0); refuses another ComID's, an extension not a static ComID's, and an IF-RECV that failed" $ do
+      framesOf 0x1004 (controlAnswer (syncSession 1 4096 SUCCESS)) `shouldBe` Right (controlFrames (syncSession 1 4096 SUCCESS))
+      framesOf 0x1004 (answerOf 0 0 0) `shouldBe` Right []
+      framesOf 0x1005 (answerOf 0 0 0) `shouldSatisfy` isLeft
+      framesOf 0x1004 (answerOn 0x1004 0x1234 0 0 0) `shouldSatisfy` isLeft
+      framesOf 0x1004 (Response SynchronousProtocolViolation mempty) `shouldSatisfy` isLeft
+    it "sendInSession issues the IF-SEND of a call in a packet of the session alone, at the least length that carries it, no IF-RECV (SPF-02 case 2, PDF 53)" $ do
+      let get = invocation dataStoreTable (Methods.Get (cellBlockValue (byteRows 0 1023)))
+      (r, qs, _) <- harness [Good] [] (sendInSession first' get)
+      status r `shouldBe` Good
+      map (\q -> (dir q, proto q, comId q)) qs `shouldBe` [(IfSend, 1, 0x1004)]
+      sentSessions qs `shouldBe` [(4096, 1)]
+      map (fromCall @Methods.Get) (sentCalls qs) `shouldBe` [Just (Right (Methods.Get (cellBlockValue (byteRows 0 1023))))]
+      map lenBytes qs `shouldBe` [fromIntegral (B.length (either (error . show) id (sessionComPacket first' (generate get))))]
+      dataStoreTable `shouldBe` uid 0x00 0x00 0x10 0x01 0x00 0x00 0x00 0x00
+    it "tperReset sends one unit of zeros on protocol 2 to ComID 0x0004 (Opal 2.30 3.2.3 and Table 13, PDF 28-29), no IF-RECV; answered Good, the run forgets its session, a StartSession unread and the host's properties, noted" $ do
+      let holding = withCtx (\x -> x { rcSession = Just first', rcSessionUnread = Just (0x1004, "why"), rcHostProperties = Just [("MaxComPacketSize", 4096)] })
+      ((r, ctx), qs, es) <- harness [Good] [] (holding >> tperReset >>= \r -> (,) r <$> ctxNow)
+      r `shouldBe` Right Good
+      map (\q -> (dir q, proto q, comId q, lenBytes q, payload q)) qs `shouldBe` [(IfSend, 2, 0x0004, 512, B.replicate 512 0)]
+      (rcSession ctx, rcSessionUnread ctx, rcHostProperties ctx) `shouldBe` (Nothing, Nothing, Nothing)
+      [ t | Note _ t <- es ] `shouldSatisfy` any ("TPER_RESET on 0x0004: good: every session aborted and the host properties back to their initial assumptions" `T.isPrefixOf`)
+      (tperResetBytes, tperResetComId) `shouldBe` (512, 0x0004)
+    it "tperReset answered other than Good (TPER_RESET disabled, Opal 2.30 Table 26) gives the status and forgets nothing" $ do
+      ((r, ctx), _, es) <- harness [OtherInvalidCommandParameter] [] (withCtx (\x -> x { rcSession = Just first' }) >> tperReset >>= \r -> (,) r <$> ctxNow)
+      r `shouldBe` Right OtherInvalidCommandParameter
+      rcSession ctx `shouldBe` Just first'
+      [ t | Note _ t <- es ] `shouldBe` []
+    it "tperReset and powerCycle refuse on a drive's end: nothing issued, nothing recorded" $ do
+      (r1, reached1, es1) <- scripted False tperReset
+      (r2, reached2, es2) <- scripted False powerCycle
+      (isLeft r1, reached1, es1, isLeft r2, reached2, es2) `shouldBe` (True, 0, [], True, 0, [])
+    it "powerCycle injects PowerCycle into the simulator's transport (Hsed.Wire.inject), noted by the recording transport and by the verb, the run's session and host properties forgotten (Core 3.3.7.1.5, PDF 76)" $ do
+      events <- newIORef []
+      t <- newTranscript
+      channel <- newChannel
+      ctx <- newIORef emptyRunCtx { rcSession = Just first', rcHostProperties = Just [] }
+      stop <- newIORef Nothing
+      let tr = MkTransport
+            { tExchange = \_ -> pure (Response Good mempty)
+            , tInject   = \e -> Good <$ modifyIORef' events (<> [e])
+            , tUnit     = UnitBytes
+            , tDescribe = Describe "tper" "a test" UnitBytes Nothing Nothing Nothing Nothing
+            , tClose    = pure ()
+            }
+          target = SimTarget (recording t tr) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
+      r <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) powerCycle
+      r `shouldBe` Right Good
+      readIORef events `shouldReturn` [PowerCycle]
+      afterwards <- readIORef ctx
+      (rcSession afterwards, rcHostProperties afterwards) `shouldBe` (Nothing, Nothing)
+      es <- entries t
+      [ t' | Note _ t' <- es ] `shouldBe`
+        [ "event PowerCycle: good"
+        , "power cycle: good: every session aborted and the host properties back to their initial assumptions (Core 3.3.7.1.5, PDF 76; 5.2.2.4.4, "
+          <> "PDF 148); the run's session and host properties forgotten" ]
+    it "stackReset answering Success/Failure 0 forgets the session the run holds on the ComID and a StartSession unread there, not another ComID's, and nothing on Success/Failure 1, with no note of its own (Core 3.3.4.7.5 item 1, PDF 65)" $ do
+      let holding c = withCtx (\x -> x { rcSession = Just first' { shComId = c }, rcSessionUnread = Just (c, "why") })
+      (ctx1, _, es1) <- harness [Good] [stackResponse] (holding 0x1004 >> stackReset 0x1004 >> ctxNow)
+      (rcSession ctx1, rcSessionUnread ctx1, [ t | Note _ t <- es1 ]) `shouldBe` (Nothing, Nothing, [])
+      (ctx2, _, _) <- harness [Good] [stackResponse] (holding 0x1005 >> stackReset 0x1004 >> ctxNow)
+      (rcSession ctx2, rcSessionUnread ctx2) `shouldBe` (Just first' { shComId = 0x1005 }, Just (0x1005, "why"))
+      ((r3, ctx3), _, _) <- harness [Good] [stackFailed] (holding 0x1004 >> stackReset 0x1004 >>= \r -> (,) r <$> ctxNow)
+      (r3, rcSession ctx3, rcSessionUnread ctx3) `shouldBe` (Right 1, Just first', Just (0x1004, "why"))
+    it "sessionGone forgets the session the run holds where it is the one aborted, noted, and keeps another" $ do
+      (ctx1, _, es) <- harness [] [] (withCtx (\x -> x { rcSession = Just first' }) >> sessionGone first' "ETC-09 step 3" >> ctxNow)
+      rcSession ctx1 `shouldBe` Nothing
+      [ t | Note _ t <- es ] `shouldBe` ["session TSN 4096 on 0x1004 aborted by the TPer, forgotten by the run: ETC-09 step 3 (Core 3.3.7.1.5, PDF 75)"]
+      (ctx2, _, _) <- harness [] [] (withCtx (\x -> x { rcSession = Just first' { shTSN = 4097 } }) >> sessionGone first' "why" >> ctxNow)
+      rcSession ctx2 `shouldBe` Just first' { shTSN = 4097 }
+    it "simCell reads a cell of the simulator's state by SP, table, row and column name: User1's Enabled, folded False (Opal 2.30 Table 40, PDF 83); nothing for a column the description lacks, nor on a drive" $ do
+      (enabled, _, _) <- scripted True (simCell uSP_Locking (tdTableUID authorityTableDesc) LockingSP.uAuthority_User1 "Enabled")
+      enabled `shouldSatisfy` \case
+        Just (EnumCell _ 0) -> True
+        _                   -> False
+      (none, _, _) <- scripted True (simCell uSP_Locking (tdTableUID authorityTableDesc) LockingSP.uAuthority_User1 "NoSuchColumn")
+      (onDrive, _, _) <- scripted False (simCell uSP_Locking (tdTableUID authorityTableDesc) LockingSP.uAuthority_User1 "Enabled")
+      (none, onDrive) `shouldBe` (Nothing, Nothing)
+    it "asAuthority gives StartSession's arguments as the authority with its current PIN from the simulator's state, read-write, the PIN a secret of the run; stops on a drive, and for an authority with no credential" $ do
+      ((args, ctx), _, _) <- scripted True ((,) <$> asAuthority "Admin1" uSP_Locking LockingSP.uAuthority_Admin1 <*> ctxNow)
+      args `shouldBe` StartArgs uSP_Locking (Just LockingSP.uAuthority_Admin1) (Just (spMsid defaultSimParams)) True
+      rcSecrets ctx `shouldBe` [spMsid defaultSimParams]
+      (v, _, _) <- scripted False (attempt (Pass <$ asAuthority "Admin1" uSP_Locking LockingSP.uAuthority_Admin1))
+      v `shouldBe` Fail ["StartSession as Admin1: the simulator's alone, its PIN read from the simulator's state (design 9.3)"]
+      (v2, _, _) <- scripted True (attempt (Pass <$ asAuthority "Anybody" uSP_Locking uAuthority_Anybody))
+      v2 `shouldBe` Fail ["StartSession as Anybody: the simulator's Locking SP holds no credential for Anybody"]
+      (spName uSP_Admin, spName uSP_Locking) `shouldBe` ("Admin SP", "Locking SP")
+    it "tperInfoObject is the UID of the state's one TPerInfo row, Opal 2.30 Table 27's (PDF 50), not Core Table 244's uTPerInfo_Row (PDF 305)" $ do
+      let st = initialState defaultSimParams
+          rowUID = Map.lookup uSP_Admin (tsSPs st) >>= Map.lookup uTPerInfoTable . spsTables >>= listToMaybe >>= L.lookup 0 >>= \case
+            UIDCell u -> Just u
+            _         -> Nothing
+      tperInfoObject `shouldBe` rowUID
+      tperInfoObject `shouldBe` Just (uid 0x00 0x00 0x02 0x01 0x00 0x03 0x00 0x01)
+      tperInfoObject `shouldNotBe` Just uTPerInfo_Row

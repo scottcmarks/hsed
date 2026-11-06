@@ -14,9 +14,10 @@ The units a binding holds, numbered tables, signature blocks, paragraphs and
 headings, are each a record of its own and an instance of
 "Hsed.Spec.RuleDef".'BoundUnit' (M4b's scaffold, the M4a plan's answer 6):
 on the committed Core run 'allUnits' holds the 248 numbered tables, the 53
-signature blocks, the 3 sentences the laws bind and the 5 headings the
-behaviours and fails bind, kind after kind; on Opal read over Core, its 50
-numbered tables and 3 signature blocks, every one bound since M5a. The per-kind names are the class's at their
+signature blocks, the 3 sentences the laws bind and the 7 headings the
+behaviours and fails bind (since M5b's Set and its Fails list), kind after
+kind; on Opal read over Core, its 50 numbered tables and 3 signature blocks,
+every one bound since M5a. The per-kind names are the class's at their
 types: 'boundUnits' reads what 'boundTables' does, a table its comment binds
 to a shape that refuses it held ('unitsAll') but not read ('unitReadable');
 'atUnit' locates as 'atTable', 'atSig', 'atPara' and 'atHeading' do;
@@ -81,8 +82,8 @@ spec = withCore $ \pristine -> do
   let ctx = mkContext Scott ir
 
   describe "allUnits" $ do
-    it "holds the committed Core run's 248 tables, 53 signature blocks, 3 paragraphs and 5 headings, kind after kind" $
-      kindCounts ctx `shouldBe` [(TableUnit, 248), (SignatureUnit, 53), (ParagraphUnit, 3), (HeadingUnit, 5)]
+    it "holds the committed Core run's 248 tables, 53 signature blocks, 3 paragraphs and 7 headings, kind after kind" $
+      kindCounts ctx `shouldBe` [(TableUnit, 248), (SignatureUnit, 53), (ParagraphUnit, 3), (HeadingUnit, 7)]
     it "holds each kind in the order its per-kind names read it" $ do
       [ anchorOf u | u <- allUnits ctx, kindOf u == TableUnit ] `shouldBe` map btAnchor (unitsAll ctx)
       [ anchorOf u | u <- allUnits ctx, kindOf u == SignatureUnit ] `shouldBe` map bsAnchor (unitsAll ctx)
@@ -106,7 +107,7 @@ spec = withCore $ \pristine -> do
       map bsAnchor (boundUnits (Just Sig) ctx) `shouldBe` map bsAnchor (boundSigs (Just Sig) ctx)
       length (boundSigs (Just Sig) ctx) `shouldBe` 53
       length (boundParas (Just Sentence) ctx) `shouldBe` 3
-      length (boundHeadings (Just Method) ctx) `shouldBe` 5
+      length (boundHeadings (Just Method) ctx) `shouldBe` 7
       length (boundTables Nothing ctx) `shouldBe` 0
     it "holds a table its comment binds to a shape that refuses it (E-SHAPE), and does not read it" $ do
       -- T46 AC_element, a type row, bound by a comment to Codes, whose shape wants a code-like first header cell
@@ -154,7 +155,7 @@ spec = withCore $ \pristine -> do
       length lines' `shouldBe` length (T.lines hsa)
       [ aid | (aid, payload) <- lines', unitAnchorLine (aid, payload), isNothing (unitNamed ctx aid) ] `shouldBe` []
       [ aid | (aid, payload) <- lines', not (unitAnchorLine (aid, payload)), isJust (unitNamed ctx aid) ] `shouldBe` []
-      length (filter unitAnchorLine lines') `shouldBe` 21
+      length (filter unitAnchorLine lines') `shouldBe` 23
     withOpal $ \opalPristine ->
       it "finds every unit anchor of the committed Opal sidecar, read over Core, and no unit at its doc anchor" $ do
         ohsa <- committedOpalHsa

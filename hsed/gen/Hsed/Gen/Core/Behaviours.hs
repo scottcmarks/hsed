@@ -87,4 +87,26 @@ behaviours =
           , frFails  = forFails @Hsed.Gen.Core.Methods.Get Hsed.Sim.Base.getFails
           }
       }
+  , -- core-2.01 5.3.3.7 Basic Table Method Group - Set (Table and Object Method) (PDF 201 / p.184, heading 805, sha256:29b8e20f2d6c)
+    BehaviourRef
+      { brAnchor    = "core-2.01:5.3.3.7"
+      , brPage      = 201
+      , brHash      = "4122043deba7"
+      , brName      = "Base.set"
+      , brBehaviour = forMethod @Hsed.Gen.Core.Methods.Set Hsed.Sim.Base.set
+        -- core-2.01 5.3.3.7.4 Fails (PDF 203 / p.186, heading 813, sha256:c1481e2eb555)
+      , brFails     = Just FailsRef
+          { frAnchor = "core-2.01:5.3.3.7.4"
+          , frPage   = 203
+          , frName   = "Base.setFails"
+          , frItems  =
+              [ ("a", "085e0146f5d8")
+              , ("b", "bafcad538d76")
+              , ("c", "9f12dcd29238")
+              , ("d", "8f8e15b09bf4")
+              , ("e", "3b9b3a224e69")
+              ]
+          , frFails  = forFails @Hsed.Gen.Core.Methods.Set Hsed.Sim.Base.setFails
+          }
+      }
   ]

@@ -35,7 +35,7 @@ import           Hsed.Gen.Core.Codes      (StatusCode (..), pattern INVALID_PARA
 import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
-import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uSP_Admin)
+import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uMethodID_Set, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import qualified Hsed.Sim.Base            as Base
 import           Hsed.Sim.Behaviour       (FailItem (..), Fails (..), someUID)
@@ -144,7 +144,7 @@ spec = do
         dispatch anybody call stA `shouldBe` (MethodResponse [] s, stA)
 
   describe "the behaviour and its Fails list" $ do
-    it "is Get's, the one behaviour of the Base Template at M4a" $
-      map someUID Base.behaviours `shouldBe` [uMethodID_Get]
+    it "is Get's, the one behaviour of the Base Template at M4a, and Set's since M5b" $
+      map someUID Base.behaviours `shouldBe` [uMethodID_Get, uMethodID_Set]
     it "has a property for each of items a to d (run by BehaviourSpec)" $
       map (isJust . fiProp) (failsItems Base.getFails) `shouldBe` [True, True, True, True]

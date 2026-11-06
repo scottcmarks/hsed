@@ -103,7 +103,15 @@ b_core_5_3_3_6 = at (anchor @'Method "core-2.01" "5.3.3.6" "0/3379" 201) (behavi
 b_core_5_3_3_6_3 :: Bound
 b_core_5_3_3_6_3 = at (anchor @'Method "core-2.01" "5.3.3.6.3" "0/3395" 201) (fails "Base.getFails")
 
-{-# LINE 107 "Hsed/Bindings/Core.hs" #-}
+{-# LINE 1 "core-2.01.pdf#page=201&5.3.3.7" #-}
+b_core_5_3_3_7 :: Bound
+b_core_5_3_3_7 = at (anchor @'Method "core-2.01" "5.3.3.7" "0/3397" 201) (behaviour "Base.set")
+
+{-# LINE 1 "core-2.01.pdf#page=203&5.3.3.7.4" #-}
+b_core_5_3_3_7_4 :: Bound
+b_core_5_3_3_7_4 = at (anchor @'Method "core-2.01" "5.3.3.7.4" "0/3431" 203) (fails "Base.setFails")
+
+{-# LINE 115 "Hsed/Bindings/Core.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_core_doc
@@ -130,4 +138,6 @@ bindings =
   , b_core_5_2_3_5
   , b_core_5_3_3_6
   , b_core_5_3_3_6_3
+  , b_core_5_3_3_7
+  , b_core_5_3_3_7_4
   ]

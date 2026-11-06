@@ -37,7 +37,8 @@ import           Hsed.Core.Token         (IsToken (..))
 import           Hsed.Core.Value         (IsValue (..), List (..), Value (..))
 import           Hsed.Gen.Core.Codes     (pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED)
 import qualified Hsed.Gen.Core.Methods   as Methods
-import           Hsed.Gen.Core.UIDs      (uCloseSession, uMethodID_Get, uProperties, uSMUID, uStartSession, uSyncSession, uSP_Admin)
+import           Hsed.Gen.Core.UIDs      (uCloseSession, uMethodID_Get, uMethodID_Set, uProperties, uSMUID, uStartSession, uSyncSession,
+                                          uSP_Admin)
 import           Hsed.Jig.Catalogue      (CatalogueEntry (..), catalogue, renderCaseKey)
 import qualified Hsed.Sim.Base           as Base
 import           Hsed.Sim.Behaviour
@@ -62,13 +63,13 @@ propertiesCall = invocation uSMUID (Methods.Properties Nothing)
 spec :: Spec
 spec = do
   describe "the behaviours the comments bind" $ do
-    it "are named and hashed as the IR hashes their signature blocks (5.2.2.1, 5.2.3.1, 5.2.3.5, 5.3.3.6)" $ do
+    it "are named and hashed as the IR hashes their signature blocks (5.2.2.1, 5.2.3.1, 5.2.3.5, 5.3.3.6, 5.3.3.7)" $ do
       [ (someName b, someHash b) | b <- SessionManager.behaviours ] `shouldBe`
         [ ("SessionManager.properties", "4096cbe61646"), ("SessionManager.startSession", "24fca697f37f"), ("SessionManager.closeSession", "993210934add") ]
-      [ (someName b, someHash b) | b <- Base.behaviours ] `shouldBe` [("Base.get", "9d67d740e4cb")]
+      [ (someName b, someHash b) | b <- Base.behaviours ] `shouldBe` [("Base.get", "9d67d740e4cb"), ("Base.set", "4122043deba7")]
       [ T.length (someHash b) | b <- SessionManager.behaviours <> Base.behaviours ] `shouldSatisfy` all (== 12)
     it "run the methods their records name" $
-      map someUID (SessionManager.behaviours <> Base.behaviours) `shouldBe` [uProperties, uStartSession, uCloseSession, uMethodID_Get]
+      map someUID (SessionManager.behaviours <> Base.behaviours) `shouldBe` [uProperties, uStartSession, uCloseSession, uMethodID_Get, uMethodID_Set]
     it "name cases the jig's catalogue has" $
       [ renderCaseKey k | SomeBehaviour b <- SessionManager.behaviours <> Base.behaviours, k <- behCases b, k `notElem` map ceKey catalogue ]
         `shouldBe` []

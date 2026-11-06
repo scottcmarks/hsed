@@ -11,21 +11,22 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The behaviours reader on the committed Core extraction with the committed
-annotations (design section 13.16, M4a): the four method headings the
+annotations (design section 13.16, M4a): the five method headings the
 behaviour comments bind (Core 5.2.2.1 Properties, PDF 140; 5.2.3.1
-StartSession, PDF 149; 5.2.3.5 CloseSession, PDF 153; 5.3.3.6 Get, PDF 201)
-and the one Fails list the fails comment binds (5.3.3.6.3, PDF 201, items a
-to d), each read with its heading's page and the first 12 hex digits of its
-signature block's hash, which the hand-written behaviour states;
-C-BEHAVIOUR-BOUND refuses a name that is not qualified and a name bound
-twice, C-BEHAVIOUR-METHOD a heading whose section has no signature block, or
-one whose method has no UID, C-FAILS-LIST a heading that is no Fails list of
-a bound method, and the unit is then left out, at its heading; the generated
-module lists the four, each under its heading's provenance line, Get's with
-its Fails list, names each behaviour at its method's record and imports the
-modules qualified, and declares nothing the oracle compares (hsed's build
-compiles it, and hsed's BehavioursSpec holds it to the dispatch lists); Opal
-binds no behaviour, and gets no module.
+StartSession, PDF 149; 5.2.3.5 CloseSession, PDF 153; 5.3.3.6 Get, PDF 201;
+and since M5b 5.3.3.7 Set, PDF 201) and the two Fails lists the fails
+comments bind (Get's 5.3.3.6.3, PDF 201, items a to d; Set's 5.3.3.7.4, PDF
+203, items a to e), each read with its heading's page and the first 12 hex
+digits of its signature block's hash, which the hand-written behaviour
+states; C-BEHAVIOUR-BOUND refuses a name that is not qualified and a name
+bound twice, C-BEHAVIOUR-METHOD a heading whose section has no signature
+block, or one whose method has no UID, C-FAILS-LIST a heading that is no
+Fails list of a bound method, and the unit is then left out, at its heading;
+the generated module lists the five, each under its heading's provenance
+line, Get's and Set's each with its Fails list, names each behaviour at its
+method's record and imports the modules qualified, and declares nothing the
+oracle compares (hsed's build compiles it, and hsed's BehavioursSpec holds
+it to the dispatch lists); Opal binds no behaviour, and gets no module.
 -}
 module Hsed.Spec.Rules.BehavioursSpec (spec) where
 
@@ -65,23 +66,30 @@ spec = withCore $ \pristine -> do
       withLine line = annotated pristine (hsa <> line <> "\n")
 
   describe "the behaviours reader" $ do
-    it "reads the four method headings the behaviour comments bind, then Get's Fails list, in the anchors' order" $ do
-      map bvAnchor (behaviourReads ctx) `shouldBe` map SectionId ["5.2.2.1", "5.2.3.1", "5.2.3.5", "5.3.3.6", "5.3.3.6.3"]
+    it "reads the five method headings the behaviour comments bind, each followed by its Fails list where one is bound, in the anchors' order" $ do
+      map bvAnchor (behaviourReads ctx) `shouldBe` map SectionId ["5.2.2.1", "5.2.3.1", "5.2.3.5", "5.3.3.6", "5.3.3.6.3", "5.3.3.7", "5.3.3.7.4"]
       map bvQName (behaviourReads ctx) `shouldBe`
-        ["SessionManager.properties", "SessionManager.startSession", "SessionManager.closeSession", "Base.get", "Base.getFails"]
-      map bvFails (behaviourReads ctx) `shouldBe` [False, False, False, False, True]
+        [ "SessionManager.properties", "SessionManager.startSession", "SessionManager.closeSession", "Base.get", "Base.getFails"
+        , "Base.set", "Base.setFails" ]
+      map bvFails (behaviourReads ctx) `shouldBe` [False, False, False, False, True, False, True]
     it "gives each its heading's PDF page and the manifest's hash of its title" $
       [ ((bvProv r).pdfPage1, T.length (bvProv r).cellsHash, (bvProv r).caption) | r <- behaviourReads ctx ] `shouldBe`
         [ (140, 64, "Properties (Method)"), (149, 64, "StartSession Method"), (153, 64, "CloseSession Method")
-        , (201, 64, "Basic Table Method Group - Get (Table and Object Method)"), (201, 64, "Fails") ]
+        , (201, 64, "Basic Table Method Group - Get (Table and Object Method)"), (201, 64, "Fails")
+        , (201, 64, "Basic Table Method Group - Set (Table and Object Method)"), (203, 64, "Fails") ]
     it "reads Get's Fails list's items a to d with their hashes in the IR, the first 12 hex digits the hand-written items state" $
       [ (label, T.take 12 h, T.length h) | (label, h) <- failsItemsOf ctx "5.3.3.6.3" ] `shouldBe`
         [("a", "fbdda8fb3e3a", 64), ("b", "ca5584e1ccdf", 64), ("c", "46db34a6034d", 64), ("d", "1b371d07bd3b", 64)]
+    it "reads Set's Fails list's items a to e likewise (M5b; Core 5.3.3.7.4, PDF 203)" $
+      [ (label, T.take 12 h, T.length h) | (label, h) <- failsItemsOf ctx "5.3.3.7.4" ] `shouldBe`
+        [ ("a", "085e0146f5d8", 64), ("b", "bafcad538d76", 64), ("c", "9f12dcd29238", 64), ("d", "8f8e15b09bf4", 64)
+        , ("e", "3b9b3a224e69", 64) ]
     it "is checked by its exemplar, Core 5.3.3.6, a heading the IR numbers once" $
       checkExemplarsWith [behavioursRule] ir `shouldBe` []
     it "names each behaviour's module and refers to it by its qualified name" $ do
       map (behaviourModuleName . bvQName) (behaviourReads ctx) `shouldBe`
-        ["Hsed.Sim.SessionManager", "Hsed.Sim.SessionManager", "Hsed.Sim.SessionManager", "Hsed.Sim.Base", "Hsed.Sim.Base"]
+        [ "Hsed.Sim.SessionManager", "Hsed.Sim.SessionManager", "Hsed.Sim.SessionManager", "Hsed.Sim.Base", "Hsed.Sim.Base"
+        , "Hsed.Sim.Base", "Hsed.Sim.Base" ]
       behaviourReference "Base.get" `shouldBe` "Hsed.Sim.Base.get"
       behaviourModuleName "Session.Manager.startSession" `shouldBe` "Hsed.Sim.Session.Manager"
     it "finds a Fails list's method heading, its parent section" $
@@ -151,8 +159,9 @@ spec = withCore $ \pristine -> do
       [ l | l <- lns, "  , -- core-2.01 " `T.isPrefixOf` l ] `shouldBe`
         [ "  , -- core-2.01 5.2.3.1 StartSession Method (PDF 149 / p.132, heading 390, sha256:" <> T.take 12 (hashOf ctx "5.2.3.1") <> ")"
         , "  , -- core-2.01 5.2.3.5 CloseSession Method (PDF 153 / p.136, heading 426, sha256:" <> T.take 12 (hashOf ctx "5.2.3.5") <> ")"
-        , "  , -- core-2.01 5.3.3.6 Basic Table Method Group - Get (Table and Object Method) (PDF 201 / p.184, heading 799, sha256:" <> T.take 12 (hashOf ctx "5.3.3.6") <> ")" ]
-      length [ l | l <- lns, T.strip l == "BehaviourRef" ] `shouldBe` 4
+        , "  , -- core-2.01 5.3.3.6 Basic Table Method Group - Get (Table and Object Method) (PDF 201 / p.184, heading 799, sha256:" <> T.take 12 (hashOf ctx "5.3.3.6") <> ")"
+        , "  , -- core-2.01 5.3.3.7 Basic Table Method Group - Set (Table and Object Method) (PDF 201 / p.184, heading 805, sha256:" <> T.take 12 (hashOf ctx "5.3.3.7") <> ")" ]
+      length [ l | l <- lns, T.strip l == "BehaviourRef" ] `shouldBe` 5
     it "gives each entry its anchor, PDF page, signature hash, name, and the behaviour that name refers to at its method's record" $ do
       lns `shouldContain`
         [ "      { brAnchor    = \"core-2.01:5.2.2.1\"", "      , brPage      = 140", "      , brHash      = \"4096cbe61646\""
@@ -171,6 +180,18 @@ spec = withCore $ \pristine -> do
         , "          , frItems  ="
         , "              [ (\"a\", \"fbdda8fb3e3a\")", "              , (\"b\", \"ca5584e1ccdf\")", "              , (\"c\", \"46db34a6034d\")", "              , (\"d\", \"1b371d07bd3b\")", "              ]"
         , "          , frFails  = forFails @Hsed.Gen.Core.Methods.Get Hsed.Sim.Base.getFails"
+        , "          }", "      }" ]
+    it "gives Set its Fails list likewise (M5b): anchor, page, name, items a to e, and the Fails at the record" $
+      lns `shouldContain`
+        [ "      { brAnchor    = \"core-2.01:5.3.3.7\"", "      , brPage      = 201", "      , brHash      = \"4122043deba7\""
+        , "      , brName      = \"Base.set\"", "      , brBehaviour = forMethod @Hsed.Gen.Core.Methods.Set Hsed.Sim.Base.set"
+        , "        -- core-2.01 5.3.3.7.4 Fails (PDF 203 / p.186, heading 813, sha256:" <> T.take 12 (hashOf ctx "5.3.3.7.4") <> ")"
+        , "      , brFails     = Just FailsRef"
+        , "          { frAnchor = \"core-2.01:5.3.3.7.4\"", "          , frPage   = 203", "          , frName   = \"Base.setFails\""
+        , "          , frItems  ="
+        , "              [ (\"a\", \"085e0146f5d8\")", "              , (\"b\", \"bafcad538d76\")", "              , (\"c\", \"9f12dcd29238\")"
+        , "              , (\"d\", \"8f8e15b09bf4\")", "              , (\"e\", \"3b9b3a224e69\")", "              ]"
+        , "          , frFails  = forFails @Hsed.Gen.Core.Methods.Set Hsed.Sim.Base.setFails"
         , "          }", "      }" ]
     it "imports the behaviour types, the methods module and each behaviour's module qualified, and needs TypeApplications" $ do
       filter ("import" `T.isPrefixOf`) lns `shouldBe`

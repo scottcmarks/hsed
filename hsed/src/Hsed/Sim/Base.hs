@@ -5,7 +5,7 @@
 
 {-|
 Module      : Hsed.Sim.Base
-Description : The Base Template's methods the simulator runs in a session: Get, with its Fails list
+Description : The Base Template's methods the simulator runs in a session: Get and Set, each with its Fails list
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -15,10 +15,14 @@ The behaviours of Core 5.3.3's Basic Table Method Group that M4a runs
 (design 8.2, 13.16): 'get', bound by @behaviour "Base.get"@ on 5.3.3.6 (PDF
 201), with its Fails list 5.3.3.6.3 bound by @fails "Base.getFails"@, one
 'FailItem' per item a to d, each with its status and the QuickCheck property
-that the simulator fails so. The cell_block is read and resolved by
-"Hsed.Core.CellBlock" (5.1.4.2.3, PDF 129-130), the columns granted by
-"Hsed.Sim.Access", and the RowValues come in column order (5.3.3.6.2.2, PDF
-201), the cells the caller may not read left out (5.3.4.2.2, PDF 223).
+that the simulator fails so; and since M5b 'set', the minimal object Set of
+design 11 M5b, bound by @behaviour "Base.set"@ on 5.3.3.7 (PDF 201-203),
+with its Fails list 5.3.3.7.4 (PDF 203) bound by @fails "Base.setFails"@,
+items a to e (its run and its properties group G1's). The cell_block is read
+and resolved by "Hsed.Core.CellBlock" (5.1.4.2.3, PDF 129-130), the columns
+granted by "Hsed.Sim.Access", and the RowValues come in column order
+(5.3.3.6.2.2, PDF 201), the cells the caller may not read left out
+(5.3.4.2.2, PDF 223).
 
 What Get is invoked on is found among the tables the session's SP holds: an
 object, the row of a table whose UID column holds the InvokingID, or an
@@ -32,12 +36,14 @@ preconfiguration's: "Hsed.Sim.Preconfig").
 module Hsed.Sim.Base
   ( get
   , getFails
+  , set
+  , setFails
   , behaviours
   ) where
 
 import qualified RIO.List                 as L
 import qualified RIO.Map                  as Map
-import           RIO
+import           RIO                      hiding (set)
 import           Test.QuickCheck          (Gen, Property, arbitrary, chooseInt, counterexample, forAll, oneof, suchThat, (===))
 
 import           Hsed.Core.CellBlock      (CellBlock (..), CellTarget (..), CellsAsked (..), RowAddress (..), cellBlock,
@@ -239,6 +245,49 @@ getAsAnybody u block = fst (behRun get invoked (Methods.Get (cellBlockValue bloc
     invoked   = Invoked { ivComId = sesComId ses, ivSession = Just ses, ivInvoker = u }
 
 
--- | The Base Template's behaviours a session dispatches to.
+-- * Set
+
+-- | Set on an object or a table (Core 5.3.3.7, PDF 201-203; @behaviour
+--   "Base.set"@), the minimal object Set of design 11 M5b: the cells of one
+--   object the session's authorities may Set, all of them or none (Core
+--   5.3.4.2.6, PDF 225; 3.3.7.2, PDF 77), of the types the simulator's Set
+--   carries out ("Hsed.Sim.Cells".'Hsed.Sim.Cells.cellFor'), written into
+--   the SP as the session sees it ("Hsed.Sim.State".'Hsed.Sim.State.putSPView');
+--   SPF-11 and SPF-12 case 1 observe it. Group G1's (M5b): until then
+--   NOT_AUTHORIZED for any Set the dispatch runs, the TPer unchanged, M5a's
+--   answer, which had no behaviour for Set (the dispatch's answer to a
+--   method it runs none for, 5.1.5.2, PDF 137).
+set :: Behaviour Methods.Set
+set = Behaviour
+  { behName  = "Base.set"
+  , behHash  = "4122043deba7"
+  , behCases = [CaseKey (SPF 11) Nothing Nothing Nothing, CaseKey (SPF 12) (Just 1) Nothing (Just "no-media")]
+  , behRun   = \_ _ st -> (ReplyResults [] NOT_AUTHORIZED, st)
+  }
+
+-- | Set's Fails list (Core 5.3.3.7.4, PDF 203; @fails "Base.setFails"@):
+--   a, the table or object does not exist, NOT_AUTHORIZED (the status Get's
+--   item a and the access control gate give, 5.1.5.2, PDF 137); b, a change
+--   to a UID or another system cell, INVALID_PARAMETER; c, a value larger
+--   than its cell's type allows, INVALID_PARAMETER (5.1.5.11 b, PDF 139); d,
+--   column values on a byte table, INVALID_PARAMETER (5.1.5.11 d, PDF 139);
+--   e, Set restricted by access control on any row or column asked,
+--   NOT_AUTHORIZED (5.3.4.2.6, PDF 225). Each item's property is group
+--   G1's (M5b), none yet.
+setFails :: Fails Methods.Set
+setFails = Fails
+  { failsName  = "Base.setFails"
+  , failsItems =
+      [ FailItem "a" "085e0146f5d8" NOT_AUTHORIZED Nothing
+      , FailItem "b" "bafcad538d76" INVALID_PARAMETER Nothing
+      , FailItem "c" "9f12dcd29238" INVALID_PARAMETER Nothing
+      , FailItem "d" "8f8e15b09bf4" INVALID_PARAMETER Nothing
+      , FailItem "e" "3b9b3a224e69" NOT_AUTHORIZED Nothing
+      ]
+  }
+
+
+-- | The Base Template's behaviours a session dispatches to: Get's, and
+--   Set's since M5b.
 behaviours :: [SomeBehaviour]
-behaviours = [forMethod get]
+behaviours = [forMethod get, forMethod set]

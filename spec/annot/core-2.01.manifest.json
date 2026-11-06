@@ -628,6 +628,50 @@
    ],
    "struct": "0/3395",
    "title": "Fails"
+  },
+  {
+   "hash": "29b8e20f2d6c6e912fe5aa6e578e924dd989e7b5ab73198ab33ea01f679902f7",
+   "header": null,
+   "id": "5.3.3.7",
+   "kind": "Behaviour",
+   "label": 184,
+   "ordinal": null,
+   "page": 200,
+   "rects": [
+    [
+     200,
+     [
+      89.97,
+      165.56,
+      412.71,
+      179.44
+     ]
+    ]
+   ],
+   "struct": "0/3397",
+   "title": "Basic Table Method Group - Set (Table and Object Method)"
+  },
+  {
+   "hash": "c1481e2eb555ca92ca5a8c8683c0b974c33935ccc83ca48e24b3b9a4b16f156e",
+   "header": null,
+   "id": "5.3.3.7.4",
+   "kind": "Behaviour",
+   "label": 186,
+   "ordinal": null,
+   "page": 202,
+   "rects": [
+    [
+     202,
+     [
+      90.0,
+      595.42,
+      161.0,
+      607.96
+     ]
+    ]
+   ],
+   "struct": "0/3431",
+   "title": "Fails"
   }
  ],
  "irVersion": 1,

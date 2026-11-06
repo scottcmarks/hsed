@@ -12,20 +12,22 @@ Stability   : experimental
 Design section 13.16 and milestone M4a. The spec compiler lists what the
 comments bind to hand-written behaviours ("Hsed.Gen.Core.Behaviours": the
 method headings of Core 5.2.2.1 Properties, PDF 140, 5.2.3.1 StartSession,
-PDF 149, 5.2.3.5 CloseSession, PDF 153, and 5.3.3.6 Get, PDF 201, each under
-its @behaviour@ comment, and Get's Fails list, 5.3.3.6.3, PDF 201, under its
-@fails@ comment), each entry naming its behaviour at its method's generated
-record, so that a behaviour a comment names and the code lacks, or one of
-another method's record, fails to compile. This test holds the generated list
-and the hand-written dispatch lists ("Hsed.Sim.SessionManager".@behaviours@
-and "Hsed.Sim.Base".@behaviours@) to each other: by name, both ways; each
-entry's behaviour is the behaviour of its name, states the hash its signature
-block has in the IR (the first 12 hex digits the entry carries), and runs the
-method of a record the generated methods list has; each Fails list's items
-match the hand-written list's by label and hash, both ways. Then it runs
-each Fails item's property under QuickCheck, over the simulator (pending
-while the item has none: the properties are group G1's), and finds each case
-a behaviour names in the jig's catalogue.
+PDF 149, 5.2.3.5 CloseSession, PDF 153, 5.3.3.6 Get, PDF 201, and since M5b
+5.3.3.7 Set, PDF 201, each under its @behaviour@ comment, and Get's and
+Set's Fails lists, 5.3.3.6.3, PDF 201, and 5.3.3.7.4, PDF 203, each under
+its @fails@ comment), each entry naming its behaviour at its method's
+generated record, so that a behaviour a comment names and the code lacks, or
+one of another method's record, fails to compile. This test holds the
+generated list and the hand-written dispatch lists
+("Hsed.Sim.SessionManager".@behaviours@ and "Hsed.Sim.Base".@behaviours@) to
+each other: by name, both ways; each entry's behaviour is the behaviour of
+its name, states the hash its signature block has in the IR (the first 12
+hex digits the entry carries), and runs the method of a record the generated
+methods list has; each Fails list's items match the hand-written list's by
+label and hash, both ways. Then it runs each Fails item's property under
+QuickCheck, over the simulator (pending while the item has none: the
+properties are group G1's), and finds each case a behaviour names in the
+jig's catalogue.
 -}
 module Hsed.BehavioursSpec (spec) where
 
@@ -48,9 +50,9 @@ import qualified Hsed.Sim.SessionManager  as SessionManager
 handWritten :: [SomeBehaviour]
 handWritten = SessionManager.behaviours <> Base.behaviours
 
--- | Every hand-written Fails list (M4a: Get's).
+-- | Every hand-written Fails list (M4a: Get's; M5b: Set's).
 handFails :: [SomeFails]
-handFails = [forFails Base.getFails]
+handFails = [forFails Base.getFails, forFails Base.setFails]
 
 -- | A Fails list's name and its items' labels and hashes.
 failsOf :: SomeFails -> (Text, [(Text, Text)])
@@ -76,10 +78,12 @@ spec = do
     it "runs the method of a record the generated methods list has, the hand-written behaviour's own" $ do
       [ brName r | r <- Generated.behaviours, someUID (brBehaviour r) `notElem` map someMethodUID Methods.methods ] `shouldBe` []
       [ brName r | r <- Generated.behaviours, b <- handWritten, someName b == brName r, someUID b /= someUID (brBehaviour r) ] `shouldBe` []
-    it "binds Core 5.2.2.1 (PDF 140), 5.2.3.1 (PDF 149), 5.2.3.5 (PDF 153) and 5.3.3.6 (PDF 201), Get's with its Fails list 5.3.3.6.3 (PDF 201)" $ do
+    it "binds Core 5.2.2.1 (PDF 140), 5.2.3.1 (PDF 149), 5.2.3.5 (PDF 153), 5.3.3.6 (PDF 201) and 5.3.3.7 (PDF 201), Get's with its Fails list 5.3.3.6.3 (PDF 201), Set's with 5.3.3.7.4 (PDF 203)" $ do
       [ (brAnchor r, brPage r) | r <- Generated.behaviours ] `shouldBe`
-        [ ("core-2.01:5.2.2.1", 140), ("core-2.01:5.2.3.1", 149), ("core-2.01:5.2.3.5", 153), ("core-2.01:5.3.3.6", 201) ]
-      [ (brName r, frAnchor f, frPage f) | r <- Generated.behaviours, Just f <- [brFails r] ] `shouldBe` [("Base.get", "core-2.01:5.3.3.6.3", 201)]
+        [ ("core-2.01:5.2.2.1", 140), ("core-2.01:5.2.3.1", 149), ("core-2.01:5.2.3.5", 153), ("core-2.01:5.3.3.6", 201)
+        , ("core-2.01:5.3.3.7", 201) ]
+      [ (brName r, frAnchor f, frPage f) | r <- Generated.behaviours, Just f <- [brFails r] ]
+        `shouldBe` [("Base.get", "core-2.01:5.3.3.6.3", 201), ("Base.set", "core-2.01:5.3.3.7.4", 203)]
 
   describe "what the fails comments bind (the Fails lists)" $ do
     it "is the hand-written Fails lists, by name, both ways" $ do

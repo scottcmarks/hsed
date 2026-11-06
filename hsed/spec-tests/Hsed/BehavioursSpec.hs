@@ -25,9 +25,9 @@ its name, states the hash its signature block has in the IR (the first 12
 hex digits the entry carries), and runs the method of a record the generated
 methods list has; each Fails list's items match the hand-written list's by
 label and hash, both ways. Then it runs each Fails item's property under
-QuickCheck, over the simulator (pending while the item has none: the
-properties are group G1's), and finds each case a behaviour names in the
-jig's catalogue.
+QuickCheck, over the simulator (pending while an item has none; since M5b
+every item of Get's and Set's has one, "Hsed.Sim.Base"), and finds each
+case a behaviour names in the jig's catalogue.
 -}
 module Hsed.BehavioursSpec (spec) where
 
@@ -101,7 +101,7 @@ spec = do
       let title = T.unpack n <> " item " <> T.unpack (fiLabel i) <> " fails with " <> show (fiStatus i)
       in case fiProp i of
            Just p  -> it title (property p)
-           Nothing -> it title (pendingWith (T.unpack n <> " item " <> T.unpack (fiLabel i) <> " has no property yet (group G1's, Hsed.Sim.Base)"))
+           Nothing -> it title (pendingWith (T.unpack n <> " item " <> T.unpack (fiLabel i) <> " has no property yet (Hsed.Sim.Base)"))
 
   describe "each case a behaviour names, in the jig's catalogue" $
     forM_ [ (behName b, k) | SomeBehaviour b <- handWritten, k <- behCases b ] $ \(n, k) ->

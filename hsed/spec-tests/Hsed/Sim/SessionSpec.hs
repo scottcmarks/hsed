@@ -30,9 +30,13 @@ past MaxTransactionLimit, 1, aborting the session with no mirror sent
 (ETC-09's shape), an End Transaction with none open or either token on a
 TPer reporting no MaxTransactionLimit aborting it (3.2.2.3.4 b and
 3.2.2.4.1 item 4, PDF 38), the session taken as the TPer holds it before
-each item, not as the stale value given (design 8.3); a response the
-host's packet cannot hold RESPONSE_OVERFLOW, which ends the payload's
-processing (Opal 2.30 3.3.1, PDF 29); the framing within the host's
+each item, not as the stale value given (design 8.3): a Set after a Start
+Transaction in the same subpacket writes the level's copy and the Get
+after it reads the value set (the M5b plan's risk R2), a Get within a
+transaction reads the session's view ("Hsed.Sim.Base", M5b); a response
+the host's packet cannot hold RESPONSE_OVERFLOW, which ends the payload's
+processing (Opal 2.30 3.3.1, PDF 29), as does a behaviour's own, a Get of
+the whole MBR bounded before a byte is built; the framing within the host's
 MaxSubpackets, MaxPacketSize and
 MaxComPacketSize (5.2.2.4.1.1-2 and 4, PDF 145-146), a packet never larger
 than the ComPacket that carries it, over any host properties. Then the whole
@@ -51,29 +55,30 @@ import           Test.Hspec.QuickCheck   (prop)
 import           Test.QuickCheck         (arbitrary, chooseInt, counterexample, forAll, vectorOf)
 
 import           Hsed.Core.Call          (MethodCall (..), MethodHeader (..), MethodResponse (..), Parameters (..), statusList)
-import           Hsed.Core.CellBlock     (cellBlockValue, columnRange, noCells)
+import           Hsed.Core.CellBlock     (CellBlock (..), RowAddress (..), cellBlockValue, columnRange, noCells)
 import           Hsed.Core.Table         (Cell (..), columnOf)
 import           Hsed.Core.Method        (fromCall, invocation)
 import           Hsed.Core.Stream        (Atom (..), Fault (..), Item (..), Place (..), Returned (..), StreamMode (..), atoms,
                                           hostPolicy, items, returnedItems)
 import           Hsed.Core.StreamItem    (StreamItem (..))
 import           Hsed.Core.Token         (Token (..))
-import           Hsed.Core.Value         (IsValue (..), List (..), Value (..), (.:))
+import           Hsed.Core.UID           (UID, uid)
+import           Hsed.Core.Value         (Datum (..), IsValue (..), List (..), Value (..), (.:))
 import           Hsed.Gen.Core.Codes     (StatusCode (..), pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED,
                                           pattern RESPONSE_OVERFLOW)
 import           Hsed.Gen.Core.Layouts   (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods   as Methods
-import           Hsed.Gen.Core.TableUIDs (uC_PINTable)
-import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uC_PIN_SID, uCloseSession, uSMUID, uSP_Admin)
-import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uMBRTable)
+import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uCloseSession, uSMUID, uSP_Admin)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
                                           encodeComPacket)
 import           Hsed.Sim                (step)
-import           Hsed.Sim.Gen            (genHostProperties)
+import           Hsed.Sim.Gen            (foldedAt, genHostProperties)
 import           Hsed.Sim.Session
 import           Hsed.Sim.SessionManager (closeSessionCall)
-import           Hsed.Sim.State          (lifeOf, liveSession, openSession, putSPView, resolveSession, spView, txnDepth,
-                                          updateRowIn)
+import           Hsed.Sim.State          (lifeOf, liveSession, openSession, programmaticResetEnabled, putSPView, resolveSession,
+                                          spView, txnDepth, updateRowIn)
 import           Hsed.Sim.Types
 import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketHeaderSize,
                                           comPacketProtocol, roundUp)
@@ -105,6 +110,45 @@ getCall = invocation uC_PIN_MSID (Methods.Get (cellBlockValue (columnRange 3 3))
 
 getResult :: MethodResponse
 getResult = MethodResponse [L (List [N ((3 :: Natural) .: spMsid defaultSimParams)])] 0
+
+-- | The default TPer with an Admin SP session as SID (HSN 0x52, TSN 4096)
+--   open on its base ComID, for a Set SID is granted: TPerInfo's
+--   ProgrammaticResetEnable (ACE_TPerInfo_Set_ProgrammaticResetEnable, Opal
+--   2.30 Table 23, PDF 47).
+sid :: Session
+stS :: TPerState
+(sid, stS) = openSession base 0x52 uSP_Admin True [uAuthority_Anybody, uAuthority_SID] (initialState defaultSimParams)
+
+-- | The TPer with its Locking SP Manufactured, the shared fold
+--   ("Hsed.Sim.Gen".'foldedAt'), with a Locking SP session as Anybody (HSN
+--   0x53, TSN 4096) open on its base ComID, for a Get on the MBR, whose Get
+--   is ACE_Anybody's (Opal 2.30 Table 38, PDF 71).
+anybodyL :: Session
+stL :: TPerState
+(anybodyL, stL) = openSession base 0x53 uSP_Locking True [uAuthority_Anybody] (foldedAt Manufactured)
+
+-- | The Admin SP's TPerInfo object, Opal 2.30 Table 27's one row (PDF 50);
+--   Set of its ProgrammaticResetEnable, column 8, with no Where and the
+--   RowValues list of that one column (Core 5.3.3.7.2.2, PDF 202-203); Get
+--   of that column, and its result.
+tperInfo :: UID
+tperInfo = uid 0x00 0x00 0x02 0x01 0x00 0x03 0x00 0x01
+
+setProgrammatic :: Natural -> MethodCall
+setProgrammatic v = invocation tperInfo (Methods.Set Nothing (Just (L (List [N ((8 :: Natural) .: v)]))))
+
+getProgrammatic :: MethodCall
+getProgrammatic = invocation tperInfo (Methods.Get (cellBlockValue (columnRange 8 8)))
+
+programmaticResult :: Natural -> MethodResponse
+programmaticResult v = MethodResponse [L (List [N ((8 :: Natural) .: v)])] 0
+
+-- | Get of the MBR, a byte table of 128 MiB (Opal 2.30 Table 36, PDF 54):
+--   whole, every row, and of its first eight rows (Core 5.1.4.2.3, PDF
+--   129-130).
+getMBR, getMBRRows :: MethodCall
+getMBR     = invocation uMBRTable (Methods.Get (cellBlockValue noCells))
+getMBRRows = invocation uMBRTable (Methods.Get (cellBlockValue noCells { cbStartRow = Just (RowNumber 0), cbEndRow = Just 7 }))
 
 -- | A packet decoded: its header and its data subpackets' payloads.
 decoded :: ByteString -> Maybe (PacketHeader, [ByteString])
@@ -153,6 +197,13 @@ withSidTries n sps = updateRowIn uC_PINTable uC_PIN_SID (map put) sps
   where
     tries = Map.lookup uC_PINTable (spsDescs sps) >>= (`columnOf` "Tries")
     put (c, cell) = (c, if Just c == tries then UIntCell n else cell)
+
+-- | The Admin SP with C_PIN_MSID's PIN put, likewise.
+withMsidPin :: ByteString -> SPState -> SPState
+withMsidPin p sps = updateRowIn uC_PINTable uC_PIN_MSID (map put) sps
+  where
+    pin = Map.lookup uC_PINTable (spsDescs sps) >>= (`columnOf` "PIN")
+    put (c, cell) = (c, if Just c == pin then BytesCell p else cell)
 
 spec :: Spec
 spec = do
@@ -312,10 +363,49 @@ spec = do
       open ses st' `shouldBe` False
     it "aborts the session at a transaction control token within a method invocation, in its header or its parameter list (Core 3.3.7.3, PDF 78)" $
       pendingWith "Hsed.Core.Stream reads a transaction control token there as any unexpected token, a BadCall answered NOT_AUTHORIZED or INVALID_PARAMETER with the session kept (3.2.2.4.2 items 3-4, PDF 39), where 3.3.7.3 (PDF 78, 71e3a18f1fb9) has the session aborted: hsed-core's, no group's at M5b"
-    it "ends the payload at a behaviour's own RESPONSE_OVERFLOW, as at the framing's (Opal 3.3.1 item 1): a Get on a byte table bounded before it builds its bytes" $
-      pendingWith "group G1's Base.get on a byte table answers RESPONSE_OVERFLOW (M5b); until it merges no behaviour answers it, and a host's status echoed is not one"
-    it "answers a Get within a transaction with the value put in the session's view (Core 3.3.7.3: visible within the transaction)" $
-      pendingWith "group G1's Base.get reads spView (M5b); until it merges Get reads the committed SP alone, and [Start Transaction, Set, Get] in one subpacket is the integration's example"
+    it "ends the payload at a behaviour's own RESPONSE_OVERFLOW, as at the framing's (Opal 3.3.1 item 1): a Get of the whole MBR, more rows than the host's ComPacket holds, answered RESPONSE_OVERFLOW before a byte is built (Hsed.Sim.Base, M5b), a second Get within MaxMethods 2 unanswered, the session kept" $ do
+      let Processed outcome st' ends = sessionPayload anybodyL [Invoke getMBR, Invoke getMBRRows] Nothing (withTPer maxMethodsName 2 stL)
+      ends `shouldBe` True
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHeader anybodyL, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
+        other        -> expectationFailure (show other)
+      open anybodyL st' `shouldBe` True
+      tsSPs st' `shouldBe` tsSPs stL
+      let Processed rows _ _ = sessionPayload anybodyL [Invoke getMBRRows] Nothing stL
+      case rows of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHeader anybodyL, [generate (MethodResponse [D (Datum (Bytes (B.replicate 8 0)))] 0)])
+        other        -> expectationFailure (show other)
+    it "answers a Get within a transaction with the value put in the session's view, the committed SP as it was (Core 3.3.7.3: visible within the transaction; Get reads spView, Hsed.Sim.Base, M5b), and the committed value again once the level is rolled back" $ do
+      let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
+          put    = putSPView ses (withMsidPin "changed" (fromMaybe (error "no view") (spView ses opened))) opened
+          Processed outcome st' _ = sessionPayload ses [Invoke getCall] Nothing put
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [L (List [N ((3 :: Natural) .: ("changed" :: ByteString))])] 0)])
+        other        -> expectationFailure (show other)
+      (depth ses st', tsSPs st' == tsSPs st1) `shouldBe` (1, True)
+      let Processed rolled _ _ = sessionPayload ses [EndTransactionItem 1, Invoke getCall] Nothing put
+      case rolled of
+        Prepared [p, q] -> do
+          decoded p `shouldBe` Just (sessionHdr, [mirror EndTransaction 1])
+          decoded q `shouldBe` Just (sessionHdr, [generate getResult])
+        other -> expectationFailure (show other)
+    it "writes a Set after a Start Transaction in the same subpacket into the level's copy, not the committed SP, the Get after it reading the value set (the M5b plan's risk R2; design 8.3: the session taken as the TPer holds it before each item): [Start Transaction, Set, Get] as SID on TPerInfo's ProgrammaticResetEnable answers the mirror and the two results in three packets, the change committed at End Transaction 0 and gone at End Transaction 1" $ do
+      let Processed outcome st' ends = sessionPayload sid [StartTransactionItem 0, Invoke (setProgrammatic 1), Invoke getProgrammatic] Nothing (withTPer maxMethodsName 2 stS)
+      ends `shouldBe` False
+      case outcome of
+        Prepared [p, q, r] -> do
+          decoded p `shouldBe` Just (sessionHeader sid, [mirror StartTransaction 0])
+          decoded q `shouldBe` Just (sessionHeader sid, [generate (MethodResponse [] 0)])
+          decoded r `shouldBe` Just (sessionHeader sid, [generate (programmaticResult 1)])
+        other -> expectationFailure (show other)
+      (depth sid st', tsSPs st' == tsSPs stS, programmaticResetEnabled st') `shouldBe` (1, True, Just False)
+      let committed = prState (sessionPayload sid [EndTransactionItem 0] Nothing st')
+          dropped   = prState (sessionPayload sid [EndTransactionItem 1] Nothing st')
+      (depth sid committed, programmaticResetEnabled committed) `shouldBe` (0, Just True)
+      (depth sid dropped, programmaticResetEnabled dropped, tsSPs dropped == tsSPs stS) `shouldBe` (0, Just False, True)
+      case prOutcome (sessionPayload sid [Invoke getProgrammatic] Nothing dropped) of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHeader sid, [generate (programmaticResult 0)])
+        other        -> expectationFailure (show other)
     it "sends the results completed before the fault: a Get, then an unexpected token" $ do
       let Processed outcome st' _ = sessionPayload ses [Invoke getCall] (Just (Fault 9 OutsideCall "StartName outside a method invocation")) st1
       case outcome of

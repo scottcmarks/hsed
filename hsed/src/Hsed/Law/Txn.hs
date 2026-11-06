@@ -40,8 +40,8 @@ change a method makes within a session is put through
 "Hsed.Sim.State".'putSPView', which M5b's Set writes through
 ("Hsed.Sim.Base"), the SP's rows the resets change varied
 ("Hsed.Sim.Gen".@genResetColumns@), so that the laws hold whether or not
-a Set is bound (the Set-driven examples are the integration's, after
-group G1's).
+a Set is bound (the Set-driven examples are "Hsed.Sim.SessionSpec"'s and
+"Hsed.Sim.BaseSpec"'s).
 -}
 module Hsed.Law.Txn
   ( mirrorStart
@@ -219,8 +219,8 @@ immediate = Law
 --   and any change to the SP as it sees it, the change put through
 --   'putSPView' is what the session sees ('spView'), while the committed
 --   SP is as it was and the level stays open. (That a Get within the
---   transaction returns the new value is the integration's example, once
---   group G1's Get reads 'spView'.)
+--   transaction returns the new value is "Hsed.Sim.SessionSpec"'s example:
+--   Get reads 'spView', "Hsed.Sim.Base".)
 visibleWithin :: Law
 visibleWithin = Law
   { lawName  = "Txn.visibleWithin"

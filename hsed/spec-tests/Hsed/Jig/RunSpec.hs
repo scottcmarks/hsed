@@ -121,7 +121,8 @@ import qualified Hsed.Gen.Core.Methods  as Methods
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
-import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
+import           Hsed.Jig.Case          (Case (..))
+import           Hsed.Jig.Catalogue     (CaseKey, CatalogueEntry (..), catalogue, parseCaseKeys, renderCaseKey)
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Guard         (Allowed (..), Policy (..), driveClose, guardDrive, readOnlyMethods)
 import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
@@ -136,7 +137,8 @@ import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..),
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.State         (lifeOf)
-import           Hsed.Sim.Types         (ComIdLife (Associated), SimParams (..), TPerState (..), defaultSimParams, maxComPacketSizeName)
+import           Hsed.Sim.Types         (ComIdLife (Associated), LifeCycle (..), SimParams (..), TPerState (..), defaultSimParams,
+                                         maxComPacketSizeName)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..))
 import           Hsed.Transport.Opened  (openedInProc)
@@ -455,6 +457,60 @@ spec = do
       silently (runJig defaultRunOptions { roRecover = True, roInterruptInSession = True }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roRecover = True }) `shouldReturn` ExitSuccess
 
+  describe "what a run with no --tests selects (Scott's answer Q1, design 11 M5b), and a whole test's key" $ do
+    let chosenKeys opts = either (error . T.unpack) (first (map cKey)) (chosenCases opts)
+        eighteen = map ceKey catalogue
+        seven = keys "SPF-02:2,SPF-11,SPF-12:1/no-media,ETC-07,ETC-09,ETC-14,ETC-21"
+        eleven = keys "UCT-01,UCT-02,UCT-03:1a-1c,SPF-02:1,ETC-02,ETC-03,ETC-04,ETC-08,ETC-15,ETC-20,ETC-21/adminsp"
+        manufactured = defaultRunOptions { roSim = defaultSimParams { spLockingOFS = Manufactured } }
+        needsManufactured (s, p) = "its section's common prerequisite, the Locking SP Manufactured (Test Cases " <> s <> " item 2, PDF " <> p
+                                   <> "), which the simulator's Original Factory State does not meet (--locking-ofs manufactured-inactive)"
+        needsInactive = "its own prerequisite, the Locking SP Manufactured-Inactive (Test Cases ETC-20 prerequisite 1, PDF 91), which the "
+                        <> "simulator's Original Factory State does not meet (--locking-ofs manufactured)"
+    it "on the simulator at the default OFS: M4a's ten and ETC-20, the seven that need the Locking SP Manufactured left out, each with its section's item and page" $ do
+      let (chosen, out) = chosenKeys defaultRunOptions
+      chosen `shouldBe` eleven
+      out `shouldBe` zip seven (map needsManufactured [("6.2", "49"), ("6.2", "49"), ("6.2", "49"), ("7.2", "76"), ("7.2", "76"), ("7.2", "76"), ("7.2", "76")])
+    it "at --locking-ofs manufactured: every case but ETC-20, left out on its own prerequisite" $ do
+      let (chosen, out) = chosenKeys manufactured
+      chosen `shouldBe` filter (`notElem` keys "ETC-20") eighteen
+      out `shouldBe` [ (k, needsInactive) | k <- keys "ETC-20" ]
+    it "on a replay alone every case, nothing left out; on the simulator paired with a replay, as on the simulator; with --tests, what it names, nothing left out" $ do
+      chosenKeys defaultRunOptions { roTarget = TReplay "nowhere.bin" } `shouldBe` (eighteen, [])
+      fst (chosenKeys defaultRunOptions { roTarget = TPair TSim (TReplay "nowhere.bin") }) `shouldBe` eleven
+      chosenKeys defaultRunOptions { roTests = eighteen } `shouldBe` (eighteen, [])
+      chosenKeys manufactured { roTests = keys "ETC-20" } `shouldBe` (keys "ETC-20", [])
+    it "a key naming a whole test selects every case of it: --tests ETC-21 selects ETC-21 and ETC-21/adminsp; --tests SPF-12:1 names no case of the catalogue, which holds the variant alone: exit 2" $ do
+      fst (chosenKeys manufactured { roTests = keys "ETC-21" }) `shouldBe` keys "ETC-21,ETC-21/adminsp"
+      silently (runJig defaultRunOptions { roTests = keys "SPF-12:1" }) `shouldReturn` ExitFailure 2
+    it "a plain run at the default OFS: exit 0, the eleven passing, the seven left out named in one note before the first case" $ do
+      (code, json, md) <- jig defaultRunOptions
+      code `shouldBe` ExitSuccess
+      verdicts json `shouldBe` [ (str (renderCaseKey k), str "pass") | k <- eleven ]
+      let ns = notes json
+          leftOut = [ t | t <- ns, "left out of the cases a run with no --tests selects" `T.isPrefixOf` t ]
+      leftOut `shouldSatisfy` \case
+        [t] -> all (\k -> (renderCaseKey k <> ": ") `T.isInfixOf` t) seven && "(--locking-ofs manufactured-inactive)" `T.isSuffixOf` t
+        _   -> False
+      L.findIndex ("left out of the cases" `T.isPrefixOf`) ns `shouldSatisfy` \i -> i < L.findIndex ("UCT-01 on the tper" `T.isPrefixOf`) ns
+      md `shouldSatisfy` T.isInfixOf "left out of the cases a run with no --tests selects"
+    it "a plain run at --locking-ofs manufactured: the seventeen selected, ETC-20 left out in the note (the five table cases are group G4's)" $ do
+      (_, json, _) <- jig manufactured
+      map fst (verdicts json) `shouldBe` [ str (renderCaseKey k) | k <- eighteen, k `notElem` keys "ETC-20" ]
+      notes json `shouldSatisfy` any (\t -> "left out of the cases a run with no --tests selects" `T.isPrefixOf` t && ("ETC-20: " <> needsInactive) `T.isSuffixOf` t)
+    it "--tests of all eighteen at the default OFS: exit 1, the seven skipped on LockingManufactured, what --locking-ofs manufactured does said, the eleven passing" $ do
+      (code, json, _) <- jig defaultRunOptions { roTests = eighteen }
+      code `shouldBe` ExitFailure 1
+      [ k | (k, [r]) <- reasonsOf json, r == "prerequisite unmet: LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory "
+                                              <> "State; --locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)" ]
+        `shouldBe` map renderCaseKey seven
+      [ k | (k, v) <- verdicts json, v == str "pass" ] `shouldBe` map (str . renderCaseKey) eleven
+    it "--tests of all eighteen at manufactured: ETC-20 alone skipped, on its own prerequisite; ETC-07, ETC-21 and ETC-21/adminsp pass (the five table cases are group G4's)" $ do
+      (_, json, _) <- jig manufactured { roTests = eighteen }
+      [ (k, r) | (k, [r]) <- reasonsOf json, "prerequisite unmet" `T.isPrefixOf` r ]
+        `shouldBe` [("ETC-20", "prerequisite unmet: LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")]
+      [ v | (k, v) <- verdicts json, k `elem` map str ["ETC-07", "ETC-21", "ETC-21/adminsp"] ] `shouldBe` replicate 3 (str "pass")
+
   describe "UCT-01's minima" $
     it "are the ones Opal and the DataStore feature set allow, the Test Cases' (PDF 30): 1, 4, 8; 1, 0xA0000, 1" $ do
       [ L.lookup f (featureAllowances (Proxy :: Proxy Level0DiscoveryOpalSSCV2Feature))
@@ -635,6 +691,18 @@ spec = do
         code `shouldBe` ExitFailure 1
         at "if_send_issued" json `shouldBe` Just (A.Number 0)
         (at "policies" json, at "blocked" json) `shouldBe` (Just (A.toJSON [A.object ["end" A..= ("drive-replay" :: Text), "policy" A..= ("level0_only" :: Text)]]), num 0)
+    it "skips M5b's eight cases too, ETC-21's key selecting its Admin SP variant with it, each for what it needs: a write first (SPF-11, SPF-12:1/no-media, ETC-14), the simulator's alone the rest; no IF-SEND" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let file    = dir </> "disk6-like-level0.bin"
+            eight   = ["SPF-02:2", "SPF-11", "SPF-12:1/no-media", "ETC-07", "ETC-09", "ETC-14", "ETC-20", "ETC-21"]
+            writes  = "writes: drives stay read-only until M6 (design 9.3; 13.34 (8))"
+            simOnly = "the simulator's alone: no drive policy admits it (design 9.3)"
+        disk6Like >>= writeFileBinary file
+        (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys (T.intercalate "," eight) }
+        map snd (verdicts json) `shouldBe` replicate 9 (str "skipped")
+        reasonsOf json `shouldBe` [ (k, [if k `elem` ["SPF-11", "SPF-12:1/no-media", "ETC-14"] then writes else simOnly]) | k <- eight <> ["ETC-21/adminsp"] ]
+        code `shouldBe` ExitFailure 1
+        at "if_send_issued" json `shouldBe` Just (A.Number 0)
     it "passes UCT-01 alone: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
@@ -827,7 +895,7 @@ spec = do
     it "skips ETC-04 selected with UCT-02, a case off design 9.3's drive list, its needs met: exit 1" $ do
       (code, json) <- fakeDrive defaultSimParams >>= onFakeDrive defaultRunOptions { roTests = keys "UCT-02,ETC-04" }
       verdicts json `shouldBe` [(str "UCT-02", str "pass"), (str "ETC-04", str "skipped")]
-      L.lookup "ETC-04" (reasonsOf json) `shouldBe` Just ["not among the cases a drive runs at M4c (design 9.3: UCT-01, UCT-02, UCT-03:1a-1c, SPF-02:1)"]
+      L.lookup "ETC-04" (reasonsOf json) `shouldBe` Just ["not among the cases a drive runs (design 9.3, its list unchanged since M4c: UCT-01, UCT-02, UCT-03:1a-1c, SPF-02:1)"]
       code `shouldBe` ExitFailure 1
     it "skips ETC-04 selected alone, the drive admitting Level 0 Discovery alone (no case selected from the list needs more), never bound: exit 1" $ do
       (code, json) <- fakeDrive defaultSimParams >>= onFakeDrive defaultRunOptions { roTests = keys "ETC-04" }

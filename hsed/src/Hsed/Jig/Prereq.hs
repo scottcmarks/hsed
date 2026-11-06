@@ -123,8 +123,13 @@ listAt = \case
 
 -- | The Locking SP need not be Manufactured for a case that never touches
 --   it (design 9.1): UCT-01, SPF-02 case 1, ETC-02 and ETC-03 all waive it,
---   or every run would be skipped on the simulator before M5 and on the
---   drive (Manufactured-Inactive).
+--   as M4a's ten do, or every run would skip them on the simulator at its
+--   default Original Factory State, Manufactured-Inactive (@--locking-ofs@;
+--   Opal 2.30 5.2.2, PDF 96; Manufactured folded since M5a), and on a drive,
+--   whose life cycle the jig cannot observe (M4c). The Locking SP's cases
+--   (since M5b) waive nothing: a run with no @--tests@ selects them where
+--   the simulator's state meets it, and leaves them out, noted, where it
+--   does not ("Hsed.Jig.Run".@leftOutByDefault@, Scott's answer Q1).
 lockingSPUntouched :: Waiver
 lockingSPUntouched = Waiver LockingManufactured "never touches the Locking SP (design 9.1)"
 

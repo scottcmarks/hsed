@@ -61,9 +61,10 @@ The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
 test selects every case of it the catalogue has; a run with no @--tests@
 selects every case of the catalogue but those its default leaves out, each
-noted with why before the first case ('leftOutByDefault': since M5b, on the
-simulator, the cases whose Locking SP prerequisite its Original Factory
-State does not meet, Scott's answer Q1; group G3's). Every command of the run
+noted with why before the first case ('leftOutByDefault': since M5b, on a
+target with the simulator's end, the cases whose Locking SP prerequisite its
+Original Factory State, @--locking-ofs@, does not meet, Scott's answer Q1;
+on a drive or a replay alone, none). Every command of the run
 goes into one transcript, created before the target is opened: the
 simulator's transport records what it exchanges, and a drive comes behind
 the Guard ("Hsed.Jig.Target", "Hsed.Jig.Guard".'GuardedDrive'), every
@@ -170,6 +171,7 @@ import           RIO.Time               (UTCTime, getCurrentTime)
 import           Hsed.Core.UID          (UID)
 import           Hsed.Gen.Core.UIDs     (uAuthority_SID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Capture       (captureLevel0)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Cases.ETC02   (etc02)
@@ -192,16 +194,16 @@ import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), cata
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, Policy, decide, driveAllowed, driveInfo, driveIssued, drivePolicy,
                                          driveTransport, readOnlyMethods, recoverMethods)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName)
 import           Hsed.Jig.Pair          (pairFails, pairLevel0)
 import           Hsed.Jig.PairProperties (pairProperties, propertiesFail)
 import           Hsed.Jig.Preflight     (preflightDrive)
-import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common, level0OutsideSync, sessionsUnobservable)
+import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common, level0OutsideSync, listAt, sessionsUnobservable)
 import           Hsed.Jig.Recover       (recoverScript)
 import           Hsed.Jig.Report        (CaseResult (..), RunResult (..), renderTarget, summary, writeReports)
 import           Hsed.Jig.Script        (Credential (..), Interrupted (..), RunCtx (..), RunEnv (..), Script, SessionHandle (..),
                                          Verdict (..), admitsStackReset, attempt, baseComId, describeStatus, discover, drain,
-                                         emptyRunCtx, ifRecvOn, maskAnswersSince, simCredential, stackReset, t45Of, t45On,
+                                         emptyRunCtx, ifRecvOn, maskAnswersSince, simCredential, spName, stackReset, t45Of, t45On,
                                          transcriptMark, verdictText)
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
@@ -235,12 +237,20 @@ cases =
 -- | The authorities a case authenticates at StartSession, by the case's
 --   key, in order, each with its name, the SP it authenticates to and its
 --   UID: ETC-21/adminsp's SID to the Admin SP (Opal 2.30 Table 24, PDF 48);
---   the Locking SP's cases' Admin1 (Table 40, PDF 82) are group G3's (M5b);
---   every other case opens its sessions as Anybody, with no authority, or
---   none at all. What CredentialsKnown and HostChallengeIsCurrentPin are
+--   since M5b, Admin1 to the Locking SP (Table 40, PDF 82) for ETC-21 as
+--   printed, SPF-02 case 2, SPF-11, ETC-09 and ETC-14, and for SPF-12 case
+--   1 SID to the Admin SP, then Admin1 to the Locking SP (Test Cases PDF
+--   65); every other case opens its sessions as Anybody, with no authority,
+--   or none at all. What CredentialsKnown and HostChallengeIsCurrentPin are
 --   about (Test Cases 5.2 items 3 and 4, 7.2 item 3; PDF 29 and 76).
 authenticating :: [(CaseKey, [(Text, UID, UID)])]
-authenticating = [(cKey etc21adminsp, [("SID", uSP_Admin, uAuthority_SID)])]
+authenticating =
+  [ (cKey etc21adminsp, [sid])
+  , (cKey etc21, [admin1]), (cKey spf02case2, [admin1]), (cKey spf11, [admin1]), (cKey etc09, [admin1]), (cKey etc14, [admin1])
+  , (cKey spf12case1nomedia, [sid, admin1]) ]
+  where
+    sid    = ("SID", uSP_Admin, uAuthority_SID)
+    admin1 = ("Admin1", uSP_Locking, LockingSP.uAuthority_Admin1)
 
 -- | Run the jig: its gates in order (a key the catalogue lacks, @--recover@
 --   with cases or a pair, a drive without @--expect-serial@, a Level 0 length
@@ -392,6 +402,14 @@ hasDriveEnd = \case
   TReplay _ -> True
   TPair a b -> hasDriveEnd a || hasDriveEnd b
 
+-- | Whether a target has the simulator's end: the simulator, or a pair with
+--   it.
+hasSimEnd :: TargetSpec -> Bool
+hasSimEnd = \case
+  TSim      -> True
+  TPair a b -> hasSimEnd a || hasSimEnd b
+  _         -> False
+
 -- | Why the run's Level 0 transfer length (@--level0-len@) is one a drive
 --   cannot carry, if it is: more than 255 blocks of 512 bytes once rounded
 --   up to blocks, the count byte of the kext's CDB ("Hsed.Transport.Cdb",
@@ -420,11 +438,6 @@ simParamsProblem opts = case simParamsProblems (roSim opts) of
   problems@(_ : _) | hasSimEnd (roTarget opts) ->
     Just ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": the simulator's parameters: " <> T.intercalate "; " problems)
   _ -> Nothing
-  where
-    hasSimEnd = \case
-      TSim      -> True
-      TPair a b -> hasSimEnd a || hasSimEnd b
-      _         -> False
 
 -- | The cases @--tests@ selects, in the catalogue's order: all of them for
 --   none; a key naming a whole test, every case of it.
@@ -451,16 +464,30 @@ chosenCases opts = do
   pure ([ c | c <- chosen, cKey c `notElem` map fst out ], out)
 
 -- | Why a run with no @--tests@ leaves a case of the catalogue out, if it
---   does (Scott's answer Q1, design 11 M5b): on a target with a simulator's
---   end, a case whose Locking SP prerequisite the simulator's Original
---   Factory State (@--locking-ofs@) does not meet, a case that does not
---   waive LockingManufactured needing the Locking SP Manufactured and one
---   that owns LockingManufacturedInactive needing it Manufactured-Inactive;
---   an explicit @--tests@ runs what it names. Group G3's (M5b): until then
---   none, a run with no @--tests@ selecting every case of the catalogue, as
---   at M5a.
+--   does (Scott's answer Q1, design 11 M5b): on a target with the
+--   simulator's end ('hasSimEnd'), a case whose Locking SP prerequisite the
+--   simulator's Original Factory State (@--locking-ofs@, "Hsed.Sim.Params".@spLockingOFS@,
+--   which no profile changes) does not meet: one that owns
+--   LockingManufacturedInactive (ETC-20, Test Cases PDF 91) needing it
+--   Manufactured-Inactive, and one that does not waive its section's
+--   LockingManufactured (5.2, 6.2 and 7.2 item 2; PDF 29, 49 and 76) needing
+--   it Manufactured; on a drive or a replay alone, none (a drive's life
+--   cycle is not observable, and its cases skip on what they need). An
+--   explicit @--tests@ runs what it names.
 leftOutByDefault :: RunOptions -> Case -> Maybe Text
-leftOutByDefault _ _ = Nothing
+leftOutByDefault opts c
+  | not (hasSimEnd (roTarget opts)) = Nothing
+  | LockingManufacturedInactive `elem` cOwnPrereqs c, ofs /= ManufacturedInactive =
+      Just ("its own prerequisite, the Locking SP Manufactured-Inactive (Test Cases ETC-20 prerequisite 1, PDF 91), which the simulator's "
+            <> "Original Factory State does not meet (--locking-ofs " <> lockingOFSName ofs <> ")")
+  | LockingManufactured `notElem` map wPrereq (cWaives c), ofs /= Manufactured =
+      Just ("its section's common prerequisite, the Locking SP Manufactured (Test Cases " <> section <> " item " <> tshow item <> ", PDF "
+            <> tshow page <> "), which the simulator's Original Factory State does not meet (--locking-ofs " <> lockingOFSName ofs <> ")")
+  | otherwise = Nothing
+  where
+    ofs             = spLockingOFS (roSim opts)
+    (section, page) = listAt (cSection c)
+    item            = fromMaybe 2 (L.lookup LockingManufactured (common (cSection c)))
 
 -- | The options with the profile read into the simulator's parameters.
 withProfile :: RunOptions -> IO (Either Text RunOptions)
@@ -567,8 +594,8 @@ runOn opts started chosen leftOut preflightNotes t stop tg = do
   withLogFunc (setLogMinLevel LevelInfo logOptions) $ \lf -> do
     ends <- endsOf opts t lf stop tg
     unless (null leftOut || roRecover opts) $
-      record t (Note 0 ("left out of the cases a run with no --tests selects: "
-                        <> T.intercalate "; " [ renderCaseKey k <> ", " <> why | (k, why) <- leftOut ]))
+      record t (Note 0 ("left out of the cases a run with no --tests selects, each on its Locking SP prerequisite (Scott's answer Q1, design 11 "
+                        <> "M5b): " <> T.intercalate "; " [ renderCaseKey k <> ": " <> why | (k, why) <- leftOut ]))
     let named = length ends > 1
     (results, recovered) <-
       if roRecover opts
@@ -792,7 +819,7 @@ lacking tg c = listToMaybe ([ why | n <- [NeedWrite, NeedSimOnly, NeedErrorPath,
       | otherwise               = Nothing
     offTheList = case tg of
       DriveTarget _ | cKey c `notElem` driveCases ->
-        ["not among the cases a drive runs at M4c (design 9.3: " <> T.intercalate ", " (map renderCaseKey driveCases) <> ")"]
+        ["not among the cases a drive runs (design 9.3, its list unchanged since M4c: " <> T.intercalate ", " (map renderCaseKey driveCases) <> ")"]
       _ -> []
 
 -- | A case's prerequisites in its section's order, then its own (Test
@@ -879,7 +906,8 @@ establish c p = asks reTarget >>= \case
             still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
       LockingManufactured
         | spLifeCycle uSP_Locking st == Just (lifeCycleValue Manufactured) -> met
-        | otherwise -> pure (Left "LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State (design 9.1; M5)")
+        | otherwise -> pure (Left ("LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State; "
+                                   <> "--locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)"))
       LockingManufacturedInactive
         | spLifeCycle uSP_Locking st == Just (lifeCycleValue ManufacturedInactive) -> met
         | otherwise -> pure (Left "LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")
@@ -888,18 +916,21 @@ establish c p = asks reTarget >>= \case
         | otherwise        -> firstUnmet (map (credentialKnown st) authorities)
       HostChallengeIsCurrentPin
         | null authorities -> Right Nothing <$ note challengeVacuous
-        | otherwise        -> Right Nothing <$ for_ authorities (\(name, _, _) ->
+        | otherwise        -> Right Nothing <$ for_ authorities (\(name, sp, _) ->
             note ("HostChallengeIsCurrentPin: " <> name <> "'s current PIN is read from the simulator's state; a challenge other than it "
-                  <> "is the case's own doing"))
+                  <> "is the case's own doing" <> ofSP sp))
       ReadWriteSessions -> Right Nothing <$ note readWrite
-    -- an authority's credential read from the simulator's state, a secret of the run, noted; or why not (the texts for an SP
-    -- other than the Admin SP group G3's, M5b)
+    -- an authority's credential read from the simulator's state, a secret of the run, noted; or why not: the SP named, the
+    -- Admin SP's notes as at M5a, another SP's saying whose C_PIN (since M5b, the Locking SP's Admin1)
     credentialKnown st (name, sp, u) = case simCredential sp u st of
-      Nothing -> pure (Just ("CredentialsKnown: the simulator's Admin SP holds no credential for " <> name))
+      Nothing -> pure (Just ("CredentialsKnown: the simulator's " <> spName sp <> " holds no credential for " <> name))
       Just cr -> do
         asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
         Nothing <$ note ("CredentialsKnown: " <> name <> "'s PIN read from the simulator's state, " <> tshow (B.length (crPIN cr))
-                         <> " bytes, TryLimit " <> tshow (crTryLimit cr) <> ", Tries " <> tshow (crTries cr) <> " (masked in the reports unless --show-msid)")
+                         <> " bytes, TryLimit " <> tshow (crTryLimit cr) <> ", Tries " <> tshow (crTries cr) <> " (masked in the reports unless --show-msid)"
+                         <> ofSP sp)
+    -- whose C_PIN, for an SP other than the Admin SP (whose notes M5a's runs hold)
+    ofSP sp = if sp == uSP_Admin then "" else " (the " <> spName sp <> "'s C_PIN)"
     -- each in order, the first unmet ending them
     firstUnmet = foldr (\s rest -> s >>= maybe rest (pure . Left)) met
     -- the ComIDs sessions hold
@@ -922,7 +953,7 @@ establish c p = asks reTarget >>= \case
         | null authorities -> Right Nothing <$ note challengeVacuous
         | otherwise        -> pure (Left "HostChallengeIsCurrentPin: no authority is authenticated on a drive (design 9.3)")
       ReadWriteSessions -> Right Nothing <$ note readWrite
-      LockingManufactured -> pure (Left "LockingManufactured: not observable on a drive at M4c: every M4c case waives it (design 9.1)")
+      LockingManufactured -> pure (Left "LockingManufactured: not observable on a drive (design 9.1): every case a drive runs waives it")
       LockingManufacturedInactive -> pure (Left "LockingManufacturedInactive: not observable on a drive (design 9.1)")
     -- SyncIdle and NoSessions as the case's own set has them, in order: what one STACK_RESET establishes
     resettable = [ q | (q, _) <- common (cSection c), q `elem` [SyncIdle, NoSessions], q `notElem` map wPrereq (cWaives c) ]

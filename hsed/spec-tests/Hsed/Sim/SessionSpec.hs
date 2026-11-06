@@ -19,12 +19,21 @@ Get answered in a packet of the session (TSN then HSN, Core 3.3.7.1.2, PDF
 closed (3.2.2.3.3.3, PDF 37; 3.3.7.1.5, PDF 75), a bare EOS echoed; an
 invocation whose header does not read NOT_AUTHORIZED and one whose
 parameters do not INVALID_PARAMETER, the session kept (3.2.2.4.2 items 3-4,
-PDF 39); a fault, a transaction token or a second invocation past the
-TPer's MaxMethods aborting the session with the results completed before it
-and the TPer's CloseSession where the run prepares one (3.3.10.7 b, PDF 86;
-5.2.2.4.1.7, PDF 146); a response the host's packet cannot hold
-RESPONSE_OVERFLOW, which ends the payload's processing (Opal 2.30 3.3.1,
-PDF 29); the framing within the host's MaxSubpackets, MaxPacketSize and
+PDF 39); a fault or a second invocation past the TPer's MaxMethods aborting
+the session with the results completed before it and the TPer's
+CloseSession where the run prepares one (3.3.10.7 b, PDF 86; 5.2.2.4.1.7,
+PDF 146); since M5b the transaction control tokens (design 11 M5b): Start
+Transaction mirrored with status 0 whatever the host's, a level open after
+it, which End Transaction with 0 commits and with any other status rolls
+back, each mirrored (3.2.2.3.3.4-5, PDF 37-38), a second Start Transaction
+past MaxTransactionLimit, 1, aborting the session with no mirror sent
+(ETC-09's shape), an End Transaction with none open or either token on a
+TPer reporting no MaxTransactionLimit aborting it (3.2.2.3.4 b and
+3.2.2.4.1 item 4, PDF 38), the session taken as the TPer holds it before
+each item, not as the stale value given (design 8.3); a response the
+host's packet cannot hold RESPONSE_OVERFLOW, which ends the payload's
+processing (Opal 2.30 3.3.1, PDF 29); the framing within the host's
+MaxSubpackets, MaxPacketSize and
 MaxComPacketSize (5.2.2.4.1.1-2 and 4, PDF 145-146), a packet never larger
 than the ComPacket that carries it, over any host properties. Then the whole
 path through the simulator's step: ETC-05's EndList before Call, answered
@@ -41,8 +50,9 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck   (prop)
 import           Test.QuickCheck         (arbitrary, chooseInt, counterexample, forAll, vectorOf)
 
-import           Hsed.Core.Call          (MethodCall (..), MethodHeader (..), MethodResponse (..), Parameters (..))
+import           Hsed.Core.Call          (MethodCall (..), MethodHeader (..), MethodResponse (..), Parameters (..), statusList)
 import           Hsed.Core.CellBlock     (cellBlockValue, columnRange, noCells)
+import           Hsed.Core.Table         (Cell (..), columnOf)
 import           Hsed.Core.Method        (fromCall, invocation)
 import           Hsed.Core.Stream        (Atom (..), Fault (..), Item (..), Place (..), Returned (..), StreamMode (..), atoms,
                                           hostPolicy, items, returnedItems)
@@ -53,6 +63,7 @@ import           Hsed.Gen.Core.Codes     (StatusCode (..), pattern INVALID_PARAM
                                           pattern RESPONSE_OVERFLOW)
 import           Hsed.Gen.Core.Layouts   (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods   as Methods
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable)
 import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uC_PIN_SID, uCloseSession, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
@@ -61,7 +72,8 @@ import           Hsed.Sim                (step)
 import           Hsed.Sim.Gen            (genHostProperties)
 import           Hsed.Sim.Session
 import           Hsed.Sim.SessionManager (closeSessionCall)
-import           Hsed.Sim.State          (lifeOf, openSession, resolveSession)
+import           Hsed.Sim.State          (lifeOf, liveSession, openSession, putSPView, resolveSession, spView, txnDepth,
+                                          updateRowIn)
 import           Hsed.Sim.Types
 import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketHeaderSize,
                                           comPacketProtocol, roundUp)
@@ -124,6 +136,24 @@ returned p = decoded p >>= \(_, payloads) -> case payloads of
       (rs, Nothing) -> Just rs
       _             -> Nothing
 
+-- | The TPer's mirror of a transaction control token with a status, as
+--   Core 3.2.2.3.3.4-5 encodes it (PDF 37): the token, then a uinteger.
+mirror :: Token -> Natural -> ByteString
+mirror t s = generate t <> generate (Unsigned s)
+
+-- | The session's transaction depth as the TPer holds it.
+depth :: Session -> TPerState -> Int
+depth s = maybe 0 txnDepth . liveSession s
+
+-- | The Admin SP with C_PIN_SID's Tries put, a change a method within the
+--   session might make, found by its column's name in the SP's description
+--   of its C_PIN table.
+withSidTries :: Integer -> SPState -> SPState
+withSidTries n sps = updateRowIn uC_PINTable uC_PIN_SID (map put) sps
+  where
+    tries = Map.lookup uC_PINTable (spsDescs sps) >>= (`columnOf` "Tries")
+    put (c, cell) = (c, if Just c == tries then UIntCell n else cell)
+
 spec :: Spec
 spec = do
   describe "one data subpacket's items (sessionPayload)" $ do
@@ -173,13 +203,119 @@ spec = do
       let Processed outcome st' _ = sessionPayload quietSes [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) quietSt1
       outcome `shouldBe` SessionAborted [] Nothing
       open quietSes st' `shouldBe` False
-    it "aborts at a transaction control token, the TPer starting no transaction (Core 3.2.2.3.3.4)" $
-      forM_ [StartTransactionItem 0, EndTransactionItem 0, EndTransactionItem 1] $ \t -> do
+    it "mirrors a Start Transaction with status 0, in one packet, a level open after it, the committed SP as it was (Core 3.2.2.3.3.4; M5b)" $ do
+      let Processed outcome st' ends = sessionPayload ses [StartTransactionItem 0] Nothing st1
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [mirror StartTransaction 0])
+        other        -> expectationFailure (show other)
+      (depth ses st', tsSPs st' == tsSPs st1, open ses st', ends) `shouldBe` (1, True, True, False)
+    it "mirrors a Start Transaction of status 7 with 0, the host's status ignored (3.2.2.3.3.4)" $ do
+      let Processed outcome st' _ = sessionPayload ses [StartTransactionItem 7] Nothing st1
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [mirror StartTransaction 0])
+        other        -> expectationFailure (show other)
+      depth ses st' `shouldBe` 1
+    it "takes the session as the TPer holds it before each item, not the value given (design 8.3): Start Transaction then a Get answers the mirror then the result, in two packets for a host taking one subpacket a packet, the level kept" $ do
+      let Processed outcome st' _ = sessionPayload ses [StartTransactionItem 0, Invoke getCall] Nothing st1
+      case outcome of
+        Prepared [p, q] -> do
+          decoded p `shouldBe` Just (sessionHdr, [mirror StartTransaction 0])
+          decoded q `shouldBe` Just (sessionHdr, [generate getResult])
+        other -> expectationFailure (show other)
+      depth ses st' `shouldBe` 1
+    it "aborts at a second Start Transaction in the same subpacket, past MaxTransactionLimit 1, with no result and no mirror sent, the TPer's CloseSession prepared, the session gone with its level: ETC-09's shape (3.2.2.3.3.4; Test Cases PDF 81-82)" $ do
+      let Processed outcome st' ends = sessionPayload ses [StartTransactionItem 0, StartTransactionItem 0, Invoke getCall] Nothing st1
+      outcome `shouldSatisfy` \o -> case o of
+        SessionAborted [] (Just _) -> True
+        _                          -> False
+      (open ses st', liveSession ses st', ends) `shouldBe` (False, Nothing, True)
+      let Processed quiet _ _ = sessionPayload quietSes [StartTransactionItem 0, StartTransactionItem 0] Nothing quietSt1
+      quiet `shouldBe` SessionAborted [] Nothing
+    it "aborts at a Start Transaction in a session already holding a level (3.2.2.3.3.4: the nesting limit exceeded)" $ do
+      let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
+          Processed outcome st' _ = sessionPayload ses [StartTransactionItem 0] Nothing opened
+      outcome `shouldSatisfy` \o -> case o of
+        SessionAborted [] (Just _) -> True
+        _                          -> False
+      open ses st' `shouldBe` False
+    it "aborts at an End Transaction with no level open (3.2.2.3.4 b: a control token out of order)" $
+      forM_ [EndTransactionItem 0, EndTransactionItem 1] $ \t -> do
         let Processed outcome st' _ = sessionPayload ses [t] Nothing st1
         outcome `shouldSatisfy` \o -> case o of
           SessionAborted [] (Just _) -> True
           _                          -> False
         open ses st' `shouldBe` False
+    it "aborts at either token on a TPer that reports no MaxTransactionLimit, whose transaction control tokens are invalid (3.2.2.4.1 item 4)" $ do
+      let noTxn = st1 { tsParams = (tsParams st1) { spTPerProperties = filter ((/= maxTransactionLimitName) . fst) (spTPerProperties (tsParams st1)) } }
+      txnLimit (tsParams noTxn) `shouldBe` Nothing
+      forM_ [StartTransactionItem 0, EndTransactionItem 0] $ \t -> do
+        let Processed outcome st' _ = sessionPayload ses [t] Nothing noTxn
+        outcome `shouldSatisfy` \o -> case o of
+          SessionAborted [] (Just _) -> True
+          _                          -> False
+        open ses st' `shouldBe` False
+    it "commits a level at End Transaction 0, mirrored 0: Start Transaction, a change put in the session's view, End Transaction 0 leaves the change in the committed SP, no level open (3.2.2.3.3.5; 3.3.7.3 b)" $ do
+      let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
+          put    = putSPView ses (withSidTries 3 (fromMaybe (error "no view") (spView ses opened))) opened
+          Processed outcome st' _ = sessionPayload ses [EndTransactionItem 0] Nothing put
+      tsSPs put `shouldBe` tsSPs st1
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [mirror EndTransaction 0])
+        other        -> expectationFailure (show other)
+      (depth ses st', open ses st') `shouldBe` (0, True)
+      Map.lookup uSP_Admin (tsSPs st') `shouldBe` fmap (withSidTries 3) (Map.lookup uSP_Admin (tsSPs st1))
+    it "rolls a level back at End Transaction 1, or at a status the TPer does not support, 7, each mirrored 1: the change put is gone, the committed SP as it was, no level open (3.2.2.3.3.5)" $
+      forM_ [1, 7] $ \s -> do
+        let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
+            put    = putSPView ses (withSidTries 3 (fromMaybe (error "no view") (spView ses opened))) opened
+            Processed outcome st' _ = sessionPayload ses [EndTransactionItem s] Nothing put
+        case outcome of
+          Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [mirror EndTransaction 1])
+          other        -> expectationFailure (show other)
+        (depth ses st', open ses st', tsSPs st' == tsSPs st1, spView ses st' == Map.lookup uSP_Admin (tsSPs st1)) `shouldBe` (0, True, True, True)
+    it "mirrors Start Transaction then End Transaction of one subpacket in order, each in a packet of its own, the level opened and closed by the live session (design 8.3)" $
+      forM_ [(0, 0), (1, 1), (7, 1)] $ \(s, mirrored) -> do
+        let Processed outcome st' _ = sessionPayload ses [StartTransactionItem 0, EndTransactionItem s] Nothing st1
+        case outcome of
+          Prepared [p, q] -> do
+            decoded p `shouldBe` Just (sessionHdr, [mirror StartTransaction 0])
+            decoded q `shouldBe` Just (sessionHdr, [mirror EndTransaction mirrored])
+          other -> expectationFailure (show other)
+        (depth ses st', st' == st1) `shouldBe` (0, True)
+    it "rolls a level back at End of Session, the TPer's own after the mirror in its subpacket, the session closed (3.3.7.3: the TPer commits only on the host's End Transaction; 3.3.7.1.5)" $ do
+      let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
+          put    = putSPView ses (withSidTries 3 (fromMaybe (error "no view") (spView ses opened))) opened
+          Processed outcome st' _ = sessionPayload ses [EndOfSessionItem] Nothing put
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate EndOfSession])
+        other        -> expectationFailure (show other)
+      (open ses st', tsSPs st' == tsSPs st1) `shouldBe` (False, True)
+      let Processed both _ _ = sessionPayload ses [StartTransactionItem 0, EndOfSessionItem] Nothing st1
+      case both of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [mirror StartTransaction 0 <> generate EndOfSession])
+        other        -> expectationFailure (show other)
+    it "drops the mirrors where it aborts: Start Transaction, a Get, then a second Get past MaxMethods sends the Get's result alone before the CloseSession (3.2.2.4.1 item 1)" $ do
+      let Processed outcome st' _ = sessionPayload ses [StartTransactionItem 0, Invoke getCall, Invoke getCall] Nothing st1
+      case outcome of
+        SessionAborted [p] (Just _) -> decoded p `shouldBe` Just (sessionHdr, [generate getResult])
+        other                       -> expectationFailure (show other)
+      open ses st' `shouldBe` False
+    it "aborts at a transaction control token after End of Data, where the status list is expected, as at a token out of place (3.2.2.4.2 item 2)" $ do
+      let inside = B.take (B.length (generate getCall) - B.length (generate (statusList 0))) (generate getCall) <> generate StartTransaction <> generate (Unsigned 0) <> generate (statusList 0)
+          (is, f) = itemsOf inside
+      is `shouldBe` []
+      f `shouldSatisfy` isJust
+      let Processed outcome st' _ = uncurry (sessionPayload ses) (is, f) st1
+      outcome `shouldSatisfy` \o -> case o of
+        SessionAborted [] (Just _) -> True
+        _                          -> False
+      open ses st' `shouldBe` False
+    it "aborts the session at a transaction control token within a method invocation, in its header or its parameter list (Core 3.3.7.3, PDF 78)" $
+      pendingWith "Hsed.Core.Stream reads a transaction control token there as any unexpected token, a BadCall answered NOT_AUTHORIZED or INVALID_PARAMETER with the session kept (3.2.2.4.2 items 3-4, PDF 39), where 3.3.7.3 (PDF 78, 71e3a18f1fb9) has the session aborted: hsed-core's, no group's at M5b"
+    it "ends the payload at a behaviour's own RESPONSE_OVERFLOW, as at the framing's (Opal 3.3.1 item 1): a Get on a byte table bounded before it builds its bytes" $
+      pendingWith "group G1's Base.get on a byte table answers RESPONSE_OVERFLOW (M5b); until it merges no behaviour answers it, and a host's status echoed is not one"
+    it "answers a Get within a transaction with the value put in the session's view (Core 3.3.7.3: visible within the transaction)" $
+      pendingWith "group G1's Base.get reads spView (M5b); until it merges Get reads the committed SP alone, and [Start Transaction, Set, Get] in one subpacket is the integration's example"
     it "sends the results completed before the fault: a Get, then an unexpected token" $ do
       let Processed outcome st' _ = sessionPayload ses [Invoke getCall] (Just (Fault 9 OutsideCall "StartName outside a method invocation")) st1
       case outcome of
@@ -217,10 +353,19 @@ spec = do
         Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
         other        -> expectationFailure (show other)
       open ses st' `shouldBe` True
-    it "says the payload goes on after a response that fits or an End of Session, and ends at an abort" $ do
+    it "says the payload goes on after a response that fits, a mirror or an End of Session, and ends at an abort" $ do
       prEnds (sessionPayload ses [Invoke getCall] Nothing st1) `shouldBe` False
       prEnds (sessionPayload ses [Invoke getCall, EndOfSessionItem] Nothing st1) `shouldBe` False
+      prEnds (sessionPayload ses [StartTransactionItem 0, EndTransactionItem 0] Nothing st1) `shouldBe` False
       prEnds (sessionPayload ses [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) st1) `shouldBe` True
+    it "echoes a host's status of RESPONSE_OVERFLOW as any other, the payload going on (Core 3.2.4.2): it is no overflow of the TPer's" $ do
+      let Processed outcome _ ends = sessionPayload ses [Invoke getCall { _statusCode = statusOf RESPONSE_OVERFLOW }, Invoke getCall] Nothing (withTPer maxMethodsName 2 st1)
+      ends `shouldBe` False
+      case outcome of
+        Prepared [p, q] -> do
+          decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
+          decoded q `shouldBe` Just (sessionHdr, [generate getResult])
+        other -> expectationFailure (show other)
     it "reads the items a session's stream gives: ETC-06's Call EndList is a header that does not read, EndList before Call a fault" $ do
       let (badHeader, noFault) = itemsOf (generate Call <> generate EndList <> B.drop 1 (generate getCall))
       noFault `shouldBe` Nothing
@@ -239,6 +384,13 @@ spec = do
       dispatch ses getCall st1 `shouldBe` (getResult, st1)
     it "answers INVALID_PARAMETER where the parameters are not the method's (5.1.5.11)" $
       fst (dispatch ses getCall { _parameters = Parameters [] [] } st1) `shouldBe` MethodResponse [] (statusOf INVALID_PARAMETER)
+    it "gates by the SP as the session sees it (spView, M5b): with the AccessControl rows gone from the session's view alone, the Get is NOT_AUTHORIZED, and granted again once the level is dropped" $ do
+      let opened  = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
+          noAcl   = (\sps -> sps { spsTables = Map.map (const []) (spsTables sps) }) (fromMaybe (error "no view") (spView ses opened))
+          blinded = putSPView ses noAcl opened
+      fst (dispatch ses getCall blinded) `shouldBe` MethodResponse [] (statusOf NOT_AUTHORIZED)
+      tsSPs blinded `shouldBe` tsSPs st1
+      fst (dispatch ses getCall (prState (sessionPayload ses [EndTransactionItem 1] Nothing blinded))) `shouldBe` getResult
 
   describe "the framing within the host's properties (packets, fits)" $ do
     let host = comIdHostLimits defaultSimParams initialHostProperties

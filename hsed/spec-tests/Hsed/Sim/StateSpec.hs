@@ -1,9 +1,10 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms   #-}
 
 {-|
 Module      : Hsed.Sim.StateSpec
-Description : Test specifications for Hsed.Sim.State and the M4a state of Hsed.Sim.Types: sessions, a ComID's life, rows and cells, the limits a ComID's host properties give
+Description : Test specifications for Hsed.Sim.State and the M4a state of Hsed.Sim.Types: sessions, a ComID's life, rows and cells, a session's transaction levels, the limits a ComID's host properties give
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -26,6 +27,18 @@ allows and are refused out of range: one Admin authority, 1 to 255 (PDF
 47-48), and a GUDID in Core Table 212's format, its company ID in IEEE 802c's
 AAI quadrant, no real company's (PDF 230); and, since the M4b review, a SID
 TryLimit C_PIN's uinteger_4 holds (Core Table 181, PDF 170).
+
+M5b's transactions (design 11 M5b, Scott's answer Q5): a session's SP as it
+sees it is the committed SP outside a transaction and its level's working
+copy within one, where a change put is visible to the session alone, kept
+from Level 0 and TPER_RESET's enabling, committed whole at End Transaction
+0 and dropped at any abort (Core 3.3.7.3, PDF 77-78); each helper looks the
+session up rather than trust the stale value it is given (design 8.3); a
+nested level, which the protocol never opens at MaxTransactionLimit 1,
+commits into its parent's copy through the State helpers alone (3.3.7.3.1,
+PDF 78); a second session to the SP is SP_BUSY before authenticating, the
+level intact (Core 5.1.5.3, PDF 138); and the parameters report
+MaxTransactionLimit 1, refusing any other (Opal Table 17, PDF 34).
 -}
 module Hsed.Sim.StateSpec (spec) where
 
@@ -36,18 +49,27 @@ import qualified RIO.Map             as Map
 import           RIO
 import           Test.Hspec
 
+import           Hsed.Core.Call      (MethodCall (..))
+import           Hsed.Core.Method    (invocation)
 import           Hsed.Core.Preconfig (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..))
 import           Hsed.Core.Record    (DecodedRecord (..), decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Table     (Cell (..), Col (..), Pre (..), Row, TableDesc (..), columnNamed)
+import           Hsed.Core.Token     (IsToken (..))
 import           Hsed.Core.TypeName  (TypeName (..))
-import           Hsed.Core.UID       (uid)
+import           Hsed.Core.UID       (UID, uid)
+import           Hsed.Core.Value     (IsValue (..))
+import           Hsed.Gen.Core.Codes (StatusCode (..), pattern SP_BUSY)
 import           Hsed.Gen.Core.Layouts (GUDIDColumnContentsDescription (..))
+import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc, tPerInfoTableDesc)
 import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable, uMBRTable, uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.Types (ubooleanType)
-import           Hsed.Gen.Core.UIDs  (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uSP_Admin)
+import           Hsed.Gen.Core.UIDs  (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uLocking_GlobalRange, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
+import           Hsed.Sim.Cells      (booleanCell)
+import           Hsed.Sim.Level0     (level0Response, lockedBit)
 import           Hsed.Sim.Preconfig  (PreconfSP (..), foldTables)
+import           Hsed.Sim.SessionManager (answer)
 import           Hsed.Sim.State
 import           Hsed.Sim.Types
 
@@ -76,6 +98,37 @@ withTPerInfo desc rows st = st { tsSPs = Map.adjust holding uSP_Admin (tsSPs st)
   where
     holding sps = sps { spsDescs  = Map.insert uTPerInfoTable desc (spsDescs sps)
                       , spsTables = Map.insert uTPerInfoTable rows (spsTables sps) }
+
+-- | An SP with cells of a row of one of its tables put, each column by name
+--   in the SP's description of the table: a change a method within a
+--   session might make.
+putNamed :: UID -> UID -> [(Text, Cell)] -> SPState -> SPState
+putNamed table object cells sps = updateRowIn table object put sps
+  where
+    put r = L.foldl' (\r' (name, cell) -> maybe r' (\c -> L.sortOn fst ((c, cell) : filter ((/= c) . fst) r')) (column name)) r cells
+    column name = Map.lookup table (spsDescs sps) >>= (`columnOf` name)
+
+-- | An SP of a TPer, one of no tables where the TPer lacks it.
+spOf :: UID -> TPerState -> SPState
+spOf sp = fromMaybe (SPState sp mempty mempty mempty) . Map.lookup sp . tsSPs
+
+-- | The host's StartSession to the Admin SP as Anybody, HSN 1, read-write
+--   (as "Hsed.Sim.SessionManager" answers it).
+startAdminCall :: MethodCall
+startAdminCall = invocation uSMUID Methods.StartSession
+  { Methods.startSessionHostSessionID         = value (1 :: Natural)
+  , Methods.startSessionSPID                  = value (token uSP_Admin)
+  , Methods.startSessionWrite                 = value (1 :: Natural)
+  , Methods.startSessionHostChallenge         = Nothing
+  , Methods.startSessionHostExchangeAuthority = Nothing
+  , Methods.startSessionHostExchangeCert      = Nothing
+  , Methods.startSessionHostSigningAuthority  = Nothing
+  , Methods.startSessionHostSigningCert       = Nothing
+  , Methods.startSessionSessionTimeout        = Nothing
+  , Methods.startSessionTransTimeout          = Nothing
+  , Methods.startSessionInitialCredit         = Nothing
+  , Methods.startSessionSignedHash            = Nothing
+  }
 
 spec :: Spec
 spec = do
@@ -142,6 +195,76 @@ spec = do
       sessionsOn base (abortSessions ((== uSP_Admin) . sesSP) st2) `shouldBe` []
       sessionsOn base (abortSessions ((== uSP_Locking) . sesSP) st2) `shouldBe` [s1, s2]
       tsNextTSN (abortSessions (const True) st2) `shouldBe` 4098
+
+  describe "a session's transactions (M5b; Core 3.3.7.3, PDF 77-78)" $ do
+    let (s, stS) = openSession base 1 uSP_Admin True [uAuthority_Anybody] st0
+        tries n  = putNamed uC_PINTable uC_PIN_SID [("Tries", UIntCell n)]
+        opened   = beginTxn s stS
+        changed  = putSPView s (tries 3 (spOf uSP_Admin stS)) opened
+        depthOf  = fmap txnDepth . liveSession s
+    it "see the committed SP outside a transaction, and put a change into it at once (3.3.7.3 a)" $ do
+      spView s stS `shouldBe` Map.lookup uSP_Admin (tsSPs stS)
+      txnDepth s `shouldBe` 0
+      let st' = putSPView s (tries 2 (spOf uSP_Admin stS)) stS
+      Map.lookup uSP_Admin (tsSPs st') `shouldBe` Just (tries 2 (spOf uSP_Admin stS))
+      spView s st' `shouldBe` Just (tries 2 (spOf uSP_Admin stS))
+      liveSession s st' `shouldBe` Just s
+    it "open a level as a copy of the SP the session sees: the live session's depth 1, the value given still at 0, the committed SP as it was (3.2.2.3.3.4)" $ do
+      depthOf opened `shouldBe` Just 1
+      txnDepth s `shouldBe` 0
+      spView s opened `shouldBe` Map.lookup uSP_Admin (tsSPs stS)
+      tsSPs opened `shouldBe` tsSPs stS
+    it "put a change into the level's copy, visible to the session and absent from the committed SP until End Transaction 0 commits it whole (3.3.7.3 b)" $ do
+      spView s changed `shouldBe` Just (tries 3 (spOf uSP_Admin stS))
+      tsSPs changed `shouldBe` tsSPs stS
+      let committed = commitTxn s changed
+      Map.lookup uSP_Admin (tsSPs committed) `shouldBe` Just (tries 3 (spOf uSP_Admin stS))
+      spView s committed `shouldBe` Just (tries 3 (spOf uSP_Admin stS))
+      depthOf committed `shouldBe` Just 0
+    it "drop the level, the change with it, the committed SP as it was (3.3.7.3: rolled back)" $ do
+      let dropped = dropTxn s changed
+      tsSPs dropped `shouldBe` tsSPs stS
+      spView s dropped `shouldBe` Map.lookup uSP_Admin (tsSPs stS)
+      depthOf dropped `shouldBe` Just 0
+      dropped `shouldBe` stS
+    it "look the session up by its ComID and TSN rather than trust the value given (design 8.3): the value has no level, yet putSPView writes the live session's copy, beginTxn stacks on it, and a session the TPer lacks sees and puts the committed SP" $ do
+      sesTxn s `shouldBe` []
+      depthOf (beginTxn s changed) `shouldBe` Just 2
+      let gone = closeSession base (sesTSN s) changed
+      (spView s gone, depthOf gone) `shouldBe` (Map.lookup uSP_Admin (tsSPs stS), Nothing)
+      tsSPs (putSPView s (tries 4 (spOf uSP_Admin stS)) gone) `shouldBe` Map.insert uSP_Admin (tries 4 (spOf uSP_Admin stS)) (tsSPs stS)
+      (beginTxn s gone, commitTxn s gone, dropTxn s gone) `shouldBe` (gone, gone, gone)
+      (commitTxn s stS, dropTxn s stS) `shouldBe` (stS, stS)
+    it "go with the session when it closes or aborts, the committed SP as it was (3.3.7.1.5, PDF 75-76; 3.3.7.3)" $ do
+      tsSPs (closeSession base (sesTSN s) changed) `shouldBe` tsSPs stS
+      tsSPs (abortSessions (const True) changed) `shouldBe` tsSPs stS
+      tsSessions (abortSessions (const True) changed) `shouldBe` mempty
+    it "keep Level 0 and TPER_RESET's enabling on the committed SP while a level holds a change (3.3.7.3: hardware settings change on commit): the global range locked in the copy shows at Level 0 only once committed" $ do
+      let manufactured = initialState defaultSimParams { spLockingOFS = Manufactured }
+          (sL, stL)    = openSession base 1 uSP_Locking True [uAuthority_Anybody] manufactured
+          lockedCopy   = putNamed uLockingTable uLocking_GlobalRange [("ReadLockEnabled", booleanCell True), ("ReadLocked", booleanCell True)] (spOf uSP_Locking stL)
+          held         = putSPView sL lockedCopy (beginTxn sL stL)
+      lockedBit stL `shouldBe` False
+      lockedBit held `shouldBe` False
+      level0Response held 2048 `shouldBe` level0Response stL 2048
+      lockedBit (commitTxn sL held) `shouldBe` True
+      level0Response (commitTxn sL held) 2048 `shouldNotBe` level0Response stL 2048
+      let enabledCopy = putNamed uTPerInfoTable (uid 0x00 0x00 0x02 0x01 0x00 0x03 0x00 0x01) [("ProgrammaticResetEnable", booleanCell True)] (spOf uSP_Admin stS)
+          armed       = putSPView s enabledCopy opened
+      programmaticResetEnabled armed `shouldBe` Just False
+      programmaticResetEnabled (commitTxn s armed) `shouldBe` Just True
+    it "nest, through these helpers alone, a level the protocol never opens at MaxTransactionLimit 1 (3.3.7.3.1, PDF 78): the nested level committed becomes part of its parent's copy, dropped leaves the parent's, and the committed SP waits for the top level" $ do
+      let inner = putSPView s (tries 5 (spOf uSP_Admin stS)) (beginTxn s changed)
+      depthOf inner `shouldBe` Just 2
+      spView s (commitTxn s inner) `shouldBe` Just (tries 5 (spOf uSP_Admin stS))
+      depthOf (commitTxn s inner) `shouldBe` Just 1
+      tsSPs (commitTxn s inner) `shouldBe` tsSPs stS
+      spView s (dropTxn s inner) `shouldBe` Just (tries 3 (spOf uSP_Admin stS))
+      Map.lookup uSP_Admin (tsSPs (commitTxn s (commitTxn s inner))) `shouldBe` Just (tries 5 (spOf uSP_Admin stS))
+    it "refuse a second session to the SP while one holds a level, SP_BUSY before authenticating, the level intact (Core 5.1.5.3, PDF 138: what makes a commit by overwrite exact)" $ do
+      let (reply, st') = answer base startAdminCall changed
+      fmap _statusCode reply `shouldBe` Just (statusValue SP_BUSY)
+      st' `shouldBe` changed
 
   describe "an SP's rows and cells" $ do
     let pin   = maybe (-1) colNumber (columnNamed "PIN" c_PINTableDesc)
@@ -248,6 +371,14 @@ spec = do
       length tperRequirements `shouldBe` 11
       L.lookup defSessionTimeoutName (spTPerProperties defaultSimParams) `shouldBe` Just 0
       simParamsProblems defaultSimParams `shouldBe` []
+    it "report MaxTransactionLimit 1 among the defaults, the one level the simulator nests, and refuse any other (M5b; Opal Table 17, PDF 34; Core 3.3.7.3.1, PDF 78)" $ do
+      L.lookup maxTransactionLimitName (spTPerProperties defaultSimParams) `shouldBe` Just 1
+      txnLimit defaultSimParams `shouldBe` Just 1
+      simParamsProblems defaultSimParams { spTPerProperties = [(maxTransactionLimitName, 1)] } `shouldBe` []
+      simParamsProblems defaultSimParams { spTPerProperties = [(maxTransactionLimitName, 2)] }
+        `shouldBe` ["MaxTransactionLimit 2: other than 1, the one transaction level the simulator nests (design 11 M5b, Scott's answer Q5; Core 3.3.7.3.1, PDF 78)"]
+      simParamsProblems defaultSimParams { spTPerProperties = [(maxTransactionLimitName, 0)] } `shouldSatisfy` ((== 1) . length)
+      txnLimit defaultSimParams { spTPerProperties = [] } `shouldBe` Nothing
     it "refuse an MSID of no bytes, and an MSID or a SID PIN past the PIN column's 32 bytes (Core Table 122)" $ do
       simParamsProblems defaultSimParams { spMsid = "" } `shouldSatisfy` (not . null)
       simParamsProblems defaultSimParams { spMsid = "123456789012345678901234567890123" } `shouldSatisfy` (not . null)

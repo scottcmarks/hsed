@@ -13,14 +13,20 @@ Stability   : experimental
 What the laws of "Hsed.Law.Sync" quantify over: states of the simulated
 TPer, with sessions open and the host's properties kept per ComID, and the
 rows the resets change varied (the Locking SP's Locking and MBRControl rows,
-every SP's C_PIN Tries and Persistence: M5a, for "Hsed.Law.Reset"); requests
-on their static ComIDs; and IF-SEND payloads that ask nothing, name no
-session the TPer has, or break a control session packet's requirements.
-Generators ('Gen' values), not 'Test.QuickCheck.Arbitrary' instances, so
-that no type here or in the codec gets an orphan instance (design 12).
+every SP's C_PIN Tries and Persistence: M5a, for "Hsed.Law.Reset"), a
+session of some holding a transaction level whose working copy differs
+from the committed SP (M5b, for "Hsed.Law.Txn"'s laws over the TPer's
+hardware and the resets); a Locking SP session as Admin1 with a level open
+or none, for the transaction laws; requests on their static ComIDs; and
+IF-SEND payloads that ask nothing, name no session the TPer has, or break a
+control session packet's requirements. Generators ('Gen' values), not
+'Test.QuickCheck.Arbitrary' instances, so that no type here or in the codec
+gets an orphan instance (design 12).
 -}
 module Hsed.Sim.Gen
   ( genState
+  , genTxnSession
+  , genTxnSessionAt
   , genStaticRequest
   , genNoActionPayload
   , genUnresolvablePayload
@@ -30,6 +36,7 @@ module Hsed.Sim.Gen
   , genStagedPackets
   , genResetColumns
   , genResetSet
+  , genLevel
   , foldedAt
   ) where
 
@@ -47,12 +54,13 @@ import           Hsed.Core.UID         (UID)
 import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable)
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
-import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
+import           Hsed.Gen.Core.UIDs    (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
 import           Hsed.Sim.Cells        (booleanCell, putCell)
 import           Hsed.Sim.Session      (packets)
-import           Hsed.Sim.State        (openSession, sessionsOn)
+import           Hsed.Sim.State        (beginTxn, openSession, putSPView, sessionsOn)
 import           Hsed.Sim.Types        (ComIdState (..), LifeCycle (..), Limits (..), SPState (..), Session (..), SimParams (..),
                                         SyncState (..),
                                         TPerState (..), comIdHostLimits, defaultSimParams, initialComIds, initialHostProperties, initialState,
@@ -80,6 +88,11 @@ import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPa
 --   session to one SP is SP_BUSY, Core 5.1.5.3, PDF 138, so no state the
 --   protocol reaches holds two on one SP). Its SPs' rows that the resets
 --   change are varied ('genResetColumns'), the Locking SP's at either life.
+--   In about a quarter of the states with a session, one session holds a
+--   transaction level, its working copy the committed SP with those rows
+--   varied again ('genLevel'; M5b): a change the session made within its
+--   transaction, which Level 0, the resets and the other sessions must not
+--   see (Core 3.3.7.3, PDF 77).
 genState :: Gen TPerState
 genState = do
   units    <- elements [minBound .. maxBound]
@@ -96,13 +109,55 @@ genState = do
   sps    <- traverse genResetColumns (tsSPs st0)
   let st = st0 { tsSPs = sps }
   comIds <- traverse (\cs -> genHostProperties >>= \props -> (\s -> cs { cSync = s, cHostProps = props }) <$> genSync p props) (tsComIds st)
-  foldM opened st { tsComIds = comIds } (take sessions [uSP_Admin, uSP_Locking])
+  st'    <- foldM opened st { tsComIds = comIds } (take sessions [uSP_Admin, uSP_Locking])
+  inTxn  <- (== 0) <$> chooseInt (0, 3)
+  case Map.elems (tsSessions st') of
+    ss@(_ : _) | inTxn -> elements ss >>= (`genLevel` st')
+    _                  -> pure st'
   where
     opened st sp = do
       c           <- elements (Map.keys (tsComIds st))
       hsn         <- arbitrary
       authorities <- elements [[uAuthority_Anybody], [uAuthority_Anybody, uAuthority_SID]]
       pure (snd (openSession c hsn sp True authorities st))
+
+-- | A TPer of the default parameters with the Locking SP Manufactured
+--   ('foldedAt'), the rows the resets change varied in it alone
+--   ('genResetColumns'), and a read-write session to the Locking SP open
+--   on the base ComID as Admin1, with the authorities the Session Manager
+--   gives such a session (Anybody, Admin1 and its class Admins, Core
+--   3.3.7.1.4, PDF 74-75; "Hsed.Sim.SessionManager") and any HSN, holding
+--   a transaction level or none, either as often: what the transaction
+--   laws quantify over ("Hsed.Law.Txn"). The session is given as
+--   "Hsed.Sim.State".'openSession' gave it, before any level opened, as
+--   "Hsed.Sim.Sync" gives "Hsed.Sim.Session" the session read when the
+--   packets were resolved: stale once a level is open (design 8.3), so that
+--   a law holds only if the simulator looks the session up.
+genTxnSession :: Gen (Session, TPerState)
+genTxnSession = chooseInt (0, 1) >>= genTxnSessionAt
+
+-- | 'genTxnSession' at a depth: a session holding that many transaction
+--   levels, none or one (the one the simulator nests, 'txnLimit'), each
+--   level's copy the SP with the reset columns varied again ('genLevel').
+genTxnSessionAt :: Int -> Gen (Session, TPerState)
+genTxnSessionAt depth = do
+  hsn <- arbitrary
+  sps <- Map.traverseWithKey (\sp s -> if sp == uSP_Locking then genResetColumns s else pure s) (tsSPs manufactured)
+  let (ses, st) = openSession (spBaseComId defaultSimParams) hsn uSP_Locking True
+                              [uAuthority_Anybody, LockingSP.uAuthority_Admin1, uAuthority_Admins] manufactured { tsSPs = sps }
+  (,) ses <$> foldM (\s _ -> genLevel ses s) st [1 .. depth]
+  where manufactured = foldedAt Manufactured
+
+-- | A TPer with a transaction level opened in a session
+--   ("Hsed.Sim.State".'beginTxn') and a change put in its working copy
+--   ('putSPView'): the SP as the session saw it with the rows the resets
+--   change varied ('genResetColumns'), visible to that session alone until
+--   it commits (Core 3.3.7.3, PDF 77); the TPer as it was for a session
+--   or an SP it lacks.
+genLevel :: Session -> TPerState -> Gen TPerState
+genLevel ses st = case Map.lookup (sesSP ses) (tsSPs st) of
+  Nothing  -> pure st
+  Just sps -> (\copy -> putSPView ses copy (beginTxn ses st)) <$> genResetColumns sps
 
 -- | The TPer of the default parameters with the Locking SP in an Original
 --   Factory State, its SPs folded once per state and shared

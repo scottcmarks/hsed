@@ -35,11 +35,18 @@ MBRControl's Done is set False where its MBRDoneOnReset lists it (Core
 3.3.4.7.5 items 1-8, PDF 65-66; 5.2.2.4.5, PDF 148): its sessions aborted
 with no CloseSession, its staged response dropped, Awaiting IF-SEND, its host
 properties the initial assumptions; its ComID management buffer is kept, the
-STACK_RESET response being what "Hsed.Sim.ComIdMgmt" then stages in it. The
-simulator has no transactions, no session startup in progress between two
-commands and no method processing between them, so items 2, 3 and 5 of each
-list have nothing to do, and it changes no Locking or MBRControl row (its
-items 1-8 name none).
+STACK_RESET response being what "Hsed.Sim.ComIdMgmt" then stages in it. Since
+M5b a session's open transaction levels are its working copies of its SP
+("Hsed.Sim.Types".@sesTxn@), so aborting the sessions is also item 2 of each
+list, every uncommitted transaction aborted (Core 3.3.4.7.5 item 2, PDF 65;
+Opal 3.2.3 c, PDF 29; 3.3.5.1 item 2, PDF 31): the levels go with their
+session, rolled back, and the committed SPs in @tsSPs@, which alone the
+resets' row changes apply to, stand (Core 3.3.7.3, PDF 77: a change made
+within a transaction takes effect on commit; "Hsed.Law.Txn".@rollback@). The
+simulator has no session startup in progress between two commands and no
+method processing between them, so items 3 and 5 of each list have nothing
+to do, and STACK_RESET changes no Locking or MBRControl row (its items 1-8
+name none).
 -}
 module Hsed.Sim.Reset
   ( ResetKind (..)

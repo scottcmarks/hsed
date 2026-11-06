@@ -42,6 +42,13 @@ ReadLocked and WriteLocked False, a power cycle is injected, and a new
 session reads them True, its LockOnReset {Power Cycle} (Opal Table 45, PDF
 86): what SPF-12 case 1 does with TPER_RESET (Test Cases PDF 65-66), the
 jig's own commands through a transport over "Hsed.Sim".@step@.
+
+M5b's group G2: a session's open transaction level, its working copy of the
+SP ("Hsed.Sim.State"'s transactions), goes with the session at every reset
+of the TPer and at STACK_RESET on its ComID, rolled back (Core 3.3.4.7.5
+item 2, PDF 65; Opal 3.2.3 c, PDF 29; 3.3.5.1 item 2, PDF 31), the reset
+columns applied to the committed rows alone (Core 3.3.7.3, PDF 77), and is
+kept by STACK_RESET on another ComID.
 -}
 module Hsed.Sim.ResetSpec (spec) where
 
@@ -70,10 +77,11 @@ import           Hsed.Jig.Target          (Target (..))
 import           Hsed.Jig.Transcript      (newTranscript)
 import           Hsed.Sim                 (step, syncOf)
 import           Hsed.Sim.Reset           (ResetKind (..), resetTPer, resetType, stackReset)
-import           Hsed.Sim.State           (cellOf, columnOf, descOf, openSession, rowWithUID, sessionsOn, tableRows, updateRow)
+import           Hsed.Sim.State           (beginTxn, cellOf, columnOf, descOf, liveSession, openSession, putSPView, rowWithUID,
+                                           sessionsOn, spView, tableRows, txnDepth, updateRow, updateRowIn)
 import           Hsed.Sim.Types           (ComIdState (..), Input (..), LifeCycle (..), MgmtBuffer (..), Output (..),
                                            SPState (..), SimParams (..), SyncState (..), TPerState (..), defaultSimParams,
-                                           initialHostProperties, initialState, maxPacketsName)
+                                           initialComIds, initialHostProperties, initialState, maxPacketsName)
 import           Hsed.Transport.InProc    (SimControl (..))
 import           Hsed.Wire                (Event (..), IfStatus (..), newChannel)
 import           Hsed.Wire.Internal       (Describe (..), Dir (..), Request (..), Response (..), Transport (..), Unit (..))
@@ -126,6 +134,15 @@ seeded sp table row cells st = updateRow sp table row put st
   where
     put r = L.foldl' (\r' (name, cell) -> maybe r' (\c -> L.sortOn fst ((c, cell) : filter ((/= c) . fst) r')) (column name)) r cells
     column name = descOf sp table st >>= (`columnOf` name)
+
+-- | An SP with cells of a row of one of its tables put, each column by name
+--   in the SP's own description of the table ('seeded' on an SP alone): a
+--   change a session puts in its transaction level's copy.
+seededIn :: UID -> UID -> [(Text, Cell)] -> SPState -> SPState
+seededIn table row cells sps = updateRowIn table row put sps
+  where
+    put r = L.foldl' (\r' (name, cell) -> maybe r' (\c -> L.sortOn fst ((c, cell) : filter ((/= c) . fst) r')) (column name)) r cells
+    column name = Map.lookup table (spsDescs sps) >>= (`columnOf` name)
 
 -- | A row's cell in a column of a name, by the SP's description.
 named :: UID -> UID -> Text -> TPerState -> Row -> Maybe Cell
@@ -272,6 +289,34 @@ spec = describe "the resets of the simulated TPer" $ do
           admin1Tries = cellAt uSP_Locking uC_PINTable LockingSP.uC_PIN_Admin1 "Tries"
       admin1Tries (afterEvent PowerCycle st) `shouldBe` Just (UIntCell 0)
       forM_ (drop 1 everyReset) $ \(_, reset) -> admin1Tries (reset st) `shouldBe` Just (UIntCell 3)
+
+  describe "an open transaction level (M5b; Core 3.3.7.3, PDF 77-78)" $ do
+    let p2        = defaultSimParams { spNComIds = 2, spLockingOFS = Manufactured }
+        -- the global range unlocked with LockOnReset {Programmatic}, on a TPer of two static ComIDs
+        committed = (armed Manufactured [3] []) { tsParams = p2, tsComIds = initialComIds p2 }
+        (s, stS)  = openSession base 1 uSP_Locking True [uAuthority_Anybody] committed
+        -- the session's copy: the range locked, its LockOnReset empty, both unlike the committed row
+        copy      = seededIn uLockingTable uLocking_GlobalRange [("ReadLocked", true), ("WriteLocked", true), ("LockOnReset", resetSet [])]
+                      (fromMaybe (error "no Locking SP") (Map.lookup uSP_Locking (tsSPs stS)))
+        held      = putSPView s copy (beginTxn s stS)
+        level st  = fmap txnDepth (liveSession s st)
+    it "holds the change in the session's view alone: the committed global range unlocked, which the resets read" $ do
+      (level held, spView s held) `shouldBe` (Just 1, Just copy)
+      globalLocks held `shouldBe` (False, False)
+      tsSPs held `shouldBe` tsSPs stS
+    it "is dropped by every reset of the TPer, the reset columns applied to the committed rows alone: TPER_RESET locks the global range by its committed LockOnReset {Programmatic}, the copy's locks and empty set gone; the interface resets leave it unlocked" $ do
+      let reset = resetTPer OnTPerReset held
+      (level reset, tsSessions reset, globalLocks reset) `shouldBe` (Nothing, mempty, (True, True))
+      tsSPs reset `shouldBe` tsSPs (resetTPer OnTPerReset stS)
+      forM_ [afterEvent PowerCycle, afterEvent HardwareReset, afterEvent HotPlug] $ \r -> do
+        let st' = r held
+        (level st', tsSessions st', globalLocks st') `shouldBe` (Nothing, mempty, (False, False))
+        tsSPs st' `shouldBe` tsSPs (r stS)
+    it "is dropped by STACK_RESET on the session's ComID, the committed rows as they were (Core 3.3.4.7.5 item 2), and kept by STACK_RESET on another" $ do
+      let st' = stackReset base held
+      (level st', tsSPs st' == tsSPs stS, globalLocks st') `shouldBe` (Nothing, True, (False, False))
+      let st'' = stackReset (base + 1) held
+      (level st'', spView s st'', tsSPs st'' == tsSPs stS) `shouldBe` (Just 1, Just copy, True)
 
   describe "the reset clause on the wire, at --locking-ofs manufactured (M5a acceptance item 8)" $
     it "reads Locking_GlobalRange's ReadLocked and WriteLocked False as Admin1, then after a power cycle True, its LockOnReset {Power Cycle}" $ do

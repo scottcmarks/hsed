@@ -30,8 +30,11 @@ the TPer unchanged; a regular session's packet, opened directly
 ("Hsed.Sim.State".@openSession@), answered in a packet carrying its TSN and
 HSN, [Get, EOS] closing it, a bare EOS echoed, (TSN, HSN + 1) discarded
 with the session kept (ETC-04), the error cases aborting it with the TPer's
-CloseSession or answering NOT_AUTHORIZED (ETC-05, ETC-06, ETC-14's shape);
-the answer to IF-RECV in each state, exactly the length asked, as many
+CloseSession or answering NOT_AUTHORIZED (ETC-05, ETC-06, ETC-14's shape),
+a Start Transaction mirrored before the Get's answer and a second one past
+MaxTransactionLimit aborting with no mirror, ETC-09's shape (M5b, Core
+3.2.2.3.3.4, PDF 37); the answer to IF-RECV in each state, exactly the
+length asked, as many
 packets as the host takes; and the four laws of "Hsed.Law.Sync", each run
 as a QuickCheck property of 100 cases.
 -}
@@ -73,7 +76,7 @@ import           Hsed.Sim.Sync
 import           Hsed.Sim.Types            (ComIdLife (..), ComIdState (..), Input (..), MgmtBuffer (..), Outcome (..), Output (..),
                                             Session (..), SimParams (..), SyncState (..), TPerState (..), defaultSimParams,
                                             initialHostProperties, initialState, maxComPacketSizeName, maxMethodsName,
-                                            maxPacketSizeName, maxPacketsName, maxSubpacketsName)
+                                            maxPacketSizeName, maxPacketsName, maxSubpacketsName, maxTransactionLimitName)
 import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketProtocol,
                                             roundUp)
 
@@ -457,10 +460,28 @@ spec = do
       let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate Call <> generate EndList <> B.drop 1 (generate getCall)]]) st1
       outcome `shouldBe` Prepared [sessionPacket [generate (MethodResponse [] (statusValue NOT_AUTHORIZED))]]
       open st' `shouldBe` True
-    it "aborts at a Start Transaction, the TPer starting no transaction (3.2.2.3.3.4)" $ do
+    it "mirrors a Start Transaction with status 0 before the Get's answer, each in a packet of its own for a host taking one subpacket a packet, a level open in the session (3.2.2.3.3.4; M5b)" $ do
       let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate StartTransaction <> "\x00" <> generate getCall]]) st1
+      outcome `shouldBe` Prepared [sessionPacket [generate StartTransaction <> "\x00"], sessionPacket [generate getResult]]
+      open st' `shouldBe` True
+      fmap (length . sesTxn) (resolveSession base (sesTSN ses) (sesHSN ses) st') `shouldBe` Just 1
+    it "aborts at a second Start Transaction in the subpacket, past MaxTransactionLimit 1, with no mirror sent, the TPer's CloseSession prepared: ETC-09's shape (3.2.2.3.3.4; Test Cases PDF 81-82)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate StartTransaction <> "\x00" <> generate StartTransaction <> "\x00" <> generate getCall]]) st1
       outcome `shouldBe` SessionAborted [] (Just closing)
       open st' `shouldBe` False
+    it "aborts at an End Transaction with no level open (3.2.2.3.4 b), and at a Start Transaction on a TPer reporting no MaxTransactionLimit (3.2.2.4.1 item 4)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate EndTransaction <> "\x00" <> generate getCall]]) st1
+      outcome `shouldBe` SessionAborted [] (Just closing)
+      open st' `shouldBe` False
+      let noTxn = st1 { tsParams = (tsParams st1) { spTPerProperties = filter ((/= maxTransactionLimitName) . fst) (spTPerProperties (tsParams st1)) } }
+      fst (classifyIfSend base (comPacketOf [inSession [generate StartTransaction <> "\x00" <> generate getCall]]) noTxn) `shouldBe` SessionAborted [] (Just closing)
+    it "through the step: the Start Transaction's mirror at the first IF-RECV, with more to come, and the Get's answer at the second (the host's MaxPackets 1)" $ do
+      let (out, st') = sent (comPacketOf [inSession [generate StartTransaction <> "\x00" <> generate getCall]]) st1
+      out `shouldBe` Out (Response Good mempty)
+      let (first', st'') = received st'
+      fmap (map (map dataSubPacketPayload . pfSubPackets) . snd) (frameOut first') `shouldBe` Just [[generate StartTransaction <> "\x00"]]
+      fmap (comPacketOutstandingData . fst) (frameOut first') `shouldSatisfy` maybe False (> 0)
+      fmap (map (map dataSubPacketPayload . pfSubPackets) . snd) (frameOut (fst (received st''))) `shouldBe` Just [[generate getResult]]
     it "aborts at a packet of two subpackets, more than the TPer's MaxSubpackets (5.2.2.4.1.1; ETC-14's shape)" $ do
       let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall, generate getCall]]) st1
       outcome `shouldBe` SessionAborted [] (Just closing)

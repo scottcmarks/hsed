@@ -17,11 +17,16 @@ as a session reads it ("Hsed.Core.Stream", 'SessionStream'), each invocation
 dispatched ('dispatch': the access control gate first, "Hsed.Sim.Access",
 then the behaviour of the method's record, "Hsed.Sim.Base"), the TPer's End
 of Session echoed and the session closed (Core 3.2.2.3.3.3, PDF 37;
-3.3.7.1.5, PDF 75), and a fault aborting the session with the results
-completed before it and the TPer's CloseSession where the run prepares one
-(3.2.2.4.2, PDF 39; 3.3.10.7 b, PDF 86; Opal 2.30 3.3.4.1.3, PDF 31).
-"Hsed.Sim.Sync" resolves the packets and reads their subpackets' atoms;
-'sessionPayload' takes one data subpacket's items.
+3.3.7.1.5, PDF 75), the host's transaction control tokens answered with
+the TPer's mirrors of them, a level of the session's transaction opened,
+committed or rolled back (since M5b, 3.2.2.3.3.4-5, PDF 37-38; 3.3.7.3,
+PDF 77-78; "Hsed.Sim.State"'s transactions), and a fault aborting the
+session with the results completed before it and the TPer's CloseSession
+where the run prepares one (3.2.2.4.2, PDF 39; 3.3.10.7 b, PDF 86; Opal
+2.30 3.3.4.1.3, PDF 31). "Hsed.Sim.Sync" resolves the packets and reads
+their subpackets' atoms; 'sessionPayload' takes one data subpacket's items,
+with the session as it was when the packets were resolved, and takes the
+session as the TPer holds it before each item (design 8.3).
 
 The responses are framed within the host's properties the session keeps
 ('sesHostProps', Core 5.2.2.4, PDF 144-145): each response a data subpacket
@@ -65,9 +70,9 @@ import           Hsed.Sim.Access         (grantedColumns)
 import qualified Hsed.Sim.Base           as Base
 import           Hsed.Sim.Behaviour      (Invoked (..), Reply (..), runSome)
 import           Hsed.Sim.SessionManager (closeSessionCall)
-import           Hsed.Sim.State          (abortSessions, closeSession)
+import           Hsed.Sim.State          (abortSessions, beginTxn, closeSession, commitTxn, dropTxn, liveSession, spView, txnDepth)
 import           Hsed.Sim.Types          (ComIdState (..), Limits (..), Outcome (..), Session (..), SimParams (..), TPerState (..),
-                                          comIdHostLimits, initialHostProperties, tperLimits)
+                                          comIdHostLimits, initialHostProperties, tperLimits, txnLimit)
 import           Hsed.Wire               (comPacketHeaderSize, dataKind)
 
 
@@ -82,7 +87,10 @@ import           Hsed.Wire               (comPacketHeaderSize, dataKind)
 --   run ("Hsed.Sim.Base".'Base.behaviours', through
 --   "Hsed.Sim.Behaviour".'runSome'), its parameters read against the
 --   signature, a ParamError INVALID_PARAMETER (5.1.5.11 d, PDF 139); a
---   behaviour that answers other than results, FAIL.
+--   behaviour that answers other than results, FAIL. The gate reads the SP
+--   as the session sees it ("Hsed.Sim.State".'spView': within a
+--   transaction its working copy, since M5b), and the behaviour is handed
+--   the session it is given, so the caller hands it the live one.
 dispatch :: Session -> MethodCall -> TPerState -> (MethodResponse, TPerState)
 dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
   | status /= statusValue SUCCESS = (MethodResponse [] status, st)
@@ -93,7 +101,7 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
       [Left _]                            -> (MethodResponse [] (statusValue INVALID_PARAMETER), st)
       _                                   -> (MethodResponse [] (statusValue FAIL), st)
   where
-    granted = isJust (Map.lookup (sesSP ses) (tsSPs st) >>= \sps -> grantedColumns sps ses invoker method)
+    granted = isJust (spView ses st >>= \sps -> grantedColumns sps ses invoker method)
     invoked = Invoked { ivComId = sesComId ses, ivSession = Just ses, ivInvoker = invoker }
 
 -- | One data subpacket of a session's packet, its items as
@@ -110,35 +118,69 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
 --     and INVALID_PARAMETER (3.2.2.4.2 items 3-4, PDF 39);
 --   * the host's End of Session is answered with the TPer's own, after the
 --     results, and the session closes (3.2.2.3.3.3, PDF 37; 3.3.7.1.5, PDF
---     75; what follows was ignored by the reading);
---   * a transaction control token aborts the session: the TPer starts no
---     transaction at M4a (3.2.2.3.3.4, PDF 37);
+--     75; what follows was ignored by the reading), its open transaction
+--     levels gone with it, rolled back (3.3.7.3, PDF 77-78: the TPer commits
+--     only on the host's End Transaction);
+--   * the host's Start Transaction (since M5b) opens a level of the
+--     session's transaction ("Hsed.Sim.State".'beginTxn') and is answered,
+--     where the host's token was, with the TPer's mirror of it, Start
+--     Transaction with status 0, whatever status the host sent, which is
+--     ignored (3.2.2.3.3.4, PDF 37); one that would exceed the TPer's
+--     MaxTransactionLimit ("Hsed.Sim.Params".'txnLimit'; 1, the one level
+--     the simulator nests), or that opens no level, aborts the session
+--     (PDF 37: the nesting limit exceeded, or the TPer unable to start the
+--     transaction);
+--   * the host's End Transaction (since M5b) with status 0 commits the
+--     innermost level ('commitTxn') and is mirrored with 0; with any other
+--     status it aborts that level ('dropTxn') and is mirrored with 1
+--     (3.2.2.3.3.5, PDF 37-38: 1 aborts the level, a status the TPer does
+--     not support aborts it and returns 1); with no level open it aborts
+--     the session (3.2.2.3.4 b, PDF 38: a control token out of order);
+--   * either token aborts the session where the TPer does not report
+--     MaxTransactionLimit, a TPer without transactions, whose transaction
+--     control tokens are invalid (3.2.2.4.1 item 4 and its item 1, PDF 38);
 --   * the fault that stopped the reading, a token out of place or a stream
 --     ending inside an invocation, aborts the session (3.2.2.4.2 items 1, 2
 --     and 5; 3.3.10.3 a, PDF 83-84), and so does a fault the caller found
 --     before reading, a packet over the TPer's MaxSubpackets or
 --     MaxPacketSize (5.2.2.4.1.1-2, PDF 145).
 --
---   The responses are framed as the module's description says, each
---   checked to fit as it is made: one that does not is answered with an
---   empty list and RESPONSE_OVERFLOW, the items after it are not processed,
---   and the result says the payload's processing ends there ('prEnds': Opal
---   2.30 3.3.1 item 1, PDF 29, the TPer SHALL terminate processing of the
---   IF-SEND command payload, so "Hsed.Sim.Sync" reads no further subpacket
---   or packet of it, over Core 3.3.10.7 d, PDF 87, where the TPer SHALL
+--   Before each item the session is taken as the TPer then holds it
+--   ("Hsed.Sim.State".'liveSession'): the one given is the one read when
+--   the packets were resolved, with no level an item before opened
+--   (design 8.3), and it is the live one that is dispatched with and whose
+--   levels are counted, so that a second Start Transaction in the same
+--   subpacket is past the limit (ETC-09) and an End Transaction after one
+--   commits.
+--
+--   The responses and the mirrors are framed as the module's description
+--   says, each its own data subpacket, each response checked to fit as it
+--   is made: one that does not, or one a behaviour itself answers with
+--   RESPONSE_OVERFLOW (since M5b: a Get on a byte table bounded before it
+--   builds its bytes, "Hsed.Sim.Base"), is answered with an empty list and
+--   RESPONSE_OVERFLOW, the items after it are not processed, and the result
+--   says the payload's processing ends there ('prEnds': Opal 2.30 3.3.1
+--   item 1, PDF 29, the TPer SHALL terminate processing of the IF-SEND
+--   command payload, so "Hsed.Sim.Sync" reads no further subpacket or
+--   packet of it, over Core 3.3.10.7 d, PDF 87, where the TPer SHALL
 --   continue processing the methods sent in that payload, the SSC refining
 --   Core, the lead's answer 8's principle, design 13.31 (a); the state
 --   changes of the invocations run before stand, the overflowed one's among
---   them, the method having run). No items and
---   no fault is 'Prepared' of no packets, the TPer unchanged (no action,
---   Core 3.3.10.6 S2:S1 d, PDF 85-86).
+--   them, the method having run; a host's own status echoed, 3.2.4.2, PDF
+--   49, is no overflow of the TPer's, whatever it is). No items and no
+--   fault is 'Prepared' of no packets, the TPer unchanged (no action, Core
+--   3.3.10.6 S2:S1 d, PDF 85-86).
 --
 --   An abort is 'SessionAborted': the packets of the results completed
---   before it, the TPer's CloseSession on the control session, with the
---   session's HSN and TSN ("Hsed.Sim.SessionManager".'closeSessionCall'),
---   where the run prepares one ('spCloseSessionOnAbort'; 3.3.10.7 b, PDF 86;
---   3.3.7.1.5 item 3, PDF 75), and the session gone
---   ("Hsed.Sim.State".'abortSessions').
+--   before it, the mirrors among them dropped (3.2.2.4.1 item 1, PDF 38:
+--   results for methods completed before the violating token are sent, so
+--   ETC-09 sees no Start Transaction mirror beside the CloseSession), the
+--   TPer's CloseSession on the control session, with the session's HSN and
+--   TSN ("Hsed.Sim.SessionManager".'closeSessionCall'), where the run
+--   prepares one ('spCloseSessionOnAbort'; 3.3.10.7 b, PDF 86; 3.3.7.1.5
+--   item 3, PDF 75), and the session gone, its levels with it
+--   ("Hsed.Sim.State".'abortSessions'; 3.3.7.3, PDF 77: an aborted session
+--   aborts its open transactions).
 sessionPayload :: Session -> [Item] -> Maybe Fault -> TPerState -> Processed
 sessionPayload ses items fault st0 = go st0 [] (0 :: Int) items
   where
@@ -146,36 +188,59 @@ sessionPayload ses items fault st0 = go st0 [] (0 :: Int) items
     tper = tperLimits p
     host = comIdHostLimits p (sesHostProps ses)
     hdr  = sessionHeader ses
+    -- the session as the TPer holds it before an item, the given one where it holds none (an item ends the payload
+    -- when the session goes, so none is read after)
+    liveIn st = fromMaybe ses (liveSession ses st)
+    depthIn   = txnDepth . liveIn
     go st done n = \case
       []          -> maybe (prepared st done Nothing False) (const (abort st done)) fault
       item : rest -> case item of
         Invoke mc
           | n >= lMethods tper -> abort st done
-          | otherwise          -> let (resp, st') = dispatch ses mc st in respond st' done (n + 1) resp rest
+          | otherwise          ->
+              let (resp, st') = dispatch (liveIn st) mc st
+                  -- the behaviour's own RESPONSE_OVERFLOW; a host's status echoed is not one (3.2.4.2, PDF 49)
+                  overflowed  = _statusCode mc == statusValue SUCCESS && _resultStatus resp == statusValue RESPONSE_OVERFLOW
+              in respond overflowed st' done (n + 1) resp rest
         BadCall f
           | n >= lMethods tper -> abort st done
           | otherwise -> case faultPlace f of
-              InHeader       -> respond st done (n + 1) (MethodResponse [] (statusValue NOT_AUTHORIZED)) rest
-              InParameters _ -> respond st done (n + 1) (MethodResponse [] (statusValue INVALID_PARAMETER)) rest
+              InHeader       -> respond False st done (n + 1) (MethodResponse [] (statusValue NOT_AUTHORIZED)) rest
+              InParameters _ -> respond False st done (n + 1) (MethodResponse [] (statusValue INVALID_PARAMETER)) rest
               _              -> abort st done
         EndOfSessionItem       -> prepared (closeSession (sesComId ses) (sesTSN ses) st) done (Just (generate EndOfSession)) False
-        StartTransactionItem _ -> abort st done
-        EndTransactionItem _   -> abort st done
-    -- a response that fits goes on; one that does not is RESPONSE_OVERFLOW's, and the payload's processing ends there
-    respond st done n resp rest
-      | fits host hdr (generate resp) = go st (done <> [generate resp]) n rest
-      | otherwise                     = prepared st (done <> [generate (MethodResponse [] (statusValue RESPONSE_OVERFLOW))]) Nothing True
-    prepared st done eos ends = case packets host hdr (withEnd done eos) of
+        StartTransactionItem _ -> case txnLimit p of
+          Just limit
+            | not (exceeded limit (depthIn st)), let opened = beginTxn (liveIn st) st, depthIn opened == depthIn st + 1
+                -> go opened (done <> [Mirror (mirror StartTransaction 0)]) n rest
+          _     -> abort st done
+        EndTransactionItem s   -> case txnLimit p of
+          Just _
+            | depthIn st > 0, s == 0 -> go (commitTxn (liveIn st) st) (done <> [Mirror (mirror EndTransaction 0)]) n rest
+            | depthIn st > 0         -> go (dropTxn (liveIn st) st) (done <> [Mirror (mirror EndTransaction 1)]) n rest
+          _ -> abort st done
+    -- the nesting limit exceeded by one level more (3.2.2.3.3.4, PDF 37); a reported 0 is no limit (Table 167, PDF 142)
+    exceeded limit depth = limit /= 0 && fromIntegral depth >= limit
+    -- the TPer's mirror of a transaction control token: the token, then its status as a uinteger (3.2.2.3.3.4-5, PDF 37)
+    mirror t s = generate t <> generate (Unsigned s)
+    -- a response that fits goes on; one that does not, or a behaviour's own RESPONSE_OVERFLOW, is RESPONSE_OVERFLOW's,
+    -- and the payload's processing ends there
+    respond overflowed st done n resp rest
+      | not overflowed && fits host hdr (generate resp) = go st (done <> [Result (generate resp)]) n rest
+      | otherwise = prepared st (done <> [Result (generate (MethodResponse [] (statusValue RESPONSE_OVERFLOW)))]) Nothing True
+    prepared st done eos ends = case packets host hdr (withEnd (map outBytes done) eos) of
       Right ps -> Processed (Prepared ps) st ends
       Left _   -> abort st []
-    -- the TPer's End of Session after the last response, in its subpacket where it fits, else in one of its own
+    -- the TPer's End of Session after the last response or mirror, in its subpacket where it fits, else in one of its own
     withEnd done = \case
       Nothing  -> done
       Just eos -> case reverse done of
         []                                        -> [eos]
         lastOne : before | fits host hdr (lastOne <> eos) -> reverse before <> [lastOne <> eos]
                          | otherwise                      -> done <> [eos]
-    abort st done = Processed (SessionAborted (either (const []) id (packets host hdr done)) closing) (abortSessions same st) True
+    -- the results completed before the abort, the mirrors dropped (3.2.2.4.1 item 1, PDF 38)
+    abort st done = Processed (SessionAborted (either (const []) id (packets host hdr [ bytes | Result bytes <- done ])) closing)
+                              (abortSessions same st) True
       where
         closing = if spCloseSessionOnAbort p then closeSessionPacket st else Nothing
         same s  = sesComId s == sesComId ses && sesTSN s == sesTSN ses
@@ -196,6 +261,20 @@ data Processed = Processed
   , prEnds    :: !Bool
   }
   deriving (Eq, Show)
+
+-- | What a session's stream carries back for an item, each its own data
+--   subpacket: a method's response, or the TPer's mirror of a transaction
+--   control token (since M5b), which an abort drops where it sends the
+--   results completed before it (Core 3.2.2.4.1 item 1, PDF 38).
+data Out
+  = Result !ByteString
+  | Mirror !ByteString
+
+-- | An item's bytes, whichever it is.
+outBytes :: Out -> ByteString
+outBytes = \case
+  Result bytes -> bytes
+  Mirror bytes -> bytes
 
 
 -- * Framing responses

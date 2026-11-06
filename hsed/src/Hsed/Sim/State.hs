@@ -29,9 +29,21 @@ regular sessions and the resets share (design 8.1-8.2, M4a):
   the session as the TPer now holds it, its SP as it sees it and put back
   as it changes it, how many levels it has open, and a level opened,
   committed or dropped, each level a working copy of the SP in the
-  session ("Hsed.Sim.Types".@sesTxn@), the committed SP in @tsSPs@ (Core
-  3.3.7.3, PDF 77-78); the bodies are group G2's (M5b), until then M5a's
-  behaviour, every session outside a transaction;
+  session ("Hsed.Sim.Types".@sesTxn@, innermost first), the committed SP
+  in @tsSPs@ (Core 3.3.7.3, PDF 77-78: a change made within a transaction
+  visible within it, persistent when the top-level one commits, rolled
+  back when it aborts). Each of them looks the session up by its ComID
+  and TSN rather than trust the value it is given: "Hsed.Sim.Sync" hands
+  "Hsed.Sim.Session" the session as it was when the payload's packets
+  were resolved, stale once an item of the payload opened a level (design
+  8.3). A commit at the top level overwrites the committed SP with the
+  copy, exact because a session holding a transaction is the only session
+  to its SP: "Hsed.Sim.SessionManager" refuses SP_BUSY and
+  NO_SESSIONS_AVAILABLE before it authenticates (Core 5.1.5.3, PDF 138), so
+  neither another session nor an authentication's Tries changes the SP
+  under an open level, and a reset aborts the session, levels and all,
+  before it changes committed rows ("Hsed.Sim.Reset"); a session closed or
+  aborted takes its levels with it, which is the rollback;
 * the Locking SP's tables (since M5a): its Locking table's rows, the
   global range and each range after it, its MBRControl row, and the size of
   a byte table it holds, the MBR or the DataStore (Opal 2.30 Tables 36, 45
@@ -174,45 +186,75 @@ liveSession ses st = Map.lookup (sesComId ses, sesTSN ses) (tsSessions st)
 -- | The session's SP as the session sees it: within a transaction the
 --   innermost level's copy (Core 3.3.7.3, PDF 77: changes made within a
 --   transaction are visible within it), else the committed SP the TPer
---   holds; 'Nothing' for an SP the TPer lacks. Group G2's (M5b): until then
---   the committed SP alone, as at M5a.
+--   holds; 'Nothing' for an SP the TPer lacks. The levels are the live
+--   session's ('liveSession'), never the given value's, which is stale once
+--   an item before the caller's opened one (design 8.3); a session the
+--   TPer no longer holds sees the committed SP.
 spView :: Session -> TPerState -> Maybe SPState
-spView ses st = Map.lookup (sesSP ses) (tsSPs st)
+spView ses st = case liveSession ses st of
+  Just live | copy : _ <- sesTxn live -> Just copy
+  _                                   -> Map.lookup (sesSP ses) (tsSPs st)
 
 -- | The session's SP put back as a method changed it: within a transaction
 --   into the innermost level's copy, committed when the top-level one is
 --   (Core 3.3.7.3 b, PDF 77), else committed at once (3.3.7.3 a, PDF 77).
---   Group G2's (M5b): until then committed at once, as at M5a.
+--   The level is the live session's, as 'spView' reads it.
 putSPView :: Session -> SPState -> TPerState -> TPerState
-putSPView ses sps st = st { tsSPs = Map.insert (sesSP ses) sps (tsSPs st) }
+putSPView ses sps st = case liveSession ses st of
+  Just live | _ : deeper <- sesTxn live -> withLevels live (sps : deeper) st
+  _                                     -> st { tsSPs = Map.insert (sesSP ses) sps (tsSPs st) }
 
 -- | How many transaction levels a session has open (Core 3.3.7.3.1, PDF
---   78), none outside a transaction.
+--   78), none outside a transaction: of the 'Session' it is given, so the
+--   live one's ('liveSession') where it matters.
 txnDepth :: Session -> Int
 txnDepth = length . sesTxn
 
 -- | A transaction level opened in a session by the host's Start
 --   Transaction (Core 3.2.2.3.3.4, PDF 37): a copy of the SP as the session
---   sees it ('spView') pushed. Group G2's (M5b): until then the TPer
---   unchanged, no level opened.
+--   sees it ('spView') pushed on the live session's levels; the TPer
+--   unchanged, no level opened, where it holds no such session or no such
+--   SP (the caller then aborts the session, unable to start a transaction,
+--   PDF 37).
 beginTxn :: Session -> TPerState -> TPerState
-beginTxn _ = id
+beginTxn ses st = fromMaybe st $ do
+  live <- liveSession ses st
+  copy <- spView ses st
+  pure (withLevels live (copy : sesTxn live) st)
 
 -- | A session's innermost transaction level committed by the host's End
 --   Transaction of status 0x00 (Core 3.2.2.3.3.5, PDF 37): at the top level
 --   its copy becomes the committed SP (3.3.7.3 b, PDF 77), deeper its
 --   parent's (3.3.7.3.1, PDF 78: the nested level's changes part of its
---   parent's). Group G2's (M5b): until then the TPer unchanged.
+--   parent's, as if its boundaries had never been established); the TPer
+--   unchanged with no level open. The copy overwrites the committed SP
+--   whole, which loses nothing: a session holding a transaction is the only
+--   session to its SP, since "Hsed.Sim.SessionManager" refuses a second
+--   session to an SP (SP_BUSY, Core 5.1.5.3, PDF 138) and the TPer's
+--   MaxSessions (NO_SESSIONS_AVAILABLE) before it authenticates, so that
+--   neither another session nor an authentication's Tries changes that SP
+--   while the level is open, and the resets, which change committed rows,
+--   abort the session and its levels first ("Hsed.Sim.Reset").
 commitTxn :: Session -> TPerState -> TPerState
-commitTxn _ = id
+commitTxn ses st = case liveSession ses st of
+  Just live -> case sesTxn live of
+    [copy]             -> (withLevels live [] st) { tsSPs = Map.insert (sesSP live) copy (tsSPs st) }
+    copy : _ : parents -> withLevels live (copy : parents) st
+    []                 -> st
+  Nothing   -> st
 
 -- | A session's innermost transaction level aborted, its copy dropped, so
 --   that the SP is as it was when the level opened (Core 3.3.7.3, PDF 78:
 --   rolled back; 3.2.2.3.3.5, PDF 37-38: the host's End Transaction of a
---   status other than 0x00). Group G2's (M5b): until then the TPer
---   unchanged.
+--   status other than 0x00); the TPer unchanged with no level open.
 dropTxn :: Session -> TPerState -> TPerState
-dropTxn _ = id
+dropTxn ses st = case liveSession ses st of
+  Just live | _ : deeper <- sesTxn live -> withLevels live deeper st
+  _                                     -> st
+
+-- | The TPer holding a session with these levels in place of its own.
+withLevels :: Session -> [SPState] -> TPerState -> TPerState
+withLevels live levels st = st { tsSessions = Map.insert (sesComId live, sesTSN live) live { sesTxn = levels } (tsSessions st) }
 
 
 -- * Tables and cells

@@ -336,6 +336,12 @@ defaultSimParams = SimParams
 --   properties ('tperLimits') among them: so that no limit is one of none,
 --   and every answer the simulator stages, RESPONSE_OVERFLOW's own included,
 --   fits a response of the least MaxResponseComPacketSize;
+-- * a MaxTransactionLimit other than 1 (since M5b): the simulator nests
+--   one transaction level, Table 17's least (PDF 34), so that it reports
+--   what it does (Core 3.3.7.3.1, PDF 78: the property states the most a
+--   session may nest; design 11 M5b, Scott's answer Q5); below 1 is
+--   refused above, as below the least, 0 among it, which Core Table 167
+--   reads as no limit (PDF 142; 'txnLimit');
 -- * an MSID of no bytes (UCT-03 step 1b reads a PIN of some, Test Cases PDF
 --   32), or an MSID or a SID PIN of more than the 32 the PIN column holds
 --   (Core Table 122, password, PDF 118);
@@ -361,6 +367,8 @@ simParamsProblems p = concat
   , [ "Data Removal version " <> tshow (spDataRemovalVersion p) <> " is past its 4 bits" | spDataRemovalVersion p > 0xF ]
   , [ name <> " " <> tshow v <> ": below the " <> tshow least <> " Opal 2.30 Table 17 has a TPer report at least (PDF 33-34)"
     | (name, v) <- spTPerProperties p, Just least <- [L.lookup name tperRequirements], v < toInteger least ]
+  , [ maxTransactionLimitName <> " " <> tshow v <> ": other than 1, the one transaction level the simulator nests (design 11 M5b, Scott's answer Q5; Core 3.3.7.3.1, PDF 78)"
+    | Just v <- [L.lookup maxTransactionLimitName (spTPerProperties p)], v > 1 ]
   , [ "an MSID of no bytes: UCT-03 step 1b reads a PIN of some (Test Cases PDF 32)" | B.null (spMsid p) ]
   , [ what <> " of " <> tshow (B.length pin) <> " bytes: the PIN column holds at most " <> tshow pinMost <> " (Core Table 122, password, PDF 118)"
     | (what, pin) <- [("the MSID", spMsid p)] <> [ ("the SID's PIN", sid) | Just sid <- [spSidPin p] ], B.length pin > pinMost ]
@@ -487,7 +495,8 @@ maxTransactionLimitName      = "MaxTransactionLimit"
 --   'simParamsProblems' refuses it, below the least Opal 2.30 Table 17 has a
 --   TPer report, 1 (PDF 34), so the simulator never reports it. The default
 --   parameters report 1, the one level the simulator nests (design 11 M5b,
---   Scott's answer Q5).
+--   Scott's answer Q5), and 'simParamsProblems' refuses any other value
+--   above it too.
 --
 -- >>> txnLimit defaultSimParams
 -- Just 1
@@ -497,6 +506,8 @@ maxTransactionLimitName      = "MaxTransactionLimit"
 -- Just 0
 -- >>> simParamsProblems defaultSimParams { spTPerProperties = [(maxTransactionLimitName, 0)] }
 -- ["MaxTransactionLimit 0: below the 1 Opal 2.30 Table 17 has a TPer report at least (PDF 33-34)"]
+-- >>> simParamsProblems defaultSimParams { spTPerProperties = [(maxTransactionLimitName, 2)] }
+-- ["MaxTransactionLimit 2: other than 1, the one transaction level the simulator nests (design 11 M5b, Scott's answer Q5; Core 3.3.7.3.1, PDF 78)"]
 txnLimit :: SimParams -> Maybe Natural
 txnLimit p = L.lookup maxTransactionLimitName (spTPerProperties p) >>= \v -> if v >= 0 then Just (fromInteger v) else Nothing
 

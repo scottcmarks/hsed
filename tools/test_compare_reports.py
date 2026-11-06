@@ -13,6 +13,7 @@ import io
 import json
 import tempfile
 import unittest
+import warnings
 from pathlib import Path
 
 import compare_reports as C
@@ -165,6 +166,14 @@ class Json(Reports):
     def test_positions_paired_across_a_shift_name_both(self):
         changes = C.json_changes(["a", "b", {"k": 1}], ["z", "a", "b", {"k": 2}])
         self.assertEqual([c.where for c in changes], ["[0]", "[2/3].k"])
+
+    def test_two_long_texts_are_shown_from_a_little_before_where_they_first_differ(self):
+        a, b = "0" * 200, "0" * 150 + "1" + "0" * 49
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            text = C.contrast(a, b)
+        self.assertEqual(text, json.dumps("..." + a[130:]) + " vs " + json.dumps("..." + b[130:]))
+        self.assertEqual(C.contrast("abc", "abd"), '"abc" vs "abd"')
 
     def test_the_differences_listed_are_limited_and_the_rest_counted(self):
         b_report = report()

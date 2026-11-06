@@ -46,7 +46,6 @@ import difflib
 import functools
 import itertools
 import json
-import os
 import re
 import sys
 from dataclasses import dataclass
@@ -382,11 +381,23 @@ def shown(value, width=100):
     return text if len(text) <= width else text[:width - 3] + "..."
 
 
+def common_prefix_length(a, b):
+    """How many characters two texts share before they first differ (not os.path.commonprefix, which Python 3.15,
+    the venv's, deprecates).
+
+    >>> common_prefix_length("0011", "0021")
+    2
+    >>> common_prefix_length("00", "001")
+    2
+    """
+    return next((i for i, (x, y) in enumerate(zip(a, b)) if x != y), min(len(a), len(b)))
+
+
 def contrast(a, b, width=100):
     """A's and B's values side by side; two texts from a little before where they first differ."""
     if not (isinstance(a, str) and isinstance(b, str)):
         return f"{shown(a, width)} vs {shown(b, width)}"
-    start = max(0, len(os.path.commonprefix([a, b])) - 20)
+    start = max(0, common_prefix_length(a, b) - 20)
 
     def cut(t):
         return ("..." if start else "") + t[start:start + width] + ("..." if len(t) > start + width else "")

@@ -17,8 +17,8 @@ to are read (design 9.3, 11): @--recover@, @--allow-mounted@ and
 @--interrupt-in-session@, and @verify-transcript@'s @--allow-list@. The
 options no milestone builds yet are read and refused, each saying why
 (writes to a drive, M6's; the hardware error paths and read-only sessions,
-Scott's decisions, design 13.7 and 13.8), as is a @ws://@ target (M5's). A
-usage error exits 2.
+Scott's decisions, design 13.7 and 13.8), as is a @ws://@ target (M5c's).
+A usage error exits 2.
 -}
 module Main (main) where
 
@@ -104,8 +104,10 @@ runOptions = options <**> laterMilestones
       <*> option (eitherReader (first T.unpack . parseCaseKeys . T.pack))
             (long "tests" <> metavar "KEYS" <> value (roTests defaultRunOptions)
              <> help ("comma-separated case keys, the catalogue's UCT-01,UCT-02,UCT-03:1a-1c,SPF-02:1,SPF-02:2,SPF-11,"
-                      <> "SPF-12:1/no-media,ETC-02,ETC-03,ETC-04,ETC-07,ETC-08,ETC-09,ETC-14,ETC-15,ETC-20,ETC-21,ETC-21/adminsp "
-                      <> "(default: every case of the catalogue)"))
+                      <> "SPF-12:1/no-media,ETC-02,ETC-03,ETC-04,ETC-07,ETC-08,ETC-09,ETC-14,ETC-15,ETC-20,ETC-21,ETC-21/adminsp; "
+                      <> "a key naming a whole test selects every case of it (ETC-21 both) (default: every case of the catalogue but, on "
+                      <> "the simulator, those whose Locking SP prerequisite --locking-ofs does not meet, each noted in the transcript; "
+                      <> "on a drive or a replay alone, every case)"))
       <*> option (eitherReader units)
             (long "units" <> metavar "UNITS" <> value (spUnits sim0) <> showDefaultWith unitName
              <> help "simulator: what transfer lengths count, bytes or blocks512")

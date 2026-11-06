@@ -91,7 +91,7 @@ import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.UIDs      (uC_PIN_SID)
 import           Hsed.Jig.Catalogue      (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Options        (RunOptions (..), defaultRunOptions)
-import           Hsed.Jig.Report         (verifyTranscriptWith)
+import           Hsed.Jig.Report         (verifyTranscript, verifyTranscriptWith)
 import           Hsed.Jig.Script         (controlComPacket)
 import           Hsed.Jig.Support        (at, atPath, onFakeDrive)
 import           Hsed.Sim.State          (lifeOf)
@@ -293,6 +293,23 @@ spec = describe "a drive's path without the drive: hsed-jig over the fake kext, 
       answers json `shouldBe` replicate (length (golden reset)) (Just "good", Nothing)
       [ (at "policy" p, at "base_comid" p) | p <- elements (at "policies" json) ] `shouldBe` [(Just "allow_list", Just (A.Number 0x1004))]
       (at "outside_policy" json, at "blocked" json) `shouldBe` (Just (A.Array mempty), Just (A.Number 0))
+
+    it "--tests of M5b's eight (design 11 M5b), ETC-21's key selecting its Admin SP variant too: exit 1, each skipped before anything is issued, a write first (SPF-11, SPF-12:1/no-media, ETC-14), the simulator's alone the rest; no CDB, Level0Only, no base bound; verify-transcript --no-if-send --level0-only passes" $
+      withSystemTempDirectory "hsed-drive-path" $ \tmp -> do
+        let eight   = "SPF-02:2,SPF-11,SPF-12:1/no-media,ETC-07,ETC-09,ETC-14,ETC-20,ETC-21"
+            writes  = "writes: drives stay read-only until M6 (design 9.3; 13.34 (8))"
+            simOnly = "the simulator's alone: no drive policy admits it (design 9.3)"
+        (code, json, cdbs) <- newTPer >>= \tper -> overKext noFaults tper defaultRunOptions { roTests = keys eight, roStackResetBeforeCases = reset }
+        code `shouldBe` ExitFailure 1
+        cdbs `shouldBe` []
+        [ (at "key" c, at "verdict" c, at "reason" c) | c <- elements (at "cases" json) ] `shouldBe`
+          [ (Just (A.String k), Just "skipped", Just (A.String (if k `elem` ["SPF-11", "SPF-12:1/no-media", "ETC-14"] then writes else simOnly)))
+          | k <- T'.splitOn "," eight <> ["ETC-21/adminsp"] ]
+        (at "if_send_issued" json, at "blocked" json, at "outside_policy" json) `shouldBe` (Just (A.Number 0), Just (A.Number 0), Just (A.Array mempty))
+        at "policies" json `shouldBe` Just (A.toJSON [A.object ["end" A..= ("drive" :: Text), "policy" A..= ("level0_only" :: Text)]])
+        let file = tmp </> "eight.json"
+        writeFileBinary file (toStrictBytes (A.encode json))
+        (fst <$> capturing (verifyTranscript file True True)) `shouldReturn` ExitSuccess
 
     it "verify-transcript --allow-list: 0 on the run's report; 1 with a drive IF-RECV moved onto ComID 0x1005, or a drive IF-SEND made a Set" $
       withSystemTempDirectory "hsed-drive-path" $ \tmp -> do

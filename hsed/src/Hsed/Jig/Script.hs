@@ -21,7 +21,13 @@ IF-SEND back: ETC-02's is the point), Properties as a whole exchange, and
 expectations of a status or of a Table 45 answer; and, since M4a, the
 session verbs: Properties with the host's own, StartSession read back as
 its SyncSession, Get in a session, the host's End of Session, STACK_RESET,
-and a session opened around a case's steps. A script runs in the run's
+and a session opened around a case's steps; and, since M5b, the Locking
+SP's cases' verbs: a session as an authority with its PIN read from the
+simulator's state ('asAuthority'), Set in a session, Start and End
+Transaction, an IF-SEND in a session with its IF-RECVs apart, an answer
+that is nothing or the TPer's CloseSession, a cell of the simulator's
+state, TPER_RESET and a power cycle, the last two the simulator's alone
+(design 9.3). A script runs in the run's
 environment ('RunEnv': its target, transcript, channel and options) and
 keeps what later cases need ('RunCtx': the Level 0 response, the base
 ComID UCT-01 records, the properties Properties reported, the session a
@@ -190,6 +196,9 @@ module Hsed.Jig.Script
   , byteRows
   , dataStoreTable
   , tperInfoObject
+  , tperResetBytes
+  , spName
+  , forgetSessionsOn
   , namedColumn
   , peekSim
   , Credential (..)
@@ -206,6 +215,7 @@ import qualified Data.Aeson             as A
 import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
+import qualified RIO.Map                as Map
 import           RIO
 import qualified RIO.Text               as T
 
@@ -235,7 +245,7 @@ import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Gen.Core.TableDescs (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
-import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSPTPerInfoTablePreconfiguration)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSPTPerInfoTablePreconfiguration, uSP_Locking)
 import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
@@ -244,19 +254,19 @@ import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defau
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
-import           Hsed.Packet            (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
-import           Hsed.Sim.State         (cellOf, columnOf, rowWithUID)
+import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
+import           Hsed.Sim.State         (cellNamedIn, cellOf, columnOf, rowWithUID)
 import           Hsed.Sim.Sync          (T45Row (..), t45Rows)
-import           Hsed.Sim.Types         (TPerState, maxComPacketSizeName)
+import           Hsed.Sim.Types         (TPerState (..), maxComPacketSizeName)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
-import           Hsed.Wire              (Cap (..), Channel, Describe (..), Dir (..), ExchangeError (..), ExchangeOpts (..),
+import           Hsed.Wire              (Cap (..), Channel, Describe (..), Dir (..), Event (..), ExchangeError (..), ExchangeOpts (..),
                                          IfStatus (..), Request (..), Response (..), Transport, Unit (..),
                                          comIdManagementProtocol, comPacketProtocol, dataKind, defaultExchangeOpts,
                                          describeTransport, exchangeComPacket, extendedComId, hex, ifRecv, ifSend, ifStatusDetail,
-                                         ifStatusName, level0ComId, mostCarried, roundUp, staticExtension, transferLength,
-                                         unitOf)
+                                         ifStatusName, inject, level0ComId, mostCarried, roundUp, staticExtension, tperResetComId,
+                                         transferLength, unitOf)
 
 
 -- * The run's environment
@@ -930,7 +940,11 @@ sessionLeftOpen = "a read-write session to the Admin SP was open before this one
 --   base must be bound first ('baseComId'): this verb binds nothing. Once
 --   its IF-SEND is out, its polls run to their end, a stop asked for or not
 --   ('stopIfAsked'): as many as the host's timeout holds (the run's
---   @roExchange@), Pending each time.
+--   @roExchange@), Pending each time. A reset that answers Success/Failure
+--   0 forgets the session the run holds on the ComID, and a StartSession
+--   unread there, since every session on it is aborted (3.3.4.7.5 item 1,
+--   PDF 65; 'forgetSessionsOn'; since M5b), with no note of its own: its
+--   callers note the reset as their step.
 stackReset :: Word16 -> Script (Either Text Word32)
 stackReset c = do
   stopIfAsked
@@ -945,7 +959,7 @@ stackReset c = do
         else retrieve x (0 :: Int) (roundUp u (fromIntegral (layoutSize (recordLayout (Proxy :: Proxy STACK_RESETCommandResponse)))))
   where
     retrieve x n len = recvOn comIdManagementProtocol c len >>= \r -> case stackResetAnswer c r of
-      Right outcome -> pure (Right outcome)
+      Right outcome -> Right outcome <$ when (outcome == 0) (modifyCtx (forgetSessionsOn c))
       Left (False, why) -> pure (Left why)
       Left (True, why)
         | n < pollsOf x -> threadDelay (xPollMicros x) >> retrieve x (n + 1) len
@@ -1023,97 +1037,207 @@ closingStep name h v = do
             <> either id (\n -> "Success/Failure " <> tshow n) outcome)
 
 
--- * The verbs of M5b's cases (group G3's)
+-- * The verbs of M5b's cases
 
--- The verbs the Locking SP's cases are written in (design 11 M5b, 9.1),
--- their types fixed for the groups to work apart: each a stub that stops
--- the script saying whose it is, the bodies group G3's, the cases that use
--- them groups G3's and G4's.
+-- The verbs the Locking SP's cases are written in (design 11 M5b, 9.1):
+-- a session as an authority with its PIN, Set, the transaction tokens, an
+-- IF-SEND in a session with its IF-RECVs apart (SPF-02 case 2), an answer
+-- that is nothing or the TPer's CloseSession (ETC-09, ETC-14), a cell of
+-- the simulator's state, TPER_RESET and a power cycle (SPF-12 case 1).
 
 -- | StartSession's arguments for an authority of an SP, named, read-write,
 --   its HostChallenge the authority's current PIN, read from the
 --   simulator's state ('simCredential'; Test Cases 5.2 item 4 and 6.2 item
---   4, PDF 29 and 49); the simulator's alone, a drive's PIN being unknown
---   (design 9.3). Group G3's (M5b).
+--   4, PDF 29 and 49) and kept among the run's secrets (design 9.3 item
+--   5); the simulator's alone, a drive's PIN being unknown (design 9.3):
+--   on a drive, and where the SP holds no credential for the authority, the
+--   script stops.
 asAuthority :: Text -> UID -> UID -> Script StartArgs
-asAuthority _ _ _ = unmet "asAuthority: group G3's (M5b)"
+asAuthority name sp authority = peekSim >>= \case
+  Nothing -> unmet ("StartSession as " <> name <> ": the simulator's alone, its PIN read from the simulator's state (design 9.3)")
+  Just st -> case simCredential sp authority st of
+    Nothing -> unmet ("StartSession as " <> name <> ": the simulator's " <> spName sp <> " holds no credential for " <> name)
+    Just cr -> do
+      modifyCtx (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
+      pure (StartArgs sp (Just authority) (Just (crPIN cr)) True)
+
+-- | An SP's name in the jig's texts: the Admin SP, the Locking SP (Opal
+--   2.30 Table 20, PDF 45), another by its UID.
+spName :: UID -> Text
+spName sp
+  | sp == uSP_Admin   = "Admin SP"
+  | sp == uSP_Locking = "Locking SP"
+  | otherwise         = "SP " <> tshow sp
 
 -- | Set on an object in a session (Core 5.3.3.7, PDF 201-203): ObjectUID.Set
 --   with no Where, its Values a RowValues list of the column numbers and
 --   values given (5.3.3.7.2.2, PDF 202-203), in one packet of the session
 --   (Test Cases Table 6, PDF 27): its results, an empty list, and its status
 --   (5.3.3.7.3, PDF 203); a session the TPer aborted instead is no outcome.
---   Group G3's (M5b).
 setCells :: SessionHandle -> UID -> [(Natural, Value)] -> Script (Either ExchangeError MethodOutcome)
-setCells _ _ _ = unmet "setCells: group G3's (M5b)"
+setCells h object cells = do
+  bytes <- framed "the Set ComPacket" (sessionComPacket h (generate (invocation object (Methods.Set Nothing (Just values)))))
+  (>>= outcomeOf) <$> exchangeOn (shComId h) bytes
+  where values = L (List [ N (col .: v) | (col, v) <- cells ])
 
 -- | Start Transaction alone in a packet of a session, its status 0x00 (Core
 --   3.2.2.3.3.4, PDF 37), the whole exchange: the status of the TPer's
 --   mirror, 0x00 where the level opened; a session the TPer aborted (its
---   CloseSession, or nothing) is no status. Group G3's (M5b).
+--   CloseSession, or nothing) is no status.
 startTransaction :: SessionHandle -> Script (Either ExchangeError Natural)
-startTransaction _ = unmet "startTransaction: group G3's (M5b)"
+startTransaction h = transactionToken h StartTransaction 0
 
 -- | End Transaction alone in a packet of a session with a status, 0x00
 --   committing the innermost level, 0x01 aborting it (Core 3.2.2.3.3.5 and
 --   Table 16, PDF 37-38), the whole exchange: the status of the TPer's
---   mirror. Group G3's (M5b).
+--   mirror.
 endTransaction :: SessionHandle -> Natural -> Script (Either ExchangeError Natural)
-endTransaction _ _ = unmet "endTransaction: group G3's (M5b)"
+endTransaction h = transactionToken h EndTransaction
 
--- | A method call in a packet of a session, the IF-SEND alone ('rawIfSend'),
---   its answer left for IF-RECVs of the case's own (SPF-02 case 2's,
---   Test Cases PDF 53). Group G3's (M5b).
+-- | A transaction control token with its status, alone in one packet of a
+--   session (Core 3.2.2.3.3.4-5, PDF 37: the token, then its uinteger
+--   status), the whole exchange: the status of the TPer's mirror of that
+--   token ('returnedOf'); the TPer's CloseSession instead, an abort, or
+--   nothing, is no status.
+transactionToken :: SessionHandle -> Token -> Natural -> Script (Either ExchangeError Natural)
+transactionToken h t st = do
+  bytes <- framed ("the " <> named <> " ComPacket") (sessionComPacket h (generate t <> generate (Unsigned st)))
+  (>>= mirrored) <$> exchangeOn (shComId h) bytes
+  where
+    named = if t == StartTransaction then "Start Transaction" else "End Transaction"
+    mirrored packets = do
+      items <- first Malformed (returnedOf packets)
+      case [ n | ReturnedTransaction t' n <- items, t' == t ] of
+        n : _ -> Right n
+        []
+          | any closeSessionReturned items -> Left (Malformed "the session was aborted: the TPer answered CloseSession (Core 3.3.7.1.5, PDF 75)")
+          | null packets                   -> Left (Malformed noResponse)
+          | otherwise                      -> Left (Malformed ("no " <> named <> " mirror in the answer (Core 3.2.2.3.3.4-5, PDF 37)"))
+
+-- | A method call in a packet of a session, the IF-SEND alone ('rawIfSend',
+--   at the least transfer length that carries it), its answer left for
+--   IF-RECVs of the case's own (SPF-02 case 2's, Test Cases PDF 53).
 sendInSession :: SessionHandle -> MethodCall -> Script Response
-sendInSession _ _ = unmet "sendInSession: group G3's (M5b)"
+sendInSession h call = do
+  bytes <- framed "the session ComPacket" (sessionComPacket h (generate call))
+  len <- sendLength bytes
+  rawIfSend (shComId h) len bytes
 
 -- | IF-RECV of a number of bytes on a ComID, rounded up to the end's unit
 --   ('transferFor'): SPF-02 case 2's insufficient transfer length, then its
---   MinTransfer (Test Cases PDF 53; Core Table 45, PDF 83). Group G3's
---   (M5b).
+--   MinTransfer (Test Cases PDF 53; Core Table 45, PDF 83).
 ifRecvWith :: Word16 -> Word32 -> Script Response
-ifRecvWith _ _ = unmet "ifRecvWith: group G3's (M5b)"
+ifRecvWith c n = stopIfAsked >> transferFor n >>= recvOn comPacketProtocol c
 
 -- | The packets of a ComPacket of a ComID that an IF-RECV delivered ('t45On':
---   a ComPacket of that ComID and a static ComID's extension), for
---   'returnedOf' to read; or why not. Group G3's (M5b).
+--   a ComPacket of that ComID and a static ComID's extension, the IF-RECV
+--   answered Good), for 'returnedOf' to read, none for Table 45's (0, 0,
+--   0); or why not.
 framesOf :: Word16 -> Response -> Either Text [PacketFrame]
-framesOf _ _ = Left "framesOf: group G3's (M5b)"
+framesOf c r = do
+  unless (status r == Good) $ Left ("the IF-RECV answered " <> describeStatus (status r))
+  _ <- t45On c r
+  case decodeComPacket (rpayload r) of
+    Left e                                             -> Left ("no ComPacket in the response: " <> tshow e)
+    Right (DecodedFrame (ComPacketFrame _ packets) _ _) -> Right packets
 
 -- | Expect an exchange to have returned no packets, the TPer's (0, 0, 0),
 --   or the TPer's CloseSession alone, a session abort with it (Test Cases
 --   7.1, PDF 76; ETC-09 and ETC-14, PDF 82 and 87), the expectation named,
---   which of the two noted. Group G3's (M5b).
+--   which of the two noted; anything else, a response of the TPer's that
+--   is neither, an answer that does not read or an exchange that failed,
+--   stops the script.
 expectNoResponseOrCloseSession :: Text -> Either ExchangeError [PacketFrame] -> Script ()
-expectNoResponseOrCloseSession _ _ = unmet "expectNoResponseOrCloseSession: group G3's (M5b)"
+expectNoResponseOrCloseSession name = \case
+  Right []      -> note (name <> ": the TPer answered (0, 0, 0), all responses returned, no further data (Core Table 45, PDF 83)")
+  Right packets -> case returnedOf packets of
+    Right [item] | closeSessionReturned item ->
+      note (name <> ": the TPer answered its CloseSession alone: a session abort, which Test Cases 7.1 (PDF 76) accepts")
+    Right items -> unmet (name <> ": the TPer answered " <> tshow (length items) <> " item(s) in " <> tshow (length packets)
+                          <> " packet(s) where none, Table 45's (0, 0, 0), or its CloseSession alone was expected (Test Cases 7.1, PDF 76)")
+    Left why    -> unmet (name <> ": an answer that does not read: " <> why)
+  Left e        -> unmet (name <> ": " <> describeExchange e)
 
 -- | A session the TPer aborted forgotten by the run's context
---   ('rcSession'), noted with why, so that the next case's NoSessions finds
---   none of this run's open (Core 3.3.7.1.5, PDF 75). Group G3's (M5b).
+--   ('rcSession', where it holds that session), noted with why, so that the
+--   next case's NoSessions finds none of this run's open (Core 3.3.7.1.5,
+--   PDF 75).
 sessionGone :: SessionHandle -> Text -> Script ()
-sessionGone _ _ = unmet "sessionGone: group G3's (M5b)"
+sessionGone h why = do
+  modifyCtx (\x -> x { rcSession = mfilter (/= h) (rcSession x) })
+  note ("session TSN " <> tshow (shTSN h) <> " on " <> hex (shComId h) <> " aborted by the TPer, forgotten by the run: " <> why
+        <> " (Core 3.3.7.1.5, PDF 75)")
 
 -- | A cell of the simulator's state, by the SP's, the table's and the
 --   row's UIDs and the column's name, found in the description the SP holds
 --   ("Hsed.Sim.State".'Hsed.Sim.State.cellNamedIn'); 'Nothing' on a drive,
---   or where the state holds no such cell. Group G3's (M5b).
+--   or where the state holds no such SP, row or cell.
 simCell :: UID -> UID -> UID -> Text -> Script (Maybe Cell)
-simCell _ _ _ _ = unmet "simCell: group G3's (M5b)"
+simCell sp table row name = peekSim <&> (>>= \st -> do
+  sps <- Map.lookup sp (tsSPs st)
+  r   <- rowWithUID sp table row st
+  cellNamedIn sps table name r)
 
 -- | TPER_RESET (Opal 2.30 3.2.3 and Table 13, PDF 28-29): an IF-SEND of
---   protocol 0x02 to ComID 0x0004, of a non-zero length, its data ignored,
---   no IF-RECV answering it; the simulator's alone, nothing sent to a drive
---   (design 9.3). Group G3's (M5b).
+--   protocol 0x02 to ComID 0x0004 of one unit of zeros ('tperResetBytes': a
+--   non-zero length, its data ignored), no IF-RECV answering it; the
+--   simulator's alone, nothing sent to a drive (design 9.3). Answered Good,
+--   the TPer has aborted every session and put the host properties back to
+--   their initial assumptions (3.2.3 b and g), so the run forgets the
+--   session it holds, a StartSession unread and the host's properties,
+--   noted; answered otherwise (TPER_RESET disabled, Table 26, PDF 49), the
+--   status is the case's to judge.
 tperReset :: Script (Either Text IfStatus)
-tperReset = unmet "tperReset: group G3's (M5b)"
+tperReset = theEnd >>= \case
+  DriveEnd _ -> pure (Left "TPER_RESET: the simulator's alone, nothing is sent to a drive (design 9.3)")
+  SimEnd _   -> do
+    stopIfAsked
+    len <- transferFor tperResetBytes
+    r <- sendOn comIdManagementProtocol tperResetComId len (B.replicate (fromIntegral tperResetBytes) 0)
+    when (status r == Good) $ do
+      modifyCtx (\x -> (forgetSessionsOn' x) { rcHostProperties = Nothing })
+      note ("TPER_RESET on " <> hex tperResetComId <> ": " <> ifStatusName (status r) <> ": every session aborted and the host properties back "
+            <> "to their initial assumptions (Opal 2.30 3.2.3 b and g, PDF 28-29); the run's session and host properties forgotten")
+    pure (Right (status r))
+
+-- | The bytes TPER_RESET's IF-SEND carries, zeros: 512, one 512-byte unit
+--   and a whole number of bytes, a non-zero length whatever the end's unit
+--   (Opal 2.30 Table 13, PDF 29: the data is ignored).
+tperResetBytes :: Word32
+tperResetBytes = transferLength UnitBlocks512 1
 
 -- | A power cycle of the simulator through its transport's event
---   ("Hsed.Wire".@inject@, which takes a @'ReadWrite@ transport alone, so
---   that a drive can be given none), every session aborted and the resets'
---   rules applied (Core 3.3.7.1.5, PDF 76; 5.2.2.4.4, PDF 148). Group G3's
---   (M5b).
+--   ("Hsed.Wire".'inject' of 'PowerCycle', which takes a @'ReadWrite@
+--   transport alone, so that a drive can be given none): every session
+--   aborted and the resets' rules applied (Core 3.3.7.1.5, PDF 76; 5.2.2.4.4,
+--   PDF 148; Opal 2.30 3.3.5.1, PDF 31), the host properties back to their
+--   initial assumptions with them, so that the run forgets the session it
+--   holds, a StartSession unread and the host's properties, noted (the
+--   recording transport notes the event itself, "Hsed.Jig.Transcript"); on
+--   a drive, nothing, and why.
 powerCycle :: Script (Either Text IfStatus)
-powerCycle = unmet "powerCycle: group G3's (M5b)"
+powerCycle = theEnd >>= \case
+  DriveEnd _ -> pure (Left "a power cycle: the simulator's alone, an event of its transport; a drive is given none (design 9.3)")
+  SimEnd tr  -> do
+    stopIfAsked
+    s <- liftIO (inject tr PowerCycle)
+    when (s == Good) $ do
+      modifyCtx (\x -> (forgetSessionsOn' x) { rcHostProperties = Nothing })
+      note ("power cycle: " <> ifStatusName s <> ": every session aborted and the host properties back to their initial assumptions "
+            <> "(Core 3.3.7.1.5, PDF 76; 5.2.2.4.4, PDF 148); the run's session and host properties forgotten")
+    pure (Right s)
+
+-- | The run's context without the session it holds on a ComID and the
+--   StartSession unread there, once a STACK_RESET on that ComID answered
+--   Success/Failure 0 (Core 3.3.4.7.5 item 1, PDF 65: every session on it
+--   aborted); a session on another ComID is kept.
+forgetSessionsOn :: Word16 -> RunCtx -> RunCtx
+forgetSessionsOn c x = x { rcSession = mfilter ((/= c) . shComId) (rcSession x), rcSessionUnread = mfilter ((/= c) . fst) (rcSessionUnread x) }
+
+-- | The run's context without any session it holds and any StartSession
+--   unread: a reset of the whole TPer (TPER_RESET, a power cycle).
+forgetSessionsOn' :: RunCtx -> RunCtx
+forgetSessionsOn' x = x { rcSession = Nothing, rcSessionUnread = Nothing }
 
 
 -- * What the verbs build on

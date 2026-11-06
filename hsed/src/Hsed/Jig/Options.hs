@@ -62,8 +62,8 @@ data TargetSpec
   deriving (Eq, Show)
 
 -- | @sim@, @/dev/diskN@, @replay:FILE@, @sim+/dev/diskN@ or @sim+replay:FILE@;
---   a @ws://@ target, M5's (the mh_transport client, design 7.4), is
---   refused.
+--   a @ws://@ target, M5c's (the LAN leg: the mh_transport client, design
+--   7.4, 11 M5c), is refused.
 --
 -- >>> parseTarget "sim+replay:build/disk6-like-level0.bin"
 -- Right (TPair TSim (TReplay "build/disk6-like-level0.bin"))
@@ -75,7 +75,7 @@ parseTarget t
   where
     driveTarget d
       | any (`T.isPrefixOf` d) ["ws://", "wss://"] =
-          Left ("--target " <> d <> ": a ws:// target is M5's (the mh_transport client, design 7.4), not M3's")
+          Left ("--target " <> d <> ": a ws:// target is M5c's (the mh_transport client, design 7.4), not built yet")
       | Just disk <- T.stripPrefix "/dev/" d, not (T.null disk) = Right (TDevice d)
       | Just file <- T.stripPrefix "replay:" d, not (T.null file) = Right (TReplay (T.unpack file))
       | otherwise =
@@ -87,7 +87,9 @@ parseTarget t
 -- | What a run is asked to do.
 data RunOptions = RunOptions
   { roTarget                :: !TargetSpec
-  , roTests                 :: ![CaseKey]        -- ^ the cases to run; none, every case of the catalogue
+  , roTests                 :: ![CaseKey]        -- ^ the cases to run; none, every case of the catalogue but those the
+                                                 --   default leaves out on the simulator, each noted ("Hsed.Jig.Run".@leftOutByDefault@:
+                                                 --   since M5b, a case whose Locking SP prerequisite @--locking-ofs@ does not meet)
   , roSim                   :: !SimParams        -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@,
                                                  --   @--sim-sid-pin@, @--locking-ofs@)
   , roHold                  :: !Int              -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@)
@@ -120,7 +122,7 @@ data RunOptions = RunOptions
   }
   deriving (Eq, Show)
 
--- | The simulator, every case, the default parameters, no hold, reports in
+-- | The simulator, every case its default selects, the default parameters, no hold, reports in
 --   @build/report@, a Level 0 transfer of 2048 bytes, what the kext
 --   itself asks for when it attaches (@DISCOVERY0_RESPONSE_SIZE@,
 --   UserKernelShared.h; design 7.2), the secrets masked, neither

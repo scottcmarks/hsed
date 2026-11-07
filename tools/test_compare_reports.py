@@ -345,6 +345,35 @@ class JUnit(Reports):
         self.assertEqual(self.compare(self.write("c"), b, "--allow-texts", "", 'name="ETC-20"')[0], 0)
 
 
+class Lines(Reports):
+    """The Markdown and the JUnit split at each LF alone, as the files hold them: line endings and the final newline
+    compared, and nothing else ending a line."""
+
+    def test_crlf_line_endings_are_a_difference(self):
+        status, out = self.compare(self.write("a"), self.write("b", md=markdown().replace("\n", "\r\n")))
+        self.assertEqual(status, 1, out)
+        self.assertIn('md line 1 (hsed-jig run: sim): "# hsed-jig run: sim" vs "# hsed-jig run: sim\\r"', out)
+        status, out = self.compare(self.write("c"), self.write("d", xml=junit().replace("\n", "\r\n")))
+        self.assertEqual(status, 1, out)
+
+    def test_a_final_newline_one_side_alone_has_is_a_difference_in_either_report(self):
+        md, xml = markdown(), junit()
+        self.assertTrue(md.endswith("```\n") and xml.endswith("</testsuites>\n"))
+        status, out = self.compare(self.write("a"), self.write("b", md=md[:-1]))
+        self.assertEqual(status, 1, out)
+        self.assertIn(f'md line {md.count(chr(10)) + 1} (Transcript): only in A: ""', out)
+        status, out = self.compare(self.write("c"), self.write("d", xml=xml[:-1]))
+        self.assertEqual(status, 1, out)
+        self.assertIn(f'xml line {xml.count(chr(10)) + 1}: only in A: ""', out)
+
+    def test_a_form_feed_a_unicode_line_separator_or_a_lone_cr_ends_no_line(self):
+        for n, separator in enumerate(["\f", " ", "\r"]):
+            joined = self.write(f"b{n}", md=markdown(cases=("- UCT-01: pass" + separator + "- ETC-02: pass",)))
+            status, out = self.compare(self.write(f"a{n}"), joined)
+            self.assertEqual(status, 1, out)
+            self.assertIn("md 2, xml 0: 2 not allowed", out)
+
+
 class Locating(Reports):
     def test_a_report_directory_and_a_report_of_any_of_the_three_kinds(self):
         a = self.write("a")

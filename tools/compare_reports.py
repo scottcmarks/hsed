@@ -22,8 +22,10 @@ Normalised in each run's three reports before they are compared, each by the val
 Compared: the JSON as values, an object's members by key and a list's elements aligned as difflib aligns them, so
 that an element one side alone has is one difference, not a shift of every element after it (the elements of a
 replaced block are paired in order, those left over one side's alone); the Markdown and the JUnit line by line,
-aligned the same way. Lines are split with str.splitlines(), so a difference only in line endings (CR versus LF)
-or in a trailing final newline is not reported; the jig's own reports carry neither.
+aligned the same way. A line is the text between two LFs as the file holds it, read with no newline translation,
+the last the text after the final LF (empty where the file ends in one), so that a difference in line endings (a
+CR or a CRLF where the other side has an LF) or in the final newline is reported like any other, and no other
+character (a form feed, a Unicode line separator) ends a line.
 
 Allowances, each option repeatable:
   --allow-keys KEY           a JSON difference at KEY or under it: a dotted path from the report's root, list
@@ -320,20 +322,32 @@ def report_paths(json_path):
     return {kind: Path(f"{base}.{kind}") for kind in KINDS}
 
 
+def lines_of(text):
+    """A report's lines: the text between two LFs, the last the text after the final LF, empty where the text ends
+    in one; a CR stays in its line, and nothing but an LF ends one (not str.splitlines(), which also ends a line at a
+    CR, a form feed or a Unicode line separator and drops the final newline).
+
+    >>> lines_of("a\\nb\\n"), lines_of("a\\nb"), lines_of("a\\r\\nb\\fc\\n")
+    (['a', 'b', ''], ['a', 'b'], ['a\\r', 'b\\x0cc', ''])
+    """
+    return text.split("\n")
+
+
 def load_run(json_path):
-    """A run's three reports, normalised: the JSON as values, the Markdown and the JUnit as lines."""
+    """A run's three reports, normalised: the JSON as values, the Markdown and the JUnit as lines, each read as its
+    bytes decode, with no newline translation."""
     paths = report_paths(json_path)
     missing = [str(p) for p in paths.values() if not p.is_file()]
     if missing:
         raise Unreadable("missing: " + ", ".join(missing))
     try:
-        texts = {kind: p.read_text(encoding="utf-8") for kind, p in paths.items()}
+        texts = {kind: p.read_bytes().decode("utf-8") for kind, p in paths.items()}
         report = json.loads(texts["json"])
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
         raise Unreadable(f"{json_path}: {e}") from e
     normalise = normaliser(report)
     return {"json": normalised(report, normalise),
-            **{kind: [normalise(line) for line in texts[kind].splitlines()] for kind in ("md", "xml")}}
+            **{kind: [normalise(line) for line in lines_of(texts[kind])] for kind in ("md", "xml")}}
 
 
 def run_changes(a_json, b_json):

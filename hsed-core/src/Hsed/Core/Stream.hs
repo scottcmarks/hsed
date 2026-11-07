@@ -45,7 +45,10 @@ Two layers:
   (item 2), in the status list (item 5), or a stream ending inside an
   invocation ('Unfinished'; 3.3.10.3 a, PDF 83-84), the reading stops with
   the fault, the items before it kept (item 1: results for methods completed
-  before the violating token are sent).
+  before the violating token are sent). A transaction control token after a
+  Call and before the next End of Data, item 2's invocation, stops the
+  reading too ('WithinInvocation': the TPer aborts the session, 3.3.7.3, PDF
+  78), whether it is the first token out of place there or follows another.
 * 'returnedItems' is the host's reading of what a TPer sent: Session Manager
   responses, which are invocations ('ReturnedCall', 3.3.7.1.3), method
   responses ('ReturnedResults'), the TPer's End of Session and its
@@ -196,9 +199,10 @@ data Place
   | Unfinished
     -- ^ the stream ends inside an invocation or a response (3.3.10.3 a, PDF 83-84)
   | WithinInvocation
-    -- ^ a transaction control token received between the Call and the status list's End List, which
-    --   aborts the session (Core 3.3.7.3, PDF 78), not a BadCall the TPer answers as it does items 3-4's
-    --   other out-of-place tokens
+    -- ^ a transaction control token received after the Call and before the next End of Data (item 2's
+    --   invocation), which aborts the session (Core 3.3.7.3, PDF 78), not a BadCall the TPer answers as it
+    --   does items 3-4's other out-of-place tokens, even where one of those came before it; one in the
+    --   status list is item 5's, which aborts as well
   deriving (Eq, Show)
 
 -- | A token out of place: which token (its index among those given, 0
@@ -265,20 +269,20 @@ items mode toks = go (indexed toks)
                                                               <> "(Core 3.2.2.4.2 item 4, PDF 39)")) (Just hdr) afterParams
           [] -> ([], Just (unfinishedAt count))
     -- after a fault in the header or the parameter list: the invocation's End of Data and status list, then the
-    -- BadCall; a stream that ends first is unfinished
-    resync f mhdr rest
-      | Just t <- tokenAt (faultAt f), isTransactionToken t = aborted t (faultAt f)
-      | otherwise = case faultPlace f of
-          Unfinished -> ([], Just f)
-          _ -> case L.dropWhile ((/= EndOfData) . snd) rest of
-            []           -> ([], Just (unfinishedAt count))
-            _ : afterEod -> status mhdr afterEod $ \_ more -> first (BadCall f :) (go more)
-    -- a transaction control token within a method invocation aborts the session (Core 3.3.7.3, PDF 78),
-    -- not read on to its End of Data as items 3-4's other out-of-place tokens are
+    -- BadCall; a transaction control token before that End of Data, the fault's own token or one after it, aborts
+    -- instead; a stream that ends first is unfinished
+    resync f mhdr rest = case L.find (isTransactionToken . snd) (L.takeWhile ((/= EndOfData) . snd) rest) of
+      Just (i, t) -> aborted t i
+      Nothing     -> case faultPlace f of
+        Unfinished -> ([], Just f)
+        _ -> case L.dropWhile ((/= EndOfData) . snd) rest of
+          []           -> ([], Just (unfinishedAt count))
+          _ : afterEod -> status mhdr afterEod $ \_ more -> first (BadCall f :) (go more)
+    -- a transaction control token within a method invocation, after its Call and before the next End of Data
+    -- (3.2.2.4.2 item 2, PDF 39), aborts the session (Core 3.3.7.3, PDF 78) whatever token out of place came before
+    -- it, not read on to its End of Data as items 3-4's other out-of-place tokens are
     aborted t i = ([], Just (Fault i WithinInvocation
                              (named t <> " within a method invocation, which aborts the session (Core 3.3.7.3, PDF 78)")))
-    -- the token at an index among those given (Empty atoms dropped), for 'resync' to know an aborting token
-    tokenAt i = lookup i (indexed toks)
     -- the status list after End of Data: its first value to the continuation, or the fault
     status mhdr afterEod k = case afterEod of
       (_, StartList) : values -> case statusValues values of

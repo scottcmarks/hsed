@@ -19,7 +19,9 @@ Get answered in a packet of the session (TSN then HSN, Core 3.3.7.1.2, PDF
 closed (3.2.2.3.3.3, PDF 37; 3.3.7.1.5, PDF 75), a bare EOS echoed; an
 invocation whose header does not read NOT_AUTHORIZED and one whose
 parameters do not INVALID_PARAMETER, the session kept (3.2.2.4.2 items 3-4,
-PDF 39); a fault or a second invocation past the TPer's MaxMethods aborting
+PDF 39), unless a transaction control token stands in it before End of
+Data, alone or after such a token, which aborts the session (3.3.7.3, PDF
+78); a fault or a second invocation past the TPer's MaxMethods aborting
 the session with the results completed before it and the TPer's
 CloseSession where the run prepares one (3.3.10.7 b, PDF 86; 5.2.2.4.1.7,
 PDF 146); since M5b the transaction control tokens (design 11 M5b): Start
@@ -362,17 +364,29 @@ spec = do
         SessionAborted [] (Just _) -> True
         _                          -> False
       open ses st' `shouldBe` False
-    it "aborts the session at a transaction control token within a method invocation, where Hsed.Core.Stream faults it (Core 3.3.7.3, PDF 78, 71e3a18f1fb9)" $
-      forM_ [StartTransaction, EndTransaction] $ \t -> do
-        let inHeader = generate Call <> generate t <> generate (Unsigned 0) <> B.drop (B.length (generate Call)) (generate getCall)
-            (is, f)  = itemsOf inHeader
-        is `shouldBe` []
-        f `shouldSatisfy` isJust
-        let Processed outcome st' _ = uncurry (sessionPayload ses) (is, f) st1
-        outcome `shouldSatisfy` \o -> case o of
-          SessionAborted [] (Just _) -> True
-          _                          -> False
-        open ses st' `shouldBe` False
+    it "aborts the session at a transaction control token within a method invocation, where Hsed.Core.Stream faults it, the first token out of place there or after another, which alone is answered with the session kept (Core 3.3.7.3, PDF 78, 71e3a18f1fb9; 3.2.2.4.2 items 2-4, PDF 39)" $ do
+      let getToks = map atomToken (either (const []) id (atoms hostPolicy (generate getCall)))
+          -- the Get's tokens with others put after its first n: after the Call (1), after the parameter list's Start
+          -- List (4), or before End of Data and the status list's five tokens
+          spliced n ts = take n getToks <> ts <> drop n getToks
+          beforeEod    = length getToks - 6
+      forM_ [StartTransaction, EndTransaction] $ \t ->
+        forM_ [ spliced 1 [t, Unsigned 0], spliced 1 [Unsigned 5, t, Unsigned 0], spliced 4 [EndName, t, Unsigned 0]
+              , spliced beforeEod [EndName, t, Unsigned 1] ] $ \within -> do
+          let (is, f) = items SessionStream within
+          (is, faultPlace <$> f) `shouldBe` ([], Just WithinInvocation)
+          let Processed outcome st' _ = sessionPayload ses is f st1
+          outcome `shouldSatisfy` \o -> case o of
+            SessionAborted [] (Just _) -> True
+            _                          -> False
+          open ses st' `shouldBe` False
+      forM_ [ (spliced 1 [Unsigned 5], NOT_AUTHORIZED), (spliced 4 [EndName], INVALID_PARAMETER)
+            , (spliced beforeEod [EndName], INVALID_PARAMETER) ] $ \(alone, code) -> do
+        let Processed outcome st' _ = uncurry (sessionPayload ses) (items SessionStream alone) st1
+        case outcome of
+          Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [] (statusOf code))])
+          other        -> expectationFailure (show other)
+        open ses st' `shouldBe` True
     it "ends the payload at a behaviour's own RESPONSE_OVERFLOW, as at the framing's (Opal 3.3.1 item 1): a Get of the whole MBR, more rows than the host's ComPacket holds, answered RESPONSE_OVERFLOW before a byte is built (Hsed.Sim.Base, M5b), a second Get within MaxMethods 2 unanswered, the session kept" $ do
       let Processed outcome st' ends = sessionPayload anybodyL [Invoke getMBR, Invoke getMBRRows] Nothing (withTPer maxMethodsName 2 stL)
       ends `shouldBe` True

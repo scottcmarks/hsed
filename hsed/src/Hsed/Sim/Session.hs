@@ -141,9 +141,11 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
 --     control tokens are invalid (3.2.2.4.1 item 4 and its item 1, PDF 38);
 --   * the fault that stopped the reading, a token out of place or a stream
 --     ending inside an invocation, aborts the session (3.2.2.4.2 items 1, 2
---     and 5; 3.3.10.3 a, PDF 83-84), and so does a fault the caller found
---     before reading, a packet over the TPer's MaxSubpackets or
---     MaxPacketSize (5.2.2.4.1.1-2, PDF 145).
+--     and 5; 3.3.10.3 a, PDF 83-84), a transaction control token within an
+--     invocation among them, whatever token out of place came before it
+--     there (3.3.7.3, PDF 78; "Hsed.Core.Stream".@WithinInvocation@), and so
+--     does a fault the caller found before reading, a packet over the
+--     TPer's MaxSubpackets or MaxPacketSize (5.2.2.4.1.1-2, PDF 145).
 --
 --   Before each item the session is taken as the TPer then holds it
 --   ("Hsed.Sim.State".'liveSession'): the one given is the one read when

@@ -18,7 +18,9 @@ refuse what Opal's TPer does not take (Table 15, PDF 31) and what is past
 MaxIndTokenSize; invocations are read whole, M0's Properties and ETC-08's
 among them, and a token out of place is a fault at 3.2.2.4.2's place, read
 past to the next invocation in the header and the parameter list, stopping
-everywhere else; End of Session and the transaction tokens by stream; the
+everywhere else; a transaction control token within an invocation, alone or
+after another token out of place there, stopping the reading (3.3.7.3, PDF
+78); End of Session and the transaction tokens by stream; the
 host's reading of what came back; and the round trip: what the codec writes,
 the stream reads.
 -}
@@ -230,6 +232,19 @@ spec = do
         aborted ([Call, smuid, properties, StartList, EndList, t, Unsigned 0, EndOfData] <> status)  -- after the list, before End of Data
         summary (items ControlStream ([Call, t, Unsigned 0, smuid, properties, StartList, EndList, EndOfData] <> status))
           `shouldSatisfy` \(is, f) -> null is && (snd <$> f) == Just WithinInvocation
+    it "aborts at a transaction control token that follows another token out of place in the same invocation, before its End of Data, the items before the invocation kept (3.2.2.4.2 item 2's invocation; 3.3.7.3)" $
+      forM_ [StartTransaction, EndTransaction] $ \t -> do
+        let completed = Right (Invoke (MethodCall propertiesHeader (Parameters [] []) 0))
+        forM_ [ ([Call, Unsigned 5, t, Unsigned 0, properties, StartList, EndList, EndOfData] <> status, 2)        -- after the header's
+              , ([Call, smuid, properties, StartList, EndName, t, Unsigned 0, EndList, EndOfData] <> status, 5)    -- after the parameter list's
+              , ([Call, smuid, properties, StartList, EndList, EndName, t, Unsigned 1, EndOfData] <> status, 6) ] $ -- after the list's End List
+          \(toks', at) -> do
+            summary (items SessionStream toks') `shouldBe` ([], Just (at, WithinInvocation))
+            summary (items ControlStream toks') `shouldBe` ([], Just (at, WithinInvocation))
+            summary (items SessionStream (callBody <> status <> toks')) `shouldBe` ([completed], Just (11 + at, WithinInvocation))
+        -- after End of Data, where the status list's Start List is expected, the token is outside the invocation (item 2)
+        summary (items SessionStream ([Call, Unsigned 5, smuid, properties, StartList, EndList, EndOfData, t, Unsigned 0] <> status))
+          `shouldBe` ([], Just (7, OutsideCall))
     it "drops Empty atoms given among the tokens, the indexes those given" $
       summary (items SessionStream ([Empty, Call, Empty, EndList, EndOfData] <> status)) `shouldBe` ([Left (3, InHeader)], Nothing)
     it "names a byte sequence out of place by its length, never its bytes (a secret may be among them)" $ do

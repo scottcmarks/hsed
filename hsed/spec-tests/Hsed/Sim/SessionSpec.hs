@@ -39,8 +39,9 @@ transaction reads the session's view ("Hsed.Sim.Base", M5b); a response
 the host's packet cannot hold RESPONSE_OVERFLOW, which ends the payload's
 processing (Opal 2.30 3.3.1, PDF 29), as does a behaviour's own, a Get of
 the whole MBR bounded before a byte is built, and a byte Get's rows bounded
-by the host's MaxIndTokenSize as well, on a session holding the host's
-raised ComPacket (Core 5.2.2.4.1.5, PDF 146); the framing within the host's
+by what one token within the host's MaxIndTokenSize carries, on a session
+holding the host's raised ComPacket (Core 5.2.2.4.1.5, PDF 146; 3.2.2.3.1,
+PDF 33: the atom's header counted); the framing within the host's
 MaxSubpackets, MaxPacketSize and
 MaxComPacketSize (5.2.2.4.1.1-2 and 4, PDF 145-146), a packet never larger
 than the ComPacket that carries it, over any host properties. Then the whole
@@ -170,6 +171,12 @@ raisedHost tokenSize = openSession base 0x53 uSP_Locking True [uAuthority_Anybod
     folded = foldedAt Manufactured
     raised = Map.fromList [(maxComPacketSizeName, 65536), (maxPacketSizeName, 65516), (maxIndTokenSizeName, tokenSize)]
     kept   = folded { tsComIds = Map.adjust (\cs -> cs { cHostProps = Map.union raised (cHostProps cs) }) base (tsComIds folded) }
+
+-- | The bytes the codec writes one byte sequence of n bytes in, its header
+--   and its data: what the host's MaxIndTokenSize bounds (Core Table 167,
+--   PDF 142).
+tokenBytes :: Natural -> Int
+tokenBytes n = B.length (generate (Bytes (B.replicate (fromIntegral n) 0)))
 
 -- | A packet decoded: its header and its data subpackets' payloads.
 decoded :: ByteString -> Maybe (PacketHeader, [ByteString])
@@ -434,6 +441,17 @@ spec = do
         Prepared [p] -> decoded p `shouldBe` Just (sessionHeader s, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
         other        -> expectationFailure (show other)
       open s st' `shouldBe` True
+    it "answers as many MBR rows as one token within the host's MaxIndTokenSize carries, its header the least atom's that holds them (Core 3.2.2.3.1, PDF 33), and RESPONSE_OVERFLOW for one more: at 1992, 1990 rows (a medium atom's two-byte header) and not 1991; at 2051, 2047 (a medium atom's most) and not 2048 (a long atom's four-byte header); at 2052, 2048; at 4040, 4036 and not 4037" $
+      forM_ [(1992, 1990), (2051, 2047), (2052, 2048), (4040, 4036)] $ \(t, most) -> do
+        let (s, st) = raisedHost t
+            answer n = prOutcome (sessionPayload s [Invoke (getMBRFirst n)] Nothing st)
+        (tokenBytes most <= fromIntegral t, tokenBytes (most + 1) > fromIntegral t) `shouldBe` (True, True)
+        case answer most of
+          Prepared [p] -> decoded p `shouldBe` Just (sessionHeader s, [generate (MethodResponse [D (Datum (Bytes (B.replicate (fromIntegral most) 0)))] 0)])
+          other        -> expectationFailure (show other)
+        case answer (most + 1) of
+          Prepared [p] -> decoded p `shouldBe` Just (sessionHeader s, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
+          other        -> expectationFailure (show other)
     it "answers a Get within a transaction with the value put in the session's view, the committed SP as it was (Core 3.3.7.3: visible within the transaction; Get reads spView, Hsed.Sim.Base, M5b), and the committed value again once the level is rolled back" $ do
       let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
           put    = putSPView ses (withMsidPin "changed" (fromMaybe (error "no view") (spView ses opened))) opened

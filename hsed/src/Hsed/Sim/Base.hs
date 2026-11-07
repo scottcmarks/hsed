@@ -68,7 +68,7 @@ import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
 import           Hsed.Sim.Access          (grantedColumns)
 import           Hsed.Sim.Behaviour       (Behaviour (..), FailItem (..), Fails (..), Invoked (..), Reply (..), SomeBehaviour,
                                            forMethod)
-import           Hsed.Sim.Bytes           (byteRange)
+import           Hsed.Sim.Bytes           (byteRange, bytesWithin)
 import           Hsed.Sim.Cells           (CellRefusal (..), cellFor, putCell)
 import           Hsed.Sim.State           (cellOf, openSession, putSPView, spView, updateRowIn)
 import           Hsed.Sim.Types           (ByteTable (..), LifeCycle (..), Limits (..), SPState (..), Session (..), SimParams (..),
@@ -114,12 +114,16 @@ import           Hsed.Sim.Types           (ByteTable (..), LifeCycle (..), Limit
 --     "Hsed.Sim.Bytes".'byteRange'), unless there are more of them than the
 --     host's ComPacket holds (the response buffer, the host's
 --     MaxComPacketSize bounded by the TPer's MaxResponseComPacketSize,
---     "Hsed.Sim.Params".'comIdHostLimits'): then the method fails
---     RESPONSE_OVERFLOW with an empty result before a byte is read (Opal
---     2.30 3.3.1 items 1-3, PDF 29; Core 5.1.5.14, PDF 139), a Get of the
---     whole MBR, 128 MiB (Opal Table 36, PDF 54), building nothing; the
---     response's framing decides again, with its overhead, whether what is
---     built fits ("Hsed.Sim.Session").
+--     "Hsed.Sim.Params".'comIdHostLimits') or than one token within the
+--     host's MaxIndTokenSize carries, its header and its data counted
+--     (5.2.2.4.1.5, PDF 146: the TPer SHALL NOT send a larger token;
+--     "Hsed.Sim.Params".'comIdHostIndTokenSize', 0 no limit; the header the
+--     least atom's that holds the rows, "Hsed.Sim.Bytes".'bytesWithin'):
+--     then the method fails RESPONSE_OVERFLOW with an empty result before a
+--     byte is read (Opal 2.30 3.3.1 items 1-3, PDF 29; Core 5.1.5.14, PDF
+--     139), a Get of the whole MBR, 128 MiB (Opal Table 36, PDF 54),
+--     building nothing; the response's framing decides again, with its
+--     overhead, whether what is built fits ("Hsed.Sim.Session").
 get :: Behaviour Methods.Get
 get = Behaviour
   { behName  = "Base.get"
@@ -153,18 +157,16 @@ getReply iv cb st = case ivSession iv of
     rowValues granted s e row =
       ReplyResults [L (List [ N ((fromIntegral c :: Natural) .: cellValue v) | (c, v) <- L.sortOn fst row
                                                                               , c >= s, c <= e, null granted || c `elem` granted ])] SUCCESS
-    -- a byte table's rows, unless more than the host's ComPacket holds or the host's MaxIndTokenSize takes
-    -- in one token: then RESPONSE_OVERFLOW before any is read, the simulator sending no continued token
+    -- a byte table's rows, unless more than the host's ComPacket holds or one token within the host's
+    -- MaxIndTokenSize carries: then RESPONSE_OVERFLOW before any is read
     bytes ses s e bt
-      | e - s + 1 > tokenRoom = ReplyResults [] RESPONSE_OVERFLOW
-      | otherwise             = ReplyResults [cellValue (BytesCell (byteRange s e bt))] SUCCESS
+      | e - s + 1 > room = ReplyResults [] RESPONSE_OVERFLOW
+      | otherwise        = ReplyResults [cellValue (BytesCell (byteRange s e bt))] SUCCESS
       where
         host = comIdHostLimits (tsParams st) (sesHostProps ses)
-        -- the rows must fit the host's ComPacket and, as one Bytes token, the host's MaxIndTokenSize,
-        -- whose header is at most four bytes (Core 5.2.2.4.1.5, PDF 146; the long atom of Table 13, PDF 35)
-        tokenRoom = fromIntegral
-          (min (lComPacketSize host) (max 0 (comIdHostIndTokenSize (tsParams st) (sesHostProps ses) - longAtomHeader)))
-        longAtomHeader = 4 :: Int
+        -- the rows must fit the host's ComPacket and, as one Bytes token, header and data, the host's
+        -- MaxIndTokenSize (Core 5.2.2.4.1.5, PDF 146), the header the least atom's that holds them ('bytesWithin')
+        room = fromIntegral (min (lComPacketSize host) (bytesWithin (comIdHostIndTokenSize (tsParams st) (sesHostProps ses))))
 
 -- | A reply of no results and a status.
 notAuthorized, invalidParameter :: Reply

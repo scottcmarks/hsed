@@ -19,10 +19,12 @@ Since M5b, for Get on byte tables (design 11 M5b): the fill byte where
 nothing was written, with the extents written overlaid on it, which never
 overlap one another (none is written before M6, whose Set on a byte table
 keeps them so; until then every row of the simulator's byte tables reads as
-the fill).
+the fill); and the most rows a Get may return as the one byte sequence of
+its result within a token size, the host's MaxIndTokenSize ('bytesWithin').
 -}
 module Hsed.Sim.Bytes
   ( byteRange
+  , bytesWithin
   ) where
 
 import qualified Data.IntMap.Strict as IntMap
@@ -64,3 +66,25 @@ byteRange s e bt = B.concat (pieces from overlaid)
     pieces at []                 = [fill at (end + 1)]
     pieces at ((o, bs) : parts)  = fill at o : bs : pieces (o + B.length bs) parts
     fill at upTo                 = B.replicate (upTo - at) (btFill bt)
+
+-- | The most bytes one byte sequence carries in a token of at most a size,
+--   its header and its data counted (Core 5.2.2.4.1.5, PDF 146: what the
+--   host's MaxIndTokenSize bounds, the TPer sending no larger token), its
+--   header the least atom's that holds the length, as the codec writes it
+--   ("Hsed.Core.Token"; Core 3.2.2.3.1, PDF 33): a short atom's one byte
+--   for up to 15 bytes, a medium atom's two for up to 2047 and a long
+--   atom's four for up to 16,777,215, the most one atom carries, the
+--   simulator sending no continued token (5.2.2.4.1.8, PDF 146: the host's
+--   ContinuedTokens TRUE alone allows one); 0 for a size of 1 or less. Get
+--   bounds a byte table's rows by it ("Hsed.Sim.Base").
+--
+-- >>> map bytesWithin [0, 1, 16, 17, 18, 1992, 2049, 2051, 2052, 4040]
+-- [0,0,15,15,16,1990,2047,2047,2048,4036]
+-- >>> map bytesWithin [0xFFFFFF + 3, 0xFFFFFF + 4, maxBound]
+-- [16777214,16777215,16777215]
+bytesWithin :: Int -> Int
+bytesWithin size = foldl' max 0 [ min most (size - header) | (header, least, most) <- forms, size - header >= least ]
+  where
+    -- a byte sequence's atoms as the codec chooses them by its length: the header's bytes, the least and the most
+    -- bytes each carries
+    forms = [(1, 0, 15), (2, 16, 2047), (4, 2048, 0xFFFFFF)] :: [(Int, Int, Int)]

@@ -17,7 +17,11 @@ written and the byte of the extent written over it elsewhere
 ("Hsed.Sim.Types".@ByteTable@, sparse since M5a): a table nothing was
 written to, extents before, within, across and after the rows asked, two
 extents touching, one row alone, and, for random tables whose extents never
-overlap, the reading a naive table of every row gives.
+overlap, the reading a naive table of every row gives. And the most bytes
+one byte sequence carries in a token of at most a size, which bounds a byte
+Get's rows by the host's MaxIndTokenSize (Core 5.2.2.4.1.5, PDF 146), held
+to the codec's own atoms for every size up to 4200 and at a long atom's
+most (3.2.2.3.1, PDF 33).
 -}
 module Hsed.Sim.BytesSpec (spec) where
 
@@ -29,7 +33,9 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck (prop)
 import           Test.QuickCheck       (Gen, arbitrary, chooseInt, counterexample, forAll, vectorOf, (===))
 
-import           Hsed.Sim.Bytes        (byteRange)
+import           Hsed.Core.StreamItem  (StreamItem (..))
+import           Hsed.Core.Token       (Token (..))
+import           Hsed.Sim.Bytes        (byteRange, bytesWithin)
 import           Hsed.Sim.Types        (ByteTable (..))
 
 
@@ -67,7 +73,13 @@ naive s e bt = B.pack [ fromMaybe (btFill bt) (L.lookup i rows) | i <- [fromInte
   where rows = [ (o + i, b) | (o, bs) <- IntMap.toList (btWritten bt), (i, b) <- zip [0 ..] (B.unpack bs) ]
 
 spec :: Spec
-spec = describe "byteRange, a byte table's rows from one to another (Core 5.3.3.6.2.1, PDF 201)" $ do
+spec = do
+  byteRangeSpec
+  bytesWithinSpec
+
+-- | 'byteRange'.
+byteRangeSpec :: Spec
+byteRangeSpec = describe "byteRange, a byte table's rows from one to another (Core 5.3.3.6.2.1, PDF 201)" $ do
   it "reads the fill where nothing was written, as many bytes as rows asked, one row one byte (Core 3.2.5.2, PDF 51)" $ do
     byteRange 2 5 (ByteTable 8 0xFF mempty) `shouldBe` B.replicate 4 0xFF
     byteRange 0 7 (ByteTable 8 0 mempty) `shouldBe` B.replicate 8 0
@@ -93,3 +105,17 @@ spec = describe "byteRange, a byte table's rows from one to another (Core 5.3.3.
       counterexample (show (btWritten bt, s, e)) (byteRange s e bt === naive s e bt)
   prop "gives as many bytes as rows asked" $
     forAll genTableAndRows $ \(bt, s, e) -> B.length (byteRange s e bt) === fromIntegral (e - s + 1)
+
+-- | 'bytesWithin', held to the codec: the bytes it writes one byte sequence
+--   of n bytes in, its header and its data ("Hsed.Core.Token").
+bytesWithinSpec :: Spec
+bytesWithinSpec = describe "bytesWithin, the most bytes one byte sequence carries in a token of at most a size (Core 5.2.2.4.1.5, PDF 146; 3.2.2.3.1, PDF 33)" $ do
+  it "is, for every size up to 4200, the most bytes whose token the codec writes no larger, short, medium and long atoms among them, and 0 where even an empty sequence's one byte does not fit" $
+    forM_ [0 .. 4200] $ \size -> do
+      let n = bytesWithin size
+      (size, n >= 0, size < 1 || tokenOf n <= size, tokenOf (n + 1) > size) `shouldBe` (size, True, True, True)
+  it "carries at most 16,777,215 bytes, the most one long atom holds, the simulator sending no continued token (5.2.2.4.1.8, PDF 146)" $ do
+    map bytesWithin [0xFFFFFF + 3, 0xFFFFFF + 4, maxBound] `shouldBe` [0xFFFFFF - 1, 0xFFFFFF, 0xFFFFFF]
+    tokenOf 0xFFFFFF `shouldBe` 0xFFFFFF + 4
+  where
+    tokenOf n = B.length (generate (Bytes (B.replicate n 0)))

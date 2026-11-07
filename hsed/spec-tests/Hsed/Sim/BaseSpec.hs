@@ -441,6 +441,15 @@ spec = do
     it "LockOnReset {32} and {0, 0} are INVALID_PARAMETER (Fails c: not a set over 0 to 31), checked before the supported sets" $ do
       unchanged (setCells admin1 stL global [(9, uintegers [32])]) INVALID_PARAMETER
       unchanged (setCells admin1 stL global [(9, uintegers [0, 0])]) INVALID_PARAMETER
+    it "a column the simulator does not carry out decides FAIL only when it is the sole fault, whatever the cells' order (Core 5.1.5.16 vs 5.1.5.11, PDF 139; Scott's answer Q3)" $ do
+      -- CommonName (column 2) is granted but not carried out: a name is FAIL on its own
+      unchanged (setCells admin1 stL global [(2, D (Datum (Bytes "a name")))]) FAIL
+      -- a bad reset set on LockOnReset (column 9, check 11) outweighs CommonName's FAIL, in either order
+      unchanged (setCells admin1 stL global [(2, D (Datum (Bytes "a name"))), (9, uintegers [0, 2])]) INVALID_PARAMETER
+      unchanged (setCells admin1 stL global [(9, uintegers [0, 2]), (2, D (Datum (Bytes "a name")))]) INVALID_PARAMETER
+      -- a non-boolean on ReadLockEnabled (column 5, check 10) outweighs CommonName's FAIL, in either order
+      unchanged (setCells admin1 stL global [(2, D (Datum (Bytes "a name"))), (5, uinteger 2)]) INVALID_PARAMETER
+      unchanged (setCells admin1 stL global [(5, uinteger 2), (2, D (Datum (Bytes "a name")))]) INVALID_PARAMETER
     it "MBRControl's Enable, Done and MBRDoneOnReset {1: 1, 2: 1, 3: [0, 3]} give SUCCESS (ACE_MBRControl_Admins_Set, Opal Table 39, PDF 81), and MBRDoneOnReset {0, 2} INVALID_PARAMETER (Opal 4.3.5.3.1, PDF 88-89)" $ do
       let (r, st') = setCells admin1 stL uMBRControl_Row [(1, uinteger 1), (2, uinteger 1), (3, uintegers [0, 3])]
       r `shouldBe` MethodResponse [] 0

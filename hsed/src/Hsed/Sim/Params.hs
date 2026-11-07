@@ -79,6 +79,7 @@ module Hsed.Sim.Params
   , tperIndTokenSize
   , hostLimits
   , comIdHostLimits
+  , comIdHostIndTokenSize
   ) where
 
 import qualified RIO.ByteString      as B
@@ -612,6 +613,18 @@ comIdHostLimits p props = Limits
     bound n        = fromInteger (min (toInteger n) (toInteger (maxBound :: Int)))
     least name     = maybe 1 fromIntegral (Map.lookup name initialHostProperties)
     responseBuffer = maybe maxBound fromInteger (L.lookup maxResponseComPacketSizeName (spTPerProperties p))
+
+-- | What the host takes of one individual token in a response, from the host's
+--   properties a ComID keeps of it: its MaxIndTokenSize (Core 5.2.2.4.1.5, PDF
+--   146; the TPer SHALL NOT send an individual token, header and data, larger
+--   than it), the Opal 2.30 Table 17 initial assumption until the host sends
+--   its own (PDF 33-34), 0 meaning no limit (Core Table 167, PDF 141-142). The
+--   byte Get reads it to bound its one Bytes value ("Hsed.Sim.Base").
+comIdHostIndTokenSize :: SimParams -> Map Text Natural -> Int
+comIdHostIndTokenSize _ props = case Map.lookup maxIndTokenSizeName props of
+  Just 0  -> maxBound
+  Just n  -> fromInteger (min (toInteger n) (toInteger (maxBound :: Int)))
+  Nothing -> maybe maxBound fromIntegral (Map.lookup maxIndTokenSizeName initialHostProperties)
 
 -- | What the host takes before any Properties exchange: Opal 2.30 Table 17's
 --   initial assumptions ('initialHostProperties'), what every ComID starts

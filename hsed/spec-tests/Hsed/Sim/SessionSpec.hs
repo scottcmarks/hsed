@@ -144,11 +144,12 @@ programmaticResult :: Natural -> MethodResponse
 programmaticResult v = MethodResponse [L (List [N ((8 :: Natural) .: v)])] 0
 
 -- | Get of the MBR, a byte table of 128 MiB (Opal 2.30 Table 36, PDF 54):
---   whole, every row, and of its first eight rows (Core 5.1.4.2.3, PDF
---   129-130).
-getMBR, getMBRRows :: MethodCall
+--   whole, every row, its first eight rows, and its first 4000 (Core
+--   5.1.4.2.3, PDF 129-130).
+getMBR, getMBRRows, getMBRMany :: MethodCall
 getMBR     = invocation uMBRTable (Methods.Get (cellBlockValue noCells))
 getMBRRows = invocation uMBRTable (Methods.Get (cellBlockValue noCells { cbStartRow = Just (RowNumber 0), cbEndRow = Just 7 }))
+getMBRMany = invocation uMBRTable (Methods.Get (cellBlockValue noCells { cbStartRow = Just (RowNumber 0), cbEndRow = Just 3999 }))
 
 -- | A packet decoded: its header and its data subpackets' payloads.
 decoded :: ByteString -> Maybe (PacketHeader, [ByteString])
@@ -361,8 +362,17 @@ spec = do
         SessionAborted [] (Just _) -> True
         _                          -> False
       open ses st' `shouldBe` False
-    it "aborts the session at a transaction control token within a method invocation, in its header or its parameter list (Core 3.3.7.3, PDF 78)" $
-      pendingWith "Hsed.Core.Stream reads a transaction control token there as any unexpected token, a BadCall answered NOT_AUTHORIZED or INVALID_PARAMETER with the session kept (3.2.2.4.2 items 3-4, PDF 39), where 3.3.7.3 (PDF 78, 71e3a18f1fb9) has the session aborted: hsed-core's, no group's at M5b"
+    it "aborts the session at a transaction control token within a method invocation, where Hsed.Core.Stream faults it (Core 3.3.7.3, PDF 78, 71e3a18f1fb9)" $
+      forM_ [StartTransaction, EndTransaction] $ \t -> do
+        let inHeader = generate Call <> generate t <> generate (Unsigned 0) <> B.drop (B.length (generate Call)) (generate getCall)
+            (is, f)  = itemsOf inHeader
+        is `shouldBe` []
+        f `shouldSatisfy` isJust
+        let Processed outcome st' _ = uncurry (sessionPayload ses) (is, f) st1
+        outcome `shouldSatisfy` \o -> case o of
+          SessionAborted [] (Just _) -> True
+          _                          -> False
+        open ses st' `shouldBe` False
     it "ends the payload at a behaviour's own RESPONSE_OVERFLOW, as at the framing's (Opal 3.3.1 item 1): a Get of the whole MBR, more rows than the host's ComPacket holds, answered RESPONSE_OVERFLOW before a byte is built (Hsed.Sim.Base, M5b), a second Get within MaxMethods 2 unanswered, the session kept" $ do
       let Processed outcome st' ends = sessionPayload anybodyL [Invoke getMBR, Invoke getMBRRows] Nothing (withTPer maxMethodsName 2 stL)
       ends `shouldBe` True
@@ -375,6 +385,16 @@ spec = do
       case rows of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHeader anybodyL, [generate (MethodResponse [D (Datum (Bytes (B.replicate 8 0)))] 0)])
         other        -> expectationFailure (show other)
+    it "bounds a byte Get's one Bytes token by the host's MaxIndTokenSize, not the ComPacket alone (Core 5.2.2.4.1.5, PDF 146): with MaxResponseComPacketSize and the host's ComPacket raised to 65536 and MaxIndTokenSize left at 1992, a Get of 4000 MBR rows is RESPONSE_OVERFLOW though the ComPacket would hold them" $ do
+      let roomyTPer = withTPer maxResponseComPacketSizeName 65536 stL
+          roomyHost = hostOf maxPacketSizeName 65516 (hostOf maxComPacketSizeName 65536 anybodyL)
+          Processed outcome st' ends = sessionPayload roomyHost [Invoke getMBRMany] Nothing roomyTPer
+      Map.lookup maxIndTokenSizeName (sesHostProps roomyHost) `shouldBe` Just 1992
+      ends `shouldBe` True
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHeader roomyHost, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
+        other        -> expectationFailure (show other)
+      open anybodyL st' `shouldBe` True
     it "answers a Get within a transaction with the value put in the session's view, the committed SP as it was (Core 3.3.7.3: visible within the transaction; Get reads spView, Hsed.Sim.Base, M5b), and the committed value again once the level is rolled back" $ do
       let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
           put    = putSPView ses (withMsidPin "changed" (fromMaybe (error "no view") (spView ses opened))) opened

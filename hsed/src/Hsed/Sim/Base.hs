@@ -72,7 +72,7 @@ import           Hsed.Sim.Bytes           (byteRange)
 import           Hsed.Sim.Cells           (CellRefusal (..), cellFor, putCell)
 import           Hsed.Sim.State           (cellOf, openSession, putSPView, spView, updateRowIn)
 import           Hsed.Sim.Types           (ByteTable (..), LifeCycle (..), Limits (..), SPState (..), Session (..), SimParams (..),
-                                           TPerState (..), comIdHostLimits, defaultSimParams, initialState)
+                                           TPerState (..), comIdHostIndTokenSize, comIdHostLimits, defaultSimParams, initialState)
 
 
 -- | Get on an object, a table or a byte table (Core 5.3.3.6, PDF 201;
@@ -153,10 +153,18 @@ getReply iv cb st = case ivSession iv of
     rowValues granted s e row =
       ReplyResults [L (List [ N ((fromIntegral c :: Natural) .: cellValue v) | (c, v) <- L.sortOn fst row
                                                                               , c >= s, c <= e, null granted || c `elem` granted ])] SUCCESS
-    -- a byte table's rows, unless more than the host's ComPacket holds: then RESPONSE_OVERFLOW before any is read
+    -- a byte table's rows, unless more than the host's ComPacket holds or the host's MaxIndTokenSize takes
+    -- in one token: then RESPONSE_OVERFLOW before any is read, the simulator sending no continued token
     bytes ses s e bt
-      | e - s + 1 > fromIntegral (lComPacketSize (comIdHostLimits (tsParams st) (sesHostProps ses))) = ReplyResults [] RESPONSE_OVERFLOW
-      | otherwise = ReplyResults [cellValue (BytesCell (byteRange s e bt))] SUCCESS
+      | e - s + 1 > tokenRoom = ReplyResults [] RESPONSE_OVERFLOW
+      | otherwise             = ReplyResults [cellValue (BytesCell (byteRange s e bt))] SUCCESS
+      where
+        host = comIdHostLimits (tsParams st) (sesHostProps ses)
+        -- the rows must fit the host's ComPacket and, as one Bytes token, the host's MaxIndTokenSize,
+        -- whose header is at most four bytes (Core 5.2.2.4.1.5, PDF 146; the long atom of Table 13, PDF 35)
+        tokenRoom = fromIntegral
+          (min (lComPacketSize host) (max 0 (comIdHostIndTokenSize (tsParams st) (sesHostProps ses) - longAtomHeader)))
+        longAtomHeader = 4 :: Int
 
 -- | A reply of no results and a status.
 notAuthorized, invalidParameter :: Reply
@@ -448,8 +456,15 @@ setReply iv wh vs st = either (\code -> (ReplyResults [] code, st)) (\st' -> (Re
         when (any ((== 0) . colNumber . fst) cols) (Left INVALID_PARAMETER)              -- (8)
         granted <- maybe (Left NOT_AUTHORIZED) Right (grantedColumns sps ses (ivInvoker iv) uMethodID_Set)  -- (9)
         unless (null granted || all ((`elem` granted) . colNumber . fst) cols) (Left NOT_AUTHORIZED)
-        cells   <- traverse (\(c, x) -> (,) (colNumber c) <$> first refused (cellFor c x)) cols  -- (10)
+        let readCells = [ (colNumber c, cellFor c x) | (c, x) <- cols ]                  -- (10)
+            cells     = [ (n, cell) | (n, Right cell) <- readCells ]
+            refusals  = [ r | (_, Left r) <- readCells ]
+        -- a value not of its column's type is INVALID_PARAMETER (Fails c; 5.1.5.11 b), decided over every
+        -- cell and with check (11) before a column the simulator does not carry out, which alone is FAIL
+        -- (5.1.5.16, PDF 139; Scott's answer Q3), so the status does not turn on the cells' order
+        when (any notOfType refusals) (Left INVALID_PARAMETER)                            -- (10), Fails c
         traverse_ (resetSet desc) cells                                                  -- (11)
+        unless (null refusals) (Left FAIL)                                               -- (10), Q3: the sole fault
         pure (putSPView ses (updateRowIn (tdTableUID desc) u (\r -> L.foldl' (flip (uncurry putCell)) r cells) sps) st)  -- (12)
     -- the RowValues option: a list of Named values, each named by a uinteger column number
     rowValues = \case
@@ -459,9 +474,11 @@ setReply iv wh vs st = either (\code -> (ReplyResults [] code, st)) (\st' -> (Re
       N (NamedValue (Name (Datum (Unsigned n))) x) -> Just (toInteger n, x)
       _                                            -> Nothing
     columnNumbered n desc = L.find ((== n) . toInteger . colNumber) (tdColumns desc)
-    refused = \case
-      NotOfType _    -> INVALID_PARAMETER
-      NotSimulated _ -> FAIL
+    -- a value not of its column's type (Fails c; INVALID_PARAMETER), as against one of a type the
+    -- simulator's Set does not carry out (NotSimulated; FAIL, Q3)
+    notOfType = \case
+      NotOfType _    -> True
+      NotSimulated _ -> False
     -- a reset_types set in a reset column must be one the TPer supports (Opal 4.3.5.2.2, 4.3.5.3.1)
     resetSet desc (c, cell)
       | Just c `elem` [columnOf desc "LockOnReset", columnOf desc "MBRDoneOnReset"], listed cell `notElem` supported = Left INVALID_PARAMETER

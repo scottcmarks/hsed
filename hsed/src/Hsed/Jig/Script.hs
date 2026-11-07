@@ -167,6 +167,7 @@ module Hsed.Jig.Script
   , framesOf
   , expectNoResponseOrCloseSession
   , sessionGone
+  , cleared
   , simCell
   , tperReset
   , powerCycle
@@ -1167,6 +1168,17 @@ sessionGone h why = do
   modifyCtx (\x -> x { rcSession = mfilter (/= h) (rcSession x) })
   note ("session TSN " <> tshow (shTSN h) <> " on " <> hex (shComId h) <> " aborted by the TPer, forgotten by the run: " <> why
         <> " (Core 3.3.7.1.5, PDF 75)")
+
+-- | After a step that failed with its session perhaps still open: STACK_RESET
+--   on the session's ComID, which aborts every session on it (Core 3.3.4.7.5
+--   item 1, PDF 65), the session forgotten where the reset answered
+--   Success/Failure 0 ('sessionGone'), so that the next case finds none of
+--   this run's open; otherwise noted, for the next case's NoSessions. Shared
+--   by ETC-09 and ETC-14 (design 13.34 (22)(d)).
+cleared :: SessionHandle -> Script ()
+cleared h = stackReset (shComId h) >>= \case
+  Right 0 -> sessionGone h ("STACK_RESET on " <> hex (shComId h) <> " after a step failed: every session on the ComID aborted (Core 3.3.4.7.5 item 1, PDF 65)")
+  outcome -> note ("after a step failed, STACK_RESET on " <> hex (shComId h) <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
 
 -- | A cell of the simulator's state, by the SP's, the table's and the
 --   row's UIDs and the column's name, found in the description the SP holds

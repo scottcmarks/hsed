@@ -46,11 +46,10 @@ import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Case      (Case (..), Need (..))
 import           Hsed.Jig.Catalogue (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq    (Section (..))
-import           Hsed.Jig.Script    (Script, SessionHandle (..), StartArgs, Verdict (..), asAuthority, attempt, endTransaction,
-                                     exchangeOn, exchanged, expectNoResponseOrCloseSession, note, observe, opened, properties,
-                                     sessionComPacket, sessionGone, stackReset, startSession, startTransaction, unmet, withSession)
+import           Hsed.Jig.Script    (Script, SessionHandle (..), StartArgs, Verdict (..), asAuthority, attempt, cleared, endTransaction,
+                                     exchangeOn, exchanged, expectNoResponseOrCloseSession, observe, opened, properties,
+                                     sessionComPacket, sessionGone, startSession, startTransaction, unmet, withSession)
 import           Hsed.Sim.Types     (maxTransactionLimitName)
-import           Hsed.Wire          (hex)
 
 
 -- | The case.
@@ -112,16 +111,6 @@ step3 h n count = do
   observe "step 3" (tshow count <> " Start Transaction tokens, each with status 0x00, sent in one subpacket; the session was aborted: the IF-RECV "
                     <> "answered (0, 0, 0) or the TPer's CloseSession (Test Cases PDF 82; 7.1, PDF 76)")
   where name = "step 3: " <> tshow count <> " Start Transaction tokens in one subpacket, " <> maxTransactionLimitName <> " " <> tshow n
-
--- | After a step that failed with its session perhaps still open:
---   STACK_RESET on the session's ComID, which aborts every session on it
---   (Core 3.3.4.7.5 item 1, PDF 65), the session forgotten where the reset
---   answered Success/Failure 0, so that the next case finds none of this
---   run's open; otherwise noted, for the next case's NoSessions.
-cleared :: SessionHandle -> Script ()
-cleared h = stackReset (shComId h) >>= \case
-  Right 0 -> sessionGone h ("STACK_RESET on " <> hex (shComId h) <> " after a step failed: every session on the ComID aborted (Core 3.3.4.7.5 item 1, PDF 65)")
-  outcome -> note ("after a step failed, STACK_RESET on " <> hex (shComId h) <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
 
 -- | The extension: in a session as Admin1, one Start Transaction with
 --   status 0x00, mirrored with status 0 (Core 3.2.2.3.3.4, PDF 37: within

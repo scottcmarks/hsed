@@ -54,13 +54,13 @@ import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Case      (Case (..), Need (..))
 import           Hsed.Jig.Catalogue (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq    (Section (..))
-import           Hsed.Jig.Script    (Script, SessionHandle (..), StartArgs, Verdict (..), asAuthority, attempt, baseComId,
-                                     dataStoreTable, exchangeOn, exchanged, expectNoResponseOrCloseSession, note, observe, opened,
-                                     peekSim, properties, sessionGone, sessionSubpackets, stackReset, startSession, unmet,
+import           Hsed.Jig.Script    (Script, SessionHandle (..), StartArgs, Verdict (..), asAuthority, attempt, baseComId, cleared,
+                                     dataStoreTable, exchangeOn, exchanged, expectNoResponseOrCloseSession, observe, opened,
+                                     peekSim, properties, sessionGone, sessionSubpackets, startSession, unmet,
                                      withSession)
 import           Hsed.Sim.Types     (ByteTable (..), SPState (..), TPerState (..), maxComPacketSizeName, maxPacketSizeName,
                                      maxSubpacketsName)
-import           Hsed.Wire          (comPacketHeaderSize, hex)
+import           Hsed.Wire          (comPacketHeaderSize)
 
 
 -- $setup
@@ -158,16 +158,6 @@ step3 h n count = do
   observe "step 3" (tshow count <> " Set subpackets sent in one packet of the session; the session was aborted: the IF-RECV answered (0, 0, 0) "
                     <> "or the TPer's CloseSession (Test Cases PDF 87; 7.1, PDF 76)")
   where name = "step 3: a packet of " <> tshow count <> " Set subpackets, " <> maxSubpacketsName <> " " <> tshow n
-
--- | After a step that failed with its session perhaps still open:
---   STACK_RESET on the session's ComID, which aborts every session on it
---   (Core 3.3.4.7.5 item 1, PDF 65), the session forgotten where the reset
---   answered Success/Failure 0, so that the next case finds none of this
---   run's open; otherwise noted, for the next case's NoSessions.
-cleared :: SessionHandle -> Script ()
-cleared h = stackReset (shComId h) >>= \case
-  Right 0 -> sessionGone h ("STACK_RESET on " <> hex (shComId h) <> " after a step failed: every session on the ComID aborted (Core 3.3.4.7.5 item 1, PDF 65)")
-  outcome -> note ("after a step failed, STACK_RESET on " <> hex (shComId h) <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
 
 -- | The extension: the DataStore as the simulator's state holds it has
 --   nothing written ("Hsed.Sim.Types".'ByteTable': its extents written),

@@ -221,6 +221,15 @@ spec = do
     it "stops a session stream at a transaction token without its uinteger status, outside an invocation" $ do
       summary (items SessionStream (EndTransaction : toks propertiesBytes)) `shouldBe` ([], Just (1, OutsideCall))
       summary (items SessionStream [StartTransaction]) `shouldBe` ([], Just (1, Unfinished))
+    it "aborts at a transaction control token within a method invocation: in the header, the parameter list, or after it before End of Data (Core 3.3.7.3, PDF 78)" $
+      forM_ [StartTransaction, EndTransaction] $ \t -> do
+        let aborted toks' = summary (items SessionStream toks')
+                              `shouldSatisfy` \(is, f) -> null is && (snd <$> f) == Just WithinInvocation
+        aborted ([Call, t, Unsigned 0, smuid, properties, StartList, EndList, EndOfData] <> status)  -- in the header
+        aborted ([Call, smuid, properties, StartList, t, Unsigned 0, EndList, EndOfData] <> status)  -- in the parameter list
+        aborted ([Call, smuid, properties, StartList, EndList, t, Unsigned 0, EndOfData] <> status)  -- after the list, before End of Data
+        summary (items ControlStream ([Call, t, Unsigned 0, smuid, properties, StartList, EndList, EndOfData] <> status))
+          `shouldSatisfy` \(is, f) -> null is && (snd <$> f) == Just WithinInvocation
     it "drops Empty atoms given among the tokens, the indexes those given" $
       summary (items SessionStream ([Empty, Call, Empty, EndList, EndOfData] <> status)) `shouldBe` ([Left (3, InHeader)], Nothing)
     it "names a byte sequence out of place by its length, never its bytes (a secret may be among them)" $ do

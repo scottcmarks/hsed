@@ -195,6 +195,10 @@ data Place
     -- ^ in a method response, its result list, End of Data or status list: the host's reading alone
   | Unfinished
     -- ^ the stream ends inside an invocation or a response (3.3.10.3 a, PDF 83-84)
+  | WithinInvocation
+    -- ^ a transaction control token received between the Call and the status list's End List, which
+    --   aborts the session (Core 3.3.7.3, PDF 78), not a BadCall the TPer answers as it does items 3-4's
+    --   other out-of-place tokens
   deriving (Eq, Show)
 
 -- | A token out of place: which token (its index among those given, 0
@@ -262,11 +266,19 @@ items mode toks = go (indexed toks)
           [] -> ([], Just (unfinishedAt count))
     -- after a fault in the header or the parameter list: the invocation's End of Data and status list, then the
     -- BadCall; a stream that ends first is unfinished
-    resync f mhdr rest = case faultPlace f of
-      Unfinished -> ([], Just f)
-      _ -> case L.dropWhile ((/= EndOfData) . snd) rest of
-        []           -> ([], Just (unfinishedAt count))
-        _ : afterEod -> status mhdr afterEod $ \_ more -> first (BadCall f :) (go more)
+    resync f mhdr rest
+      | Just t <- tokenAt (faultAt f), isTransactionToken t = aborted t (faultAt f)
+      | otherwise = case faultPlace f of
+          Unfinished -> ([], Just f)
+          _ -> case L.dropWhile ((/= EndOfData) . snd) rest of
+            []           -> ([], Just (unfinishedAt count))
+            _ : afterEod -> status mhdr afterEod $ \_ more -> first (BadCall f :) (go more)
+    -- a transaction control token within a method invocation aborts the session (Core 3.3.7.3, PDF 78),
+    -- not read on to its End of Data as items 3-4's other out-of-place tokens are
+    aborted t i = ([], Just (Fault i WithinInvocation
+                             (named t <> " within a method invocation, which aborts the session (Core 3.3.7.3, PDF 78)")))
+    -- the token at an index among those given (Empty atoms dropped), for 'resync' to know an aborting token
+    tokenAt i = lookup i (indexed toks)
     -- the status list after End of Data: its first value to the continuation, or the fault
     status mhdr afterEod k = case afterEod of
       (_, StartList) : values -> case statusValues values of
@@ -368,6 +380,10 @@ faultOf count place = \case
 unfinishedAt :: Int -> Fault
 unfinishedAt count =
   Fault count Unfinished "the stream ends inside a method invocation or response, which it leaves incomplete (Core 3.3.10.3 a, PDF 83-84)"
+
+-- | Whether a token is a transaction control token (Core 3.2.2.3.3.4-5, PDF 37).
+isTransactionToken :: Token -> Bool
+isTransactionToken t = t == StartTransaction || t == EndTransaction
 
 -- | The method header after a Call: the two eight-byte UIDs, then the
 --   parameter list's Start List (Core 3.2.4.2 items 2-3, PDF 48).

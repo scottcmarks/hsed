@@ -399,16 +399,21 @@ dataStore = uidLower LockingSP.uTable_DataStore +:+ hNull
 --   5.3.2.9.5, PDF 165), NOT_AUTHORIZED for the whole method (5.3.4.2.6,
 --   PDF 225; Fails e);
 --
---   (10) each value read as its column's cell ('cellFor'): not of the
---   column's type, INVALID_PARAMETER (Fails c; 5.1.5.11 b); of a type the
---   simulator's Set does not carry out, FAIL (Q3);
+--   (10) each value read as its column's cell ('cellFor'): one not of the
+--   column's type, INVALID_PARAMETER (Fails c; 5.1.5.11 b), whatever the
+--   other cells hold; one of a type the simulator's Set does not carry out
+--   decides nothing yet, its FAIL coming after (11);
 --
 --   (11) a LockOnReset or MBRDoneOnReset cell (the columns by name in the
 --   SP's description) holding a set other than {0} or {0,3}, or {0,1} or
 --   {0,1,3} where the TPer supports a hardware reset for them
 --   ("Hsed.Sim.Params".@spHwResetLorDor@, Opal 2.30 3.1.1.3, PDF 21),
 --   INVALID_PARAMETER (Opal 4.3.5.2.2, PDF 88; 4.3.5.3.1, PDF 88-89; Core
---   5.1.5.11 f);
+--   5.1.5.11 f); then a cell of a type the simulator's Set does not carry
+--   out, FAIL (Q3; 5.1.5.16, PDF 139: the status where none of the others
+--   applies), so that FAIL answers a Set whose sole fault is such a column,
+--   whatever the cells' order, and INVALID_PARAMETER one whose parameters
+--   are also wrong;
 --
 --   (12) else the cells put in the row ("Hsed.Sim.Cells".'putCell', through
 --   "Hsed.Sim.State".'updateRowIn') and the SP put back as the session sees
@@ -422,7 +427,8 @@ set = Behaviour
   }
 
 -- | Set's reply and the TPer after it, the TPer as it was unless the reply
---   is SUCCESS: the module's description of 'set', its checks in order.
+--   is SUCCESS: the module's description of 'set', its checks in the order
+--   given there, (10)'s FAIL after (11).
 setReply :: Invoked -> Maybe Value -> Maybe Value -> TPerState -> (Reply, TPerState)
 setReply iv wh vs st = either (\code -> (ReplyResults [] code, st)) (\st' -> (ReplyResults [] SUCCESS, st')) $ do
   ses   <- maybe (Left NOT_AUTHORIZED) Right (ivSession iv)

@@ -217,6 +217,11 @@ class AllowKeys(Reports):
         self.assertEqual(status, 0, out)
         self.assertIn('allowed by --allow-keys options.tests: json options.tests: [] vs ["UCT-01", "ETC-02"]', out)
 
+    def test_an_empty_key_is_a_usage_error(self):
+        status, out = self.compare(self.a, self.b, "--allow-keys", "")
+        self.assertEqual(status, 2, out)
+        self.assertIn("--allow-keys ''", out)
+
 
 class AllowTexts(Reports):
     OLD_LINE = "- IF-SENDs issued on a drive: 0"
@@ -321,6 +326,12 @@ class AllowMdSections(Reports):
         self.assertFalse(C.section_allows(change, "Cases"))
         self.assertTrue(C.section_allows(change, "run"))
 
+    def test_an_empty_section_title_is_a_usage_error(self):
+        b = self.write("b", md=markdown(extra=self.SECTION))
+        status, out = self.compare(self.write("a"), b, "--allow-md-sections", "")
+        self.assertEqual(status, 2, out)
+        self.assertIn("--allow-md-sections ''", out)
+
 
 class JUnit(Reports):
     def test_a_testcase_b_adds_is_a_difference_a_text_allowance_may_allow(self):
@@ -412,6 +423,14 @@ class RunSets(Reports):
         status, out = self.compare(a, b)
         self.assertEqual(status, 2, out)
         self.assertIn("1: B has no report", out)
+
+    def test_a_runs_tsv_row_shorter_than_the_header_is_unreadable(self):
+        a = self.write_set("a", {"1": report()})
+        b = self.write_set("b", {"1": report()})
+        (b / "runs.tsv").write_text("run\texit\tentries\treport\targs\n1\t0\n", encoding="utf-8")
+        status, out = self.compare(a, b)
+        self.assertEqual(status, 2, out)
+        self.assertIn("row 2 has 2 columns", out)
 
 
 if __name__ == "__main__":

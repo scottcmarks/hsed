@@ -96,6 +96,7 @@ simulated_or_replayed() {
     [ -f "$file" ] && [ ! -b "$file" ] && [ ! -c "$file" ]
 }
 
+case ",$runs," in *,,*) die "--runs names an empty run (a leading, trailing or doubled comma)" ;; esac
 IFS=, read -r -a names <<<"$runs"
 [ ${#names[@]} -gt 0 ] || die "--runs names no run"
 for name in "${names[@]}"; do flags_of "$name" >/dev/null || die "unknown run '$name' (runs: $all_runs)"; done

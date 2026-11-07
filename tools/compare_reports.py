@@ -22,7 +22,8 @@ Normalised in each run's three reports before they are compared, each by the val
 Compared: the JSON as values, an object's members by key and a list's elements aligned as difflib aligns them, so
 that an element one side alone has is one difference, not a shift of every element after it (the elements of a
 replaced block are paired in order, those left over one side's alone); the Markdown and the JUnit line by line,
-aligned the same way.
+aligned the same way. Lines are split with str.splitlines(), so a difference only in line endings (CR versus LF)
+or in a trailing final newline is not reported; the jig's own reports carry neither.
 
 Allowances, each option repeatable:
   --allow-keys KEY           a JSON difference at KEY or under it: a dotted path from the report's root, list
@@ -353,6 +354,9 @@ def run_set(directory):
     columns = {name: i for i, name in enumerate(rows[0])} if rows else {}
     if "run" not in columns or "report" not in columns:
         raise Unreadable(f"{directory / 'runs.tsv'}: no run and report columns")
+    for i, row in enumerate(rows[1:], start=2):
+        if len(row) < len(rows[0]):
+            raise Unreadable(f"{directory / 'runs.tsv'}: row {i} has {len(row)} columns, fewer than the header's {len(rows[0])}")
     return {row[columns["run"]]: (None if row[columns["report"]] == "-" else directory / row[columns["report"]])
             for row in rows[1:]}
 
@@ -467,6 +471,12 @@ def main(argv=None):
     allow = Allowances(tuple(args.allow_keys), tuple(map(tuple, args.allow_texts)), tuple(args.allow_md_sections))
     if any(not old and not new for old, new in allow.texts):
         print("compare_reports.py: --allow-texts '' '' allows nothing it can name: give OLD or NEW", file=sys.stderr)
+        return 2
+    if any(not title for title in allow.md_sections):
+        print("compare_reports.py: --allow-md-sections '' would allow every Markdown change under any heading: give a section title", file=sys.stderr)
+        return 2
+    if any(not key for key in allow.keys):
+        print("compare_reports.py: --allow-keys '' allows nothing it can name: give a key", file=sys.stderr)
         return 2
     try:
         a_runs, b_runs = runs_of(Path(args.a)), runs_of(Path(args.b))

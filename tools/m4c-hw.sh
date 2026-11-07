@@ -121,11 +121,17 @@ disk_of() {
     fi
 }
 
-# What a loaded kext UUID was read to be (design 13.12): build 625's arm64e slice, signed 2024-05-07.
+# What a loaded kext UUID was read to be (design 13.12): build 625's arm64e slice, signed 2024-05-07, and its two ad hoc
+# rebuilds of 2026-11-07 (TPerDriver's docs/kext625-panic-2026-11-07.md, sections 6 and 7), from the same source,
+# macos-driver tag 1.49.1 (513e429) with sedutil 802774a, older than 2be586e (the privilege check) and 7856c9c (the whitelist).
 known_uuid() {
     case "$1" in
         373BA509-89F7-3B36-A977-BB65C7635F1B)
-            echo "build 625: no privilege check, no command whitelist (disassembled 2026-10-30, re-read 2026-11-02): hsed's Guard and shim are the safety" ;;
+            echo "build 625: no privilege check, no command whitelist (disassembled 2026-10-30, re-read 2026-11-02): hsed's Guard and shim are the safety; it panics macOS 27.2 when an instance is freed (a use-after-free in its debug free())" ;;
+        2011DD44-AA2E-358F-BF94-786B490F0A1D)
+            echo "build 625.1, ad hoc (SIP off), 2026-11-07: 625 with its free() fixed; it still panicked on its debug hex dump of an empty VPD page (PrintBufferToIOLog's size-0 wrap): install 625.2 instead; no privilege check, no command whitelist: hsed's Guard and shim are the safety" ;;
+        4A0A3A8C-4C10-3B63-A423-8559C7E94CEC)
+            echo "build 625.2, ad hoc (SIP off), 2026-11-07: 625 with both debug-only faults fixed (free(), PrintBufferToIOLog), 625's dispatch and 436-byte DTA Device Info; no privilege check, no command whitelist: hsed's Guard and shim are the safety" ;;
         *) echo "" ;;
     esac
 }
@@ -287,7 +293,7 @@ H3. M3's Level 0 capture, while FixtureSpec's six examples still pend: one IF-RE
     nothing bound, no --allow-mounted needed:
       sudo build/bin/hsed-jig --target /dev/$DISK --tests UCT-01 --expect-serial "$SERIAL" \
           --capture-level0 spec/fixtures/disk6-level0.bin --report-dir build/report
-    Expect exit 0, and on stderr the user client opened (SAT, kext build 625), one command line with the CDB
+    Expect exit 0, and on stderr the user client opened (SAT, the kext's build: 625.2 since 2026-11-07), one command line with the CDB
     a1 08 0e 01 04 00 01 00 00 5c 00 00, kIOReturnSuccess (0x00000000), 2048 bytes transferred, the capture's sha256, and
     the user client closed. Then, as yourself (both exit 0):
       R=$(ls -t build/report/jig-dev-$DISK-*.json | head -1)
@@ -314,7 +320,7 @@ H4. The volume's baseline, as yourself, the volume left mounted. Optionally, fir
     mount it again after H13's snapshot (diskutil mount /dev/${DISK}s1).
     On failure: a verify error predates hsed. Stop.
 
-H5. sedutil's MSID, the oracle: the first IF-SEND through this bridge and kext 625, by an established tool. Only its
+H5. sedutil's MSID, the oracle: the first IF-SEND through this bridge and the kext, by an established tool. Only its
     length and its digest's first 12 hex digits are written, never the MSID:
       sudo sedutil-cli --printDefaultPassword /dev/$DISK | sed -n 's/^MSID: //p' | tr -d '\n' \
           | python3 -c 'import sys,hashlib; b=sys.stdin.buffer.read(); print(len(b), hashlib.sha256(b).hexdigest()[:12])' \

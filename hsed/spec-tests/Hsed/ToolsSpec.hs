@@ -17,7 +17,8 @@ each names the Level 0 fixture by the name FixtureSpec reads,
 @spec\/fixtures\/disk6-level0.bin@ (the drive as first seen, whatever its BSD
 name is now). @tools/m4c-hw.sh@ names no @\/dev\/diskN@ outside its comments
 (the drive is found by its serial, its number assigned at each attach),
-prints the steps H0 to H14, and knows kext build 625 by its UUID; since the
+prints the steps H0 to H14, and knows kext build 625 by its UUID (and since
+2026-11-07 its ad hoc rebuilds 625.1 and 625.2); since the
 M4c review its steps begin once M4c has landed, eject the drive before any
 replug, tell a latched transport from the TPer's own answer at H6, verify
 the volume before H4's snapshot, run the Pair's Properties (H12, its offline
@@ -141,9 +142,12 @@ spec = describe "the hardware scripts" $ do
            , "\"$(slice_of \"$disk\" \"/dev/$slice\")\" \"$key\""
            , "s#^(([^ @]*@)?/dev/$1(s[0-9]+)*) on (.*)" ] $ \l ->
         text `shouldSatisfy` T.isInfixOf l
-    it "knows kext build 625 by its UUID, read byte for byte (design 13.12)" $ do
+    it "knows kext build 625 by its UUID, read byte for byte, and its rebuilds 625.1 and 625.2 of 2026-11-07 (design 13.12)" $ do
       text <- script "../tools/m4c-hw.sh"
-      text `shouldSatisfy` T.isInfixOf "373BA509-89F7-3B36-A977-BB65C7635F1B)"
+      for_ [ "373BA509-89F7-3B36-A977-BB65C7635F1B)"
+           , "2011DD44-AA2E-358F-BF94-786B490F0A1D)"
+           , "4A0A3A8C-4C10-3B63-A423-8559C7E94CEC)" ] $ \u ->
+        text `shouldSatisfy` T.isInfixOf u
     it "asks build/bin/hsed-jig for the shim's command and bind and the portable C's scalars and bind check, and the shared hsed-jig only for no _hsed_kext_ symbol" $ do
       text <- script "../tools/m4c-hw.sh"
       for_ [ "for s in _hsed_kext_command _hsed_kext_bind _hsed_cdb_scalars _hsed_cdb_bind_check; do"

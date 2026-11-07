@@ -41,7 +41,7 @@ session, which STACK_RESET clears before the step fails.
 Its sessions need the Locking SP Manufactured, the common prerequisite of
 6.2 (PDF 49); its Sets and TPER_RESET are writes no drive takes before M6,
 so the simulator alone runs it (design 9.3; 13.34 (8)), on its Set and the
-jig's TPER_RESET (since M5b). The jig's extension is M5's reset clause
+jig's TPER_RESET (since M5b). The jig's extension is M5a's reset clause
 through the jig: a power cycle of the simulator sets ReadLocked and
 WriteLocked on every range whose LockOnReset lists Power Cycle, as the
 factory's all do (Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86),
@@ -88,7 +88,7 @@ spf12case1nomedia = Case
   , cOwnPrereqs = []
   , cNeeds      = [NeedIfRecv, NeedWrite, NeedSimOnly]
   , cRun        = run
-  , cExtensions = [("a power cycle sets ReadLocked and WriteLocked on every range whose LockOnReset lists Power Cycle (Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86: M5's reset clause through the jig), each range's locks put back", powerCycleLocks)]
+  , cExtensions = [("a power cycle sets ReadLocked and WriteLocked on every range whose LockOnReset lists Power Cycle (Core 5.7.2.2.10, PDF 275; Opal 2.30 Table 45, PDF 86: M5a's reset clause through the jig), each range's locks put back", powerCycleLocks)]
   }
 
 -- | An object of an SP and the cells it held before the case set them, as
@@ -218,7 +218,7 @@ restore who args kept = readIORef kept >>= \case
       observe "restore" (kName k <> " set back to what the case read first, as " <> who <> " (Scott's answer Q4)")
     pure Pass
 
--- | The extension, M5's reset clause through the jig: as Admin1, every
+-- | The extension, M5a's reset clause through the jig: as Admin1, every
 --   range's ReadLocked, WriteLocked and LockOnReset read and kept; a power
 --   cycle of the simulator ('powerCycle'); then, as Admin1 again, the
 --   global range's ReadLocked and WriteLocked read TRUE TRUE, its

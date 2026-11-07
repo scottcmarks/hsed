@@ -37,6 +37,7 @@ for their parameters (@foldedAt@).
 -}
 module Hsed.LawsSpec (spec) where
 
+import           Data.Aeson            (FromJSON (..), eitherDecodeFileStrict, withObject, (.:), (.:?))
 import qualified RIO.List              as L
 import qualified RIO.Map               as Map
 import qualified RIO.Text              as T
@@ -101,6 +102,35 @@ cited =
   , ("Txn.failedMethod",     ("core-2.01 3.3.7.3, its failed-method paragraph", 78, "de557e6e406b"))
   ]
 
+-- | A paragraph of an IR extraction (@spec/ir/*.json@'s @paras@): its hash,
+--   section and 0-based page, the fields 'cited' is held to until the anchors
+--   exist (design 13.29 (j)).
+data IRPara = IRPara { ipHash :: !Text, ipSection :: !(Maybe Text), ipPage :: !Int }
+
+instance FromJSON IRPara where
+  parseJSON = withObject "paragraph" $ \o -> IRPara <$> o .: "hash" <*> o .:? "section" <*> o .: "page"
+
+newtype IRParas = IRParas [IRPara]
+
+instance FromJSON IRParas where
+  parseJSON = withObject "IR" $ \o -> IRParas <$> o .: "paras"
+
+-- | The paragraphs of an IR file (hsed-test runs with cwd @hsed/@, the IR a
+--   directory up), or an error naming the file.
+irParagraphs :: FilePath -> IO [IRPara]
+irParagraphs path = do
+  r <- eitherDecodeFileStrict path
+  case r of
+    Left e             -> error (path <> ": " <> e)
+    Right (IRParas ps) -> pure ps
+
+-- | The spec and section a cited paragraph names: its first word, and its
+--   second with a trailing comma dropped (@"core-2.01 3.3.7.3, ..."@).
+citedSpecSection :: Text -> (Text, Text)
+citedSpecSection paragraph = case T.words paragraph of
+  specId : section : _ -> (specId, T.dropWhileEnd (== ',') section)
+  _                    -> (paragraph, "")
+
 -- | The cases a law names that a later rung's jig runs, with that rung
 --   (design section 11; the M5 plan's rungs): SPF-12's first case whole at
 --   M6, its steps 6 and 7 media I/O (its steps 1 to 5 are the jig's variant
@@ -156,6 +186,15 @@ spec = do
       [ lawName l | l <- unbound, lawName l `elem` map lrName Generated.laws ] `shouldBe` []
       [ lawName l | l <- unbound, lawHash l `elem` map lawHash bound ] `shouldBe` []
       [ lawName l | l <- unbound, T.length (lawHash l) /= 12 ] `shouldBe` []
+    it "each sits once in the IR it cites, in that section and on that PDF page (spec/ir, the IR page + 1): the citations held until the anchors exist (design 13.29 (j))" $ do
+      core <- irParagraphs "../spec/ir/core-2.01.json"
+      opal <- irParagraphs "../spec/ir/opal-2.30.json"
+      let misplaced (paragraph, page, hashPrefix) =
+            let (spec', section) = citedSpecSection paragraph
+                hits = [ (ipSection p, ipPage p + 1) | p <- if spec' == "opal-2.30" then opal else core
+                                                     , hashPrefix `T.isPrefixOf` ipHash p ]
+            in hits /= [(Just section, page)]
+      [ n | (n, c) <- cited, misplaced c ] `shouldBe` []
     forM_ cited $ \(n, (paragraph, page, _)) ->
       it (T.unpack n <> " (" <> T.unpack paragraph <> ", PDF " <> show page <> ") is bound by a comment") $
         pendingWith "the paragraph is unlabelled prose, which no anchor names yet (design 13.29 (j); the M5 plan's D7)"

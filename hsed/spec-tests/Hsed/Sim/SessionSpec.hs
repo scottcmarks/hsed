@@ -38,7 +38,9 @@ after it reads the value set (the M5b plan's risk R2), a Get within a
 transaction reads the session's view ("Hsed.Sim.Base", M5b); a response
 the host's packet cannot hold RESPONSE_OVERFLOW, which ends the payload's
 processing (Opal 2.30 3.3.1, PDF 29), as does a behaviour's own, a Get of
-the whole MBR bounded before a byte is built; the framing within the host's
+the whole MBR bounded before a byte is built, and a byte Get's rows bounded
+by the host's MaxIndTokenSize as well, on a session holding the host's
+raised ComPacket (Core 5.2.2.4.1.5, PDF 146); the framing within the host's
 MaxSubpackets, MaxPacketSize and
 MaxComPacketSize (5.2.2.4.1.1-2 and 4, PDF 145-146), a packet never larger
 than the ComPacket that carries it, over any host properties. Then the whole
@@ -146,12 +148,28 @@ programmaticResult :: Natural -> MethodResponse
 programmaticResult v = MethodResponse [L (List [N ((8 :: Natural) .: v)])] 0
 
 -- | Get of the MBR, a byte table of 128 MiB (Opal 2.30 Table 36, PDF 54):
---   whole, every row, its first eight rows, and its first 4000 (Core
---   5.1.4.2.3, PDF 129-130).
-getMBR, getMBRRows, getMBRMany :: MethodCall
+--   whole, every row, and its first n rows (Core 5.1.4.2.3, PDF 129-130),
+--   its first eight among them.
+getMBR, getMBRRows :: MethodCall
 getMBR     = invocation uMBRTable (Methods.Get (cellBlockValue noCells))
-getMBRRows = invocation uMBRTable (Methods.Get (cellBlockValue noCells { cbStartRow = Just (RowNumber 0), cbEndRow = Just 7 }))
-getMBRMany = invocation uMBRTable (Methods.Get (cellBlockValue noCells { cbStartRow = Just (RowNumber 0), cbEndRow = Just 3999 }))
+getMBRRows = getMBRFirst 8
+
+getMBRFirst :: Natural -> MethodCall
+getMBRFirst n = invocation uMBRTable (Methods.Get (cellBlockValue noCells { cbStartRow = Just (RowNumber 0), cbEndRow = Just (n - 1) }))
+
+-- | The TPer with its Locking SP Manufactured and its MaxResponseComPacketSize
+--   raised to 65536, its base ComID keeping a host's MaxComPacketSize 65536,
+--   MaxPacketSize 65516 and the MaxIndTokenSize given (0, no limit), as a
+--   host's Properties leaves them (Core 5.2.2.3-4, PDF 143-145), with a
+--   Locking SP session as Anybody opened on it, which takes them: the
+--   session the TPer holds live, as a byte Get reads it (design 8.3), with a
+--   ComPacket that holds thousands of rows.
+raisedHost :: Natural -> (Session, TPerState)
+raisedHost tokenSize = openSession base 0x53 uSP_Locking True [uAuthority_Anybody] (withTPer maxResponseComPacketSizeName 65536 kept)
+  where
+    folded = foldedAt Manufactured
+    raised = Map.fromList [(maxComPacketSizeName, 65536), (maxPacketSizeName, 65516), (maxIndTokenSizeName, tokenSize)]
+    kept   = folded { tsComIds = Map.adjust (\cs -> cs { cHostProps = Map.union raised (cHostProps cs) }) base (tsComIds folded) }
 
 -- | A packet decoded: its header and its data subpackets' payloads.
 decoded :: ByteString -> Maybe (PacketHeader, [ByteString])
@@ -399,16 +417,23 @@ spec = do
       case rows of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHeader anybodyL, [generate (MethodResponse [D (Datum (Bytes (B.replicate 8 0)))] 0)])
         other        -> expectationFailure (show other)
-    it "bounds a byte Get's one Bytes token by the host's MaxIndTokenSize, not the ComPacket alone (Core 5.2.2.4.1.5, PDF 146): with MaxResponseComPacketSize and the host's ComPacket raised to 65536 and MaxIndTokenSize left at 1992, a Get of 4000 MBR rows is RESPONSE_OVERFLOW though the ComPacket would hold them" $ do
-      let roomyTPer = withTPer maxResponseComPacketSizeName 65536 stL
-          roomyHost = hostOf maxPacketSizeName 65516 (hostOf maxComPacketSizeName 65536 anybodyL)
-          Processed outcome st' ends = sessionPayload roomyHost [Invoke getMBRMany] Nothing roomyTPer
-      Map.lookup maxIndTokenSizeName (sesHostProps roomyHost) `shouldBe` Just 1992
+    it "bounds a byte Get's one Bytes token by the host's MaxIndTokenSize, not the ComPacket alone (Core 5.2.2.4.1.5, PDF 146): on a session the TPer holds with the host's ComPacket of 65536, a Get of 4000 MBR rows answers them in one token where MaxIndTokenSize is 0 (no limit) or 4040, and RESPONSE_OVERFLOW, the payload ended and the session kept, where it is 1992" $ do
+      forM_ [0, 4040] $ \t -> do
+        let (s, st) = raisedHost t
+            Processed outcome st' ends = sessionPayload s [Invoke (getMBRFirst 4000)] Nothing st
+        fmap (lComPacketSize . comIdHostLimits (tsParams st) . sesHostProps) (liveSession s st) `shouldBe` Just 65536
+        ends `shouldBe` False
+        case outcome of
+          Prepared [p] -> decoded p `shouldBe` Just (sessionHeader s, [generate (MethodResponse [D (Datum (Bytes (B.replicate 4000 0)))] 0)])
+          other        -> expectationFailure (show other)
+        open s st' `shouldBe` True
+      let (s, st) = raisedHost 1992
+          Processed outcome st' ends = sessionPayload s [Invoke (getMBRFirst 4000)] Nothing st
       ends `shouldBe` True
       case outcome of
-        Prepared [p] -> decoded p `shouldBe` Just (sessionHeader roomyHost, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHeader s, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
         other        -> expectationFailure (show other)
-      open anybodyL st' `shouldBe` True
+      open s st' `shouldBe` True
     it "answers a Get within a transaction with the value put in the session's view, the committed SP as it was (Core 3.3.7.3: visible within the transaction; Get reads spView, Hsed.Sim.Base, M5b), and the committed value again once the level is rolled back" $ do
       let opened = prState (sessionPayload ses [StartTransactionItem 0] Nothing st1)
           put    = putSPView ses (withMsidPin "changed" (fromMaybe (error "no view") (spView ses opened))) opened

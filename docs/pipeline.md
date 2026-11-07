@@ -74,7 +74,7 @@ binding takes the shape Core binds its table to (design E14).
   list item (design §3.2).
 - **Payloads** are rule names and modifiers, the smart constructors of `Hsed.Spec.DSL` (grammar in
   design §3.3). Most tables need no annotation at all: a document-wide `rule` on the `doc` line binds
-  every table that rule recognises. Annotations stay minimal: Core has 24, about 287 bytes each, and Opal
+  every table that rule recognises. Annotations stay minimal: Core has 26, about 282 bytes each, and Opal
   12, about 246 (budget in design §3.6).
 - **Errata:** Scott's corrections to the text are `erratum scott ["old" ~> "new"]` modifiers, held to
   `tcg/Core Spec errata.txt` by a test. Opal's slips are not errata but readings in the compiler, which cost
@@ -233,7 +233,7 @@ exactly what it names; a whole-test key (`ETC-21`) selects every case of that te
 | `make compare-test` | the unit tests of `tools/compare_reports.py` over hand-made reports, no jig run (in `make check` and in CI) |
 | `make werror` | CI's `-Werror` build and tests, in their own work dir |
 | `make werror-cold` | the same from nothing |
-| `tools/jig-runs.sh [-t KEYS] OUTDIR` | the fifteen standard jig runs (nine on the simulator and a replay of a Level 0 response synthesized from `spec/fixtures/disk6-query.txt`, six at `--locking-ofs manufactured`) into OUTDIR, their exits and transcript entries in `runs.tsv`, the jig's version and the replay's SHA-256 in `runs.info`; simulator and replay targets alone, never a drive (design §9.2) |
+| `tools/jig-runs.sh [-t KEYS] [-r RUNS] OUTDIR` | the fifteen standard jig runs (nine on the simulator and a replay of a Level 0 response synthesized from `spec/fixtures/disk6-query.txt`, six at `--locking-ofs manufactured`), or the subset `-r RUNS` names, into OUTDIR, their exits and transcript entries in `runs.tsv`, the jig's version and the replay's SHA-256 in `runs.info`; simulator and replay targets alone, never a drive (design §9.2) |
 | `.venv/bin/python -I tools/compare_reports.py A B` | two runs' reports, or two sets `jig-runs.sh` wrote run by run, compared after the version, the start and the report directory are normalised, with allowances for what a change means to differ (design §9.2) |
 | `tools/land.sh` | pushes `feature/types` to GitHub, then bumps and pushes the home repo's pointer to hsed on wapex (design §10.4) |
 

@@ -20,7 +20,8 @@ Normalised in each run's three reports before they are compared, each by the val
   - the report directory, options.report_dir, and a path under it, as <report_dir>;
   - a ws:// target's own port, options.target's (ws://127.0.0.1:PORT/PATH, an ephemeral port each run: M5c), where
     it stands as that port, in the URL (ws://127.0.0.1:PORT) and in the target's slug (ws-127.0.0.1-PORT, the
-    reports' names and the JUnit classnames), as <port>; so that two sets of ws:// runs compare with no allowance.
+    reports' names, and the JUnit classnames of reports before the M5c review), as <port>; so that two sets of
+    ws:// runs compare with no allowance.
 
 Compared: the JSON as values, an object's members by key and a list's elements aligned as difflib aligns them, so
 that an element one side alone has is one difference, not a shift of every element after it (the elements of a
@@ -42,9 +43,12 @@ Allowances, each option repeatable:
   --allow-md-sections TITLE  a Markdown line under a heading that begins with TITLE (its #s left out; a heading
                              heads its own section, and fenced code holds none), on each side that has the line
   --allow-target             what the target alone makes differ (M5c: a sim run against a ws:// run): the JSON's
-                             options.target and a target's opened (targets.opened), and a Markdown or JUnit line
-                             that is A's with A's target (options.target) and slug read as B's, each side's slug
-                             the one its JSON report's own name gives (jig-<slug>-<stamp>.json), where they stand
+                             options.target, and a target's opened (targets.opened) where each side's is absent or
+                             that side's options.target; and a Markdown or JUnit line that is A's with A's target
+                             (options.target), slug and JUnit class read as B's, each a whole token where it
+                             stands (no letter, digit, - or _ beside it), each side's slug the one its JSON
+                             report's own name gives (jig-<slug>-<stamp>.json) and its class the JUnit classname's
+                             (a ws:// target's ws-loopback-PATH, its port left out; any other's its slug)
 
 Exit status: 0 equal under the allowances; 1 a difference none allows, or a run one set alone has; 2 a usage error,
 or a report missing or not readable.
@@ -88,12 +92,14 @@ class Allowances:
 
 @dataclass(frozen=True)
 class Targets:
-    """Each side's target as the run's reports name it, normalised: its target (options.target) and its slug (from
-    its JSON report's name)."""
+    """Each side's target as the run's reports name it, normalised: its target (options.target), its slug (from
+    its JSON report's name) and its JUnit class (hsed-jig.<class>, the classname's)."""
     a_target: str = ""
     a_slug: str = ""
     b_target: str = ""
     b_slug: str = ""
+    a_class: str = ""
+    b_class: str = ""
 
 
 @dataclass(frozen=True)
@@ -161,6 +167,20 @@ def ws_port(target):
     """
     m = WS_TARGET.fullmatch(target)
     return m.group(1) if m else None
+
+
+def junit_class(target, slug):
+    """A target's JUnit class as hsed-jig writes it (hsed-jig.<class>, Report.junitClass): a ws:// target's
+    ws-loopback-PATH, its port left out and each character of its path but a letter, a digit, - and _ written _;
+    any other target's slug.
+
+    >>> junit_class("ws://127.0.0.1:50123/ws", "ws-127.0.0.1-50123-ws"), junit_class("ws://127.0.0.1:1/a.b/c", ""), junit_class("sim", "sim")
+    ('ws-loopback-ws', 'ws-loopback-a_b-c', 'sim')
+    """
+    m = re.fullmatch(r"ws://127\.0\.0\.1:\d+(/\S*)?", target)
+    if not m:
+        return slug
+    return "-".join(["ws", "loopback"] + [re.sub(r"[^A-Za-z0-9_-]", "_", p) for p in (m.group(1) or "").split("/") if p])
 
 
 def port_normaliser(target):
@@ -353,18 +373,29 @@ def section_allows(change, title):
     return all(any(h.startswith(title) for h in heads) for heads in sides)
 
 
-TARGET_KEYS = (("options", "target"), ("targets", "opened"))
+def token_at(text, start, end):
+    """Whether text[start:end] stands as a whole token: no letter, digit, - or _ just before it or just after it (so
+    that the sim of hsed-sim or of simulator is no target's).
+
+    >>> token_at("hsed-jig.sim x", 9, 12), token_at("hsed-sim", 5, 8), token_at("simulator", 0, 3)
+    (True, False, False)
+    """
+    def wordy(c):
+        return c.isascii() and (c.isalnum() or c in "-_")
+    return (start == 0 or not wordy(text[start - 1])) and (end == len(text) or not wordy(text[end]))
 
 
 def reads_as(a, b, swaps):
-    """Whether text B is text A with some of the places each swap's OLD stands in A read as its NEW, every other
-    character the same: A's target and slug read as B's (a target and a slug may be one text, as sim's are, each
-    place read either way).
+    """Whether text B is text A with some of the places each swap's OLD stands in A as a whole token read as its NEW,
+    standing in B as a whole token, every other character the same: A's target, slug and class read as B's (a target
+    and a slug may be one text, as sim's are, each place read either way).
 
     >>> reads_as("# hsed-jig run: sim", "# hsed-jig run: ws://127.0.0.1:<port>/ws", [("sim", "ws://127.0.0.1:<port>/ws")])
     True
     >>> reads_as("hsed-sim sim", "hsed-sim T", [("sim", "T")]), reads_as("sim x", "T y", [("sim", "T")])
     (True, False)
+    >>> reads_as("| hsed-sim <hsed> |", "| hsed-T <hsed> |", [("sim", "T")]), reads_as("simulator", "Tulator", [("sim", "T")])
+    (False, False)
     """
     pairs = [(old, new) for old, new in swaps if old]
     seen, frontier = set(), [(0, 0)]
@@ -377,16 +408,23 @@ def reads_as(a, b, swaps):
             return True
         if i < len(a) and j < len(b) and a[i] == b[j]:
             frontier.append((i + 1, j + 1))
-        frontier.extend((i + len(old), j + len(new)) for old, new in pairs if a.startswith(old, i) and b.startswith(new, j))
+        frontier.extend((i + len(old), j + len(new)) for old, new in pairs
+                        if a.startswith(old, i) and b.startswith(new, j)
+                        and token_at(a, i, i + len(old)) and token_at(b, j, j + len(new)))
     return False
 
 
 def target_allows(change, targets):
-    """Whether --allow-target allows a change: options.target or a target's opened in the JSON; a Markdown or JUnit
-    line on each side that is A's with A's target and slug read as B's."""
+    """Whether --allow-target allows a change: options.target in the JSON, or a target's opened where each side's is
+    absent or that side's own options.target; a Markdown or JUnit line on each side that is A's with A's target, slug
+    and class read as B's."""
     if change.kind == "json":
-        return any(change.keys[:len(k)] == k for k in TARGET_KEYS)
-    swaps = [(targets.a_target, targets.b_target), (targets.a_slug, targets.b_slug)]
+        if change.keys[:2] == ("options", "target"):
+            return True
+        return (change.keys[:2] == ("targets", "opened")
+                and all(side is ABSENT or side == target
+                        for side, target in ((change.a, targets.a_target), (change.b, targets.b_target))))
+    swaps = [(targets.a_target, targets.b_target), (targets.a_slug, targets.b_slug), (targets.a_class, targets.b_class)]
     return isinstance(change.a, str) and isinstance(change.b, str) and reads_as(change.a, change.b, swaps)
 
 
@@ -448,9 +486,10 @@ def load_run(json_path):
         raise Unreadable(f"{json_path}: {e}") from e
     normalise = normaliser(report)
     target = text_field(report.get("options") if isinstance(report, dict) else None, "target")
+    slug = slug_of(json_path)
     return {"json": normalised(report, normalise),
             **{kind: [normalise(line) for line in lines_of(texts[kind])] for kind in ("md", "xml")},
-            "target": normalise(target), "slug": normalise(slug_of(json_path))}
+            "target": normalise(target), "slug": normalise(slug), "class": normalise(junit_class(target, slug))}
 
 
 def run_changes(a_json, b_json):
@@ -459,7 +498,7 @@ def run_changes(a_json, b_json):
     a, b = load_run(a_json), load_run(b_json)
     return (json_changes(a["json"], b["json"])
             + line_changes("md", a["md"], b["md"], headings(a["md"]), headings(b["md"]))
-            + line_changes("xml", a["xml"], b["xml"])), Targets(a["target"], a["slug"], b["target"], b["slug"])
+            + line_changes("xml", a["xml"], b["xml"])), Targets(a["target"], a["slug"], b["target"], b["slug"], a["class"], b["class"])
 
 
 def run_set(directory):

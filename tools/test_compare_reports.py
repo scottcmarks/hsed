@@ -401,7 +401,7 @@ class Targets(Reports):
         slug = f"ws-127.0.0.1-{port}-ws"
         return self.write(where, stem=f"jig-{slug}-20261106T134512Z", json_report=ws_report(port, observation),
                           md=md if md is not None else markdown(target=f"ws://127.0.0.1:{port}/ws"),
-                          xml=junit(target=f"ws://127.0.0.1:{port}/ws", slug=slug))
+                          xml=junit(target=f"ws://127.0.0.1:{port}/ws", slug="ws-loopback-ws"))
 
     def write_sim(self, where):
         return self.write(where, json_report=sim_report())
@@ -441,7 +441,7 @@ class Targets(Reports):
         b_report = ws_report(50123)
         b_report["options"]["locking_ofs"] = "manufactured"
         b = self.write("ws2", stem="jig-ws-127.0.0.1-50123-ws-20261106T134512Z", json_report=b_report,
-                       md=markdown(target="ws://127.0.0.1:50123/ws"), xml=junit(target="ws://127.0.0.1:50123/ws", slug="ws-127.0.0.1-50123-ws"))
+                       md=markdown(target="ws://127.0.0.1:50123/ws"), xml=junit(target="ws://127.0.0.1:50123/ws", slug="ws-loopback-ws"))
         status, out = self.compare(self.write_sim("sim2"), b, "--allow-target")
         self.assertEqual(status, 1, out)
         self.assertIn("json options.locking_ofs", out)
@@ -453,6 +453,23 @@ class Targets(Reports):
         self.assertTrue(C.reads_as("| tper | hsed-sim <hsed> | sim |", "| tper | hsed-sim <hsed> | ws://127.0.0.1:<port>/ws |", swaps))
         self.assertFalse(C.reads_as("# hsed-jig run: sim", "# hsed-jig run: ws://127.0.0.1:<port>/ws2", swaps))
         self.assertFalse(C.reads_as("- UCT-01: pass on sim", "- UCT-01: fail on ws://127.0.0.1:<port>/ws", swaps))
+
+    def test_a_swap_is_taken_only_at_a_whole_token(self):
+        swaps = [("sim", "ws://127.0.0.1:<port>/ws"), ("sim", "ws-127.0.0.1-<port>-ws"), ("sim", "ws-loopback-ws")]
+        self.assertTrue(C.reads_as('<testcase classname="hsed-jig.sim" name="UCT-01"/>', '<testcase classname="hsed-jig.ws-loopback-ws" name="UCT-01"/>', swaps))
+        self.assertFalse(C.reads_as("| tper | hsed-sim <hsed> |", "| tper | hsed-ws-127.0.0.1-<port>-ws <hsed> |", swaps))
+        self.assertFalse(C.reads_as("simulator", "ws://127.0.0.1:<port>/wsulator", swaps))
+        self.assertFalse(C.reads_as("a sim_x", "a ws-loopback-ws_x", swaps))
+
+    def test_allow_target_allows_an_opened_that_is_not_its_side_s_target_never(self):
+        b_report = ws_report(50123)
+        b_report["targets"][0]["opened"] = "ws://127.0.0.1:9/elsewhere"
+        b = self.write("ws", stem="jig-ws-127.0.0.1-50123-ws-20261106T134512Z", json_report=b_report,
+                       md=markdown(target="ws://127.0.0.1:50123/ws"), xml=junit(target="ws://127.0.0.1:50123/ws", slug="ws-loopback-ws"))
+        status, out = self.compare(self.write_sim("sim"), b, "--allow-target")
+        self.assertEqual(status, 1, out)
+        self.assertIn("json targets[0].opened", out)
+        self.assertEqual(C.junit_class("ws://127.0.0.1:50123/ws", "ws-127.0.0.1-50123-ws"), "ws-loopback-ws")
 
     def test_each_side_s_slug_is_read_from_its_own_json_report_s_name(self):
         self.assertEqual(C.slug_of(Path("d/jig-ws-127.0.0.1-50123-ws-20261106T134512Z.json")), "ws-127.0.0.1-50123-ws")

@@ -132,7 +132,7 @@ import           Hsed.Wire                      (Cap (..), Describe (..), IfStat
 --   release), the reset op and the conformance hooks, the token a client
 --   must give (none: none asked), its clock (seconds, monotonic), how
 --   many frames a socket's send queue holds before the socket is closed,
---   and how many bytes queued to a socket and not yet written hold back its
+--   and how many bytes queued to a socket and still unsent hold back its
 --   requests (the backlog).
 data HubOpts = HubOpts
   { hoIntervalMs   :: !Int

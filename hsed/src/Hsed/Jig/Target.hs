@@ -13,9 +13,16 @@ Stability   : experimental
 
 The transports behind a 'TargetSpec' (design 9.2): the simulator in process
 (@'ReadWrite@, with its control); a drive through the kext (@'ReadOnly@,
-root required) or a replay of a captured response (@'ReadOnly@); or the
-two together for the Pair runner. Only the transport differs between
-targets.
+root required) or a replay of a captured response (@'ReadOnly@); the two
+together for the Pair runner; or, since M5c, the simulator served by
+hsed-sim's hub over mh_transport frames on 127.0.0.1 (@'ReadWrite@: the LAN
+leg's client, "Hsed.Transport.Mhtx.Client", its view and control the hub's
+peek and release ops, Option A). Only the transport differs between
+targets. A hub is held to the run when it opens ('hubRefusals'): it allows
+the peeks the run's reads of the simulator take, and the setup it publishes
+is the one the run's simulator flags ask for, which on a @ws:\/\/@ target
+assert the hub's setup and choose nothing; else it is closed again and the
+run refused (exit 1), each reason named.
 
 'openTarget' puts a drive behind the Guard the moment it is opened
 ("Hsed.Jig.Guard".'GuardedDrive', design 13.29 (l)): the opener's
@@ -36,6 +43,7 @@ module Hsed.Jig.Target
   , parseTarget
   , Target (..)
   , openTarget
+  , hubRefusals
   , closeTarget
   ) where
 
@@ -44,13 +52,17 @@ import qualified RIO.Text              as T
 
 import           Hsed.Jig.Files        (runningAsRoot)
 import           Hsed.Jig.Guard        (Allowed, GuardedDrive, driveClose, guardDrive)
-import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), parseTarget)
-import           Hsed.Jig.Simulator    (Simulator, inProcess)
+import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), WsUrl (..), parseTarget)
+import           Hsed.Jig.Simulator    (Opened (..), Simulator (..), inProcess)
 import           Hsed.Jig.Transcript   (Transcript)
 import           Hsed.Sim.Types        (SimParams (..), foldProblemText, simParamsProblems)
+import           Hsed.Sim.View         (setupDifferences, setupOf)
 import           Hsed.Transport.Drive  (RawDrive (..))
 import           Hsed.Transport.InProc (InProcOpts (..), newInProc)
 import           Hsed.Transport.MacKext (KextOpts (..), openKext)
+import           Hsed.Transport.Mhtx.Client (clientApp, clientControl, clientNotices, clientOpts, clientTransport, clientView, closeMhtx,
+                                             openMhtx)
+import           Hsed.Transport.Mhtx.Frame (Allow (..), SedApp (..))
 import           Hsed.Transport.Replay (openReplay)
 import           Hsed.Wire             (Cap (..), Transport, closeTransport)
 
@@ -67,7 +79,10 @@ data Target
 --   does not fold with them), units and hold; a replay of a file; a drive by its BSD name,
 --   held to the serial the run expects (which it must name), as root alone;
 --   both ends of a pair, the first closed again when the second cannot be
---   opened. A drive or a replay is put behind the Guard at once, recording
+--   opened; a hub's simulator at @ws:\/\/127.0.0.1:PORT\/PATH@, its client
+--   opened by one attempt ("Hsed.Transport.Mhtx.Client".'openMhtx': a hello
+--   of a TPer within its wait), then held to the run ('hubRefusals'), and
+--   closed again if it is not. A drive or a replay is put behind the Guard at once, recording
 --   into the run's transcript, its policy Level0Only until the run binds its
 --   base ComID with what the allowed list admits (a replay's bind refuses).
 openTarget :: RunOptions -> [Allowed] -> Transcript -> IO (Either Text Target)
@@ -93,12 +108,38 @@ openTarget opts admits t = open (roTarget opts)
         Right ta -> open b >>= \case
           Left e   -> Left e <$ closeTarget ta
           Right tb -> pure (Right (PairTarget ta tb))
-      TWs _ -> pure (Left "not yet written: group G3 (Hsed.Jig.Target.openTarget: a ws:// target opened over Hsed.Transport.Mhtx.Client)")
+      TWs u -> openMhtx (clientOpts (wsPort u) (wsPath u)) >>= \case
+        Left why -> pure (Left why)
+        Right c  -> case hubRefusals opts (clientApp c) of
+          []      -> pure (Right (SimTarget (clientTransport c) Simulator
+                       { simOpened      = OverWs u
+                       , simView        = clientView c
+                       , simControl     = clientControl c
+                       , simNotices     = clientNotices c
+                       }))
+          refusals -> Left (T.intercalate "; " refusals) <$ closeMhtx c
     bsdName dev = fromMaybe dev (T.stripPrefix "/dev/" dev)
     -- a replay carries Level 0 Discovery alone, so binds no base ComID
     replayBind _ = pure (Left "a replay answers Level 0 Discovery alone (Hsed.Transport.Replay)")
 
--- | Close a target's transports.
+-- | Why a @ws:\/\/@ target's hub cannot serve the run, each reason (none:
+--   it can): it allows no peek (hsed-sim without @--allow-remote-control@),
+--   which the run's reads of the simulator take (design 11 M5c, Option A);
+--   it publishes no setup, so that the run's simulator flags cannot be held
+--   to it; its setup is not the one the run's simulator flags and hold ask
+--   for, each difference named by its flag ("Hsed.Sim.View".'setupDifferences',
+--   the profile already read into the run's parameters). A hub that allows
+--   no reset serves the run, whose power cycles it answers unsupported.
+hubRefusals :: RunOptions -> SedApp -> [Text]
+hubRefusals opts app =
+  [ "the hub allows no peek: hsed-sim --allow-remote-control, which the run's reads of the simulator take (design 11 M5c, Option A)"
+  | AllowPeek `notElem` saAllows app ]
+  <> maybe ["the hub publishes no setup (app.sed.setup): the run's simulator flags cannot be held to it"]
+           (map ("the hub's setup differs: " <>) . setupDifferences (setupOf (roSim opts) (roHold opts)))
+           (saSetup app)
+
+-- | Close a target's transports (a hub's client among them: its transport
+--   closes it).
 closeTarget :: Target -> IO ()
 closeTarget = \case
   SimTarget tr _ -> closeTransport tr

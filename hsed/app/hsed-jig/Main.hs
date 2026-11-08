@@ -16,8 +16,11 @@ to are read (design 9.3, 11): @--recover@, @--allow-mounted@ and
 @--interrupt-in-session@, and @verify-transcript@'s @--allow-list@. The
 options no milestone builds yet are read and refused, each saying why
 (writes to a drive, M6's; the hardware error paths and read-only sessions,
-Scott's decisions, design 13.7 and 13.8), as is a @ws://@ target (M5c's).
-A usage error exits 2.
+Scott's decisions, design 13.7 and 13.8). Since M5c @--target@ takes
+@ws:\/\/127.0.0.1:PORT\/PATH@, the simulator served by hsed-sim's hub (the
+LAN leg, design 11 M5c), whose setup the simulator flags then assert rather
+than choose; every other websocket target, and a pair with a @ws:\/\/@ end,
+is refused ("Hsed.Jig.Options".'parseTarget'). A usage error exits 2.
 -}
 module Main (main) where
 
@@ -41,14 +44,15 @@ hsedJig :: ParserInfo Command
 hsedJig = info (commands <**> helper <**> versionOption)
   ( fullDesc
  <> header "hsed-jig - the hsed host test jig"
- <> progDesc "Runs Opal Family Test Cases against the simulator, a drive or a replay (docs/spec-as-source.md 9); RUN is the default command."
+ <> progDesc ("Runs Opal Family Test Cases against the simulator, in process or served by hsed-sim over ws://127.0.0.1, a drive "
+              <> "or a replay (docs/spec-as-source.md 9, 11 M5c); RUN is the default command.")
  <> footer exitCodes
  <> failureCode 2 )
   where
     versionOption = infoOption (T.unpack hsedVersion) (long "version" <> help "Show the version")
 
 exitCodes :: String
-exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences in Level 0 and in Properties, and a capture asked for was written; with --recover, the base ComID reset, found idle, and a session to the Admin SP opened and ended on it; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed (its Properties judged by Opal 2.30 Table 17), the capture failed, the Guard refused a command, --recover did not recover, or a profile or target named could not be read or opened; 2 a usage error (a key the catalogue lacks, a drive target without --expect-serial, a --level0-len a drive or a replay cannot carry, --recover with --tests, a pair or --interrupt-in-session, an option refused, simulator parameters out of range); 3 a safety violation (a drive target without root, a drive command its policy does not admit, re-decided from the drive's own transcript, or a mounted drive without --allow-mounted where the run may send to it); 130 interrupted (SIGINT, SIGTERM, SIGHUP, or --interrupt-in-session): nothing issued after the command in flight, the reports written, naming any session left open. Where more than one applies, 3 outranks 130, 130 outranks 1, and 1 outranks 0; and for a /dev target, once the command line parses (an option refused or malformed exits 2 first), --expect-serial (2) and then root (3) are checked before the run's own checks, so that a drive run as yourself exits 3 whatever else the run would refuse."
+exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences in Level 0 and in Properties, and a capture asked for was written; with --recover, the base ComID reset, found idle, and a session to the Admin SP opened and ended on it; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed (its Properties judged by Opal 2.30 Table 17), the capture failed, the Guard refused a command, --recover did not recover, or a profile or target named could not be read or opened (a ws:// hub that sent no hello of a TPer, allows no peek, or whose setup differs from the run's simulator flags); 2 a usage error (a key the catalogue lacks, a --target refused (a ws:// one but ws://127.0.0.1:PORT/PATH, or one in a pair), a drive target without --expect-serial, a --level0-len a drive or a replay cannot carry, --recover with --tests, a pair or --interrupt-in-session, an option refused, simulator parameters out of range); 3 a safety violation (a drive target without root, a drive command its policy does not admit, re-decided from the drive's own transcript, or a mounted drive without --allow-mounted where the run may send to it); 130 interrupted (SIGINT, SIGTERM, SIGHUP, or --interrupt-in-session): nothing issued after the command in flight, the reports written, naming any session left open. Where more than one applies, 3 outranks 130, 130 outranks 1, and 1 outranks 0; and for a /dev target, once the command line parses (an option refused or malformed exits 2 first), --expect-serial (2) and then root (3) are checked before the run's own checks, so that a drive run as yourself exits 3 whatever else the run would refuse."
 
 -- | A subcommand: its parser and its description (hsubparser gives it
 --   --help), a usage error exiting 2.
@@ -100,7 +104,10 @@ runOptions = options <**> laterMilestones
     options = mk
       <$> option (eitherReader (first T.unpack . parseTarget . T.pack))
             (long "target" <> metavar "TARGET" <> value (roTarget defaultRunOptions)
-             <> help "sim (the default), /dev/diskN, replay:FILE, sim+/dev/diskN or sim+replay:FILE")
+             <> help ("sim (the default), /dev/diskN, replay:FILE, sim+/dev/diskN, sim+replay:FILE, or ws://127.0.0.1:PORT/PATH: "
+                      <> "the simulator hsed-sim serves (its PORT=<n>, path /ws), started with --allow-remote-control, the "
+                      <> "simulator flags below then asserting its setup (127.0.0.1 alone, no wss://, query, fragment or pair: "
+                      <> "design 11 M5c)"))
       <*> option (eitherReader (first T.unpack . parseCaseKeys . T.pack))
             (long "tests" <> metavar "KEYS" <> value (roTests defaultRunOptions)
              <> help ("comma-separated case keys, the catalogue's UCT-01,UCT-02,UCT-03:1a-1c,SPF-02:1,SPF-02:2,SPF-11,"
@@ -110,21 +117,21 @@ runOptions = options <**> laterMilestones
                       <> "on a drive or a replay alone, every case)"))
       <*> option (eitherReader parseUnits)
             (long "units" <> metavar "UNITS" <> value (spUnits sim0) <> showDefaultWith (T.unpack . unitName)
-             <> help "simulator: what transfer lengths count, bytes or blocks512")
-      <*> switch (long "hold-processing" <> help "simulator: hold a prepared response in S2 for one IF-RECV")
+             <> simulatorHelp "what transfer lengths count, bytes or blocks512")
+      <*> switch (long "hold-processing" <> simulatorHelp "hold a prepared response in S2 for one IF-RECV")
       <*> optional (option auto (long "hold-ifrecvs" <> metavar "N"
-            <> help "simulator: hold a prepared response for N IF-RECVs (with or without --hold-processing)"))
+            <> simulatorHelp "hold a prepared response for N IF-RECVs (with or without --hold-processing)"))
       <*> optional (strOption (long "profile" <> metavar "FILE.bin"
-            <> help "simulator: add a Level 0 response's descriptors the simulator lacks"))
+            <> simulatorHelp "add a Level 0 response's descriptors the simulator lacks"))
       <*> switch (long "inactive-comid-discard"
-            <> help "simulator: discard a command to an inactive ComID rather than refuse it")
+            <> simulatorHelp "discard a command to an inactive ComID rather than refuse it")
       <*> optional (option (eitherReader parseSidPin) (long "sim-sid-pin" <> metavar "HEX"
-            <> help ("simulator: C_PIN_SID's PIN as hex digits, two a byte (an optional 0x before them), 4 to 32 bytes, other than "
+            <> simulatorHelp ("C_PIN_SID's PIN as hex digits, two a byte (an optional 0x before them), 4 to 32 bytes, other than "
                      <> "the MSID's, so that Level 0's Initial C_PIN_SID PIN Indicator is 0xFF and SID Value State 1: UCT-03 step 1 "
                      <> "does not apply and UCT-01 step 4c.ii fails, the drive being past its factory state (Test Cases PDF 30, 33)")))
       <*> option (eitherReader parseLockingOFS) (long "locking-ofs" <> metavar "OFS" <> value (spLockingOFS sim0)
             <> showDefaultWith (T.unpack . lockingOFSName)
-            <> help ("simulator: the Locking SP's Original Factory State, manufactured-inactive (what Opal 2.30 5.2.2 says it "
+            <> simulatorHelp ("the Locking SP's Original Factory State, manufactured-inactive (what Opal 2.30 5.2.2 says it "
                      <> "SHALL be, PDF 96) or manufactured (outside that SHALL, which its informative comment allows; the reports "
                      <> "say so)"))
       <*> optional (strOption (long "expect-serial" <> metavar "SERIAL"
@@ -165,6 +172,10 @@ runOptions = options <**> laterMilestones
       , roAllowMounted       = allowMounted
       , roInterruptInSession = interrupt
       }
+    -- a simulator flag's help: on a ws:// target it asserts the hub's setup, checked when the hub is opened
+    -- (Hsed.Jig.Target.hubRefusals: a difference exits 1, named by its flag)
+    simulatorHelp :: String -> Mod f a
+    simulatorHelp h = help ("simulator: " <> h <> "; on a ws:// target, what the hub's setup must say (checked at open)")
     -- a length some transport carries: none carries more than 1 MiB (Hsed.Wire.mostCarried)
     mostLevel0 = mostCarried UnitBytes
     level0Len s = case readMaybe s of

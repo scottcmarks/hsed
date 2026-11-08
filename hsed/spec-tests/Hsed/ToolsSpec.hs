@@ -35,6 +35,13 @@ suite does not, and a snapshot reads the drive's volume.
 that imports more, one @nm@ cannot read, @nm@ missing, an object nm reads
 no import of, and a work dir with no object (the M4c review's
 verification found the earlier one passing an object @nm@ could not read).
+
+@tools/mhtx-conformance.sh@ (M5c, Scott's answer Q2) prints Scott's Dart
+conformance run against hsed-sim and runs none of it: it parses; it runs
+here, printing hsed-sim's command with its conformance hooks on 127.0.0.1 at
+200/600 ms, the suite from a throwaway copy of ~/mh_transport at the same
+heartbeat, and the last line to read; and the recipe's commands stand only
+in what it prints.
 -}
 module Hsed.ToolsSpec (spec) where
 
@@ -154,6 +161,24 @@ spec = describe "the hardware scripts" $ do
       for_ [ "for s in _hsed_kext_command _hsed_kext_bind _hsed_cdb_scalars _hsed_cdb_bind_check; do"
            , "grep -q '_hsed_kext_' <<<\"$symbols\"" ] $ \l ->
         text `shouldSatisfy` T.isInfixOf l
+
+  describe "tools/mhtx-conformance.sh (M5c, Scott's answer Q2)" $ do
+    it "parses (bash -n)" $ do
+      (code, _, err) <- withProcessContextNoLogging (proc "bash" ["-n", "../tools/mhtx-conformance.sh"] readProcess)
+      (code, decodeUtf8Lenient (toStrictBytes err)) `shouldBe` (ExitSuccess, "")
+    it "prints the recipe: hsed-sim with --conformance-hooks on 127.0.0.1 at 200/600 ms, the suite from a throwaway copy, the line to read" $ do
+      (code, out, err) <- withProcessContextNoLogging (proc "bash" ["../tools/mhtx-conformance.sh"] readProcess)
+      (code, decodeUtf8Lenient (toStrictBytes err)) `shouldBe` (ExitSuccess, "")
+      let printed = decodeUtf8Lenient (toStrictBytes out)
+      [ l | l <- [ "\"$(stack path --local-install-root)/bin/hsed-sim\" --conformance-hooks --listen 127.0.0.1:0 --heartbeat-interval-ms 200 --dead-timeout-ms 600"
+                 , "d=$(mktemp -d) && cp -Rp ~/mh_transport \"$d/\""
+                 , "--emit http://127.0.0.1:<n>/emit --count http://127.0.0.1:<n>/clients --interval-ms 200 --timeout-ms 600"
+                 , "CONFORMANT: 8 passed, 0 failed, 0 skipped", "Read its output, not its exit status" ]
+          , not (l `T.isInfixOf` printed) ] `shouldBe` []
+    it "runs none of the recipe's commands: hsed-sim, dart, stack, cp, mktemp and lsof stand only in what it prints" $ do
+      text <- script "../tools/mhtx-conformance.sh"
+      [ l | l <- outsideHeredocs (T.lines text), not (comment l), any (`T.isInfixOf` l) ["hsed-sim", "dart", "stack", "cp ", "mktemp", "lsof"] ]
+        `shouldBe` []
 
   describe "tools/kext-imports.sh, a copy in a directory of its own, against a fake nm (the M4c review's verification)" $ do
     it "parses (bash -n)" $ do

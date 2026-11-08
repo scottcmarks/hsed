@@ -17,8 +17,12 @@ silent client closed within the timeout and the interval and a second
 (:208, :220); each against a hub of its own on bindLoopback 0, at a heartbeat
 of 200 ms and a timeout of 600 ms, its hooks on, emit and count going
 through 'hubBroadcast' and 'hubClientCount' as conformance_hub_test.dart:14-20
-does. Check 8 needs group G3's client: the lead makes it real at the
-integration. Besides them: the hooks over raw HTTP (@POST \/emit@'s 200
+does; and check 8 (conformance.dart:237-275) with hsed's client, which
+has no stop and start that keep what it last saw: the hub closes every peer
+with 1001 and serves on ('hubClose', its server id and @seq@ kept), the
+client reconnects by itself after a fixed 250 ms, a broadcast made in that
+gap the second time, and each connection's verdict is read as
+'clientVerdicts' gives it (design 13.34). Besides them: the hooks over raw HTTP (@POST \/emit@'s 200
 @{"seq": n}@ and its 400s, @GET \/clients@, a 426 and a 404); the
 binary-frame check (SPEC.md L21: a binary message ignored, and counted as
 liveness, hub.dart:83-86, which the Python hub breaks, design D5); a
@@ -39,19 +43,32 @@ import           RIO
 import qualified RIO.Text                  as T
 import           Test.Hspec
 
-import           Hsed.Lan.Support          (lanBackend, rawHttp, withHub)
-import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..), codeNormal, dialLoopback)
-import           Hsed.Transport.Mhtx.Frame (FromServer (..), Hello (..), Op (..), Reply (..), SedReq (..), SedRsp (..), fromServer,
-                                            pingText, reqText)
-import           Hsed.Transport.Mhtx.Hub   (Hub, HubOpts (..), defaultHubOpts, hubBroadcast, hubClientCount, hubServerId)
+import           Hsed.Lan.Support           (lanBackend, rawHttp, withHub)
+import           Hsed.Transport.Mhtx.Client (Backoff (..), ClientOpts (..), Missed (..), MhtxClient, clientOpts, clientVerdicts,
+                                             closeMhtx, openMhtx)
+import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeNormal, dialLoopback)
+import           Hsed.Transport.Mhtx.Frame  (FromServer (..), Hello (..), Op (..), Reply (..), SedReq (..), SedRsp (..), fromServer,
+                                             pingText, reqText)
+import           Hsed.Transport.Mhtx.Hub    (Hub, HubOpts (..), defaultHubOpts, hubBroadcast, hubClientCount, hubClose, hubServerId)
 
 
 spec :: Spec
 spec = describe "Hsed.Transport.Mhtx.Hub on 127.0.0.1 at 200/600 ms (mh_transport SPEC.md L113-129)" $ do
   checks
-  it "8. has the client judge missed broadcasts: unknown, then some, then none (conformance.dart:237-275)" $
-    pendingWith ("with group G3's MhtxClient: the lead makes it real at the integration, through reconnects the hub forces on one "
-                 <> "server id (hubClose), the verdicts read as the client's notices (design 13.34)")
+  it "8. has the client judge missed broadcasts: unknown, then some, then none, each connection within 5 s (conformance.dart:237-275)" $
+    conformant $ \port hub -> bracket (openMhtx (reconnecting port) >>= either (throwString . T.unpack) pure) closeMhtx $ \client -> do
+      opened  <- verdictsOf client
+      started <- Clock.getMonotonicTime
+      hubClose hub
+      hubBroadcast hub (event 3) `shouldReturn` Right 1
+      missed  <- verdictsOf client
+      again   <- Clock.getMonotonicTime
+      hubClose hub
+      kept    <- verdictsOf client
+      done    <- Clock.getMonotonicTime
+      [opened, missed, kept] `shouldBe` [[MissedUnknown], [MissedSome], [MissedNone]]
+      note ("check 8: unknown, then some " <> ms (again - started) <> " after the first close, then none " <> ms (done - again)
+            <> " after the second")
   beyond
 
 -- | SPEC.md's checks 1 to 7, as conformance.dart runs them.
@@ -200,6 +217,26 @@ pinging p stop = readTVarIO stop >>= \done -> unless done $ do
   send p pingText
   void (timeout (200 * millis) (atomically (readTVar stop >>= checkSTM)))
   pinging p stop
+
+
+-- * Check 8's client
+
+-- | hsed's client of the hub, which requires a hello (conformance.dart:239-243's
+--   @requireHello@), reconnecting 250 ms after a drop, no jitter: long
+--   enough for a broadcast made at once to be missed, well within the
+--   check's 5 s for a connection (conformance.dart:245-249).
+reconnecting :: Word16 -> ClientOpts
+reconnecting port = (clientOpts port "/ws") { coBackoff = Backoff 250000 2 250000 0 }
+
+-- | The verdicts on the connections the client has taken since last asked,
+--   polled every 10 ms until there is one, for 5 s at most
+--   (conformance.dart:249's timeout); none when it took none.
+verdictsOf :: MhtxClient -> IO [Missed]
+verdictsOf client = go (500 :: Int)
+  where
+    go n = clientVerdicts client >>= \case
+      [] | n > 0 -> threadDelay (10 * millis) >> go (n - 1)
+      vs         -> pure vs
 
 
 -- * A probe (conformance.dart:284-350's _Probe)

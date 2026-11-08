@@ -12,7 +12,9 @@ Stability   : experimental
 The options of @hsed-jig run@ (design 9.2), apart from the command line
 that reads them (@app/hsed-jig@): the target ('TargetSpec': the simulator,
 a drive, a replay of a captured response, or the simulator paired with a
-drive), the cases, the simulator's parameters and options (among them, since
+drive; since M5c the simulator served by hsed-sim's hub,
+@ws:\/\/127.0.0.1:PORT\/PATH@ alone, 'WsUrl', every other websocket target
+refused by 'parseTarget'), the cases, the simulator's parameters and options (among them, since
 M4a, the SID's PIN, @--sim-sid-pin HEX@, which 'parseSidPin' reads into
 "Hsed.Sim.Params".@spSidPin@, and since M5a the Locking SP's Original
 Factory State, @--locking-ofs@, 'parseLockingOFS'), the drive's (the serial it must have, where to
@@ -42,6 +44,7 @@ module Hsed.Jig.Options
   ) where
 
 import           RIO
+import           RIO.Char               (isAsciiLower, isAsciiUpper, isDigit)
 import qualified RIO.Text               as T
 
 import           Hsed.Jig.Catalogue     (CaseKey)
@@ -61,8 +64,8 @@ data TargetSpec
   | TDevice !Text                -- ^ a drive, @/dev/diskN@, through the kext
   | TReplay !FilePath            -- ^ a captured Level 0 response, as a drive
   | TPair !TargetSpec !TargetSpec  -- ^ the simulator and a drive, step by step (the Pair runner)
-  | TWs !WsUrl                   -- ^ the simulator served by hsed-sim over mh_transport frames (M5c's LAN leg); 'parseTarget'
-                                 --   refuses it until group G3 builds its client
+  | TWs !WsUrl                   -- ^ the simulator served by hsed-sim's hub over mh_transport frames (M5c's LAN leg,
+                                 --   "Hsed.Transport.Mhtx.Client"), @ws:\/\/127.0.0.1:PORT\/PATH@ alone; never in a pair
   deriving (Eq, Show)
 
 -- | A @ws://@ target's URL: its port and its path, the host being 127.0.0.1
@@ -81,25 +84,89 @@ data WsUrl = WsUrl
 renderWsUrl :: WsUrl -> Text
 renderWsUrl u = "ws://127.0.0.1:" <> tshow (wsPort u) <> wsPath u
 
--- | @sim@, @/dev/diskN@, @replay:FILE@, @sim+/dev/diskN@ or @sim+replay:FILE@;
---   a @ws://@ target, M5c's (the LAN leg: the mh_transport client, design
---   7.4, 11 M5c), is refused.
+-- | @sim@, @/dev/diskN@, @replay:FILE@, @sim+/dev/diskN@, @sim+replay:FILE@,
+--   or @ws:\/\/127.0.0.1:PORT\/PATH@: the simulator served by hsed-sim's hub
+--   (M5c's LAN leg, design 7 item 4, 11 M5c), PORT 1 to 65535 in decimal (the
+--   one hsed-sim prints, @PORT=\<n\>@) and PATH a @/@ and then letters, digits
+--   and @._~/-@ alone. Every other websocket target is refused, each with
+--   why, before anything opens (hsed-jig's usage error, exit 2): @wss:\/\/@
+--   (TLS is M6's); another host, @localhost@ among them (the cross-host run is
+--   M6's, D4; 127.0.0.1 alone, D6 and Scott's answer Q1); no port, port 0, a
+--   port out of range or not in decimal; user info, a query or a fragment (a
+--   token or a credential would land in the reports, which print the target:
+--   the jig's own token is M6's); a path of other characters; and a @ws:\/\/@
+--   end in a pair, any @+@ with one (@sim+ws:\/\/@ among them: the Pair runner
+--   pairs the simulator in process with a drive).
 --
 -- >>> parseTarget "sim+replay:build/disk6-like-level0.bin"
 -- Right (TPair TSim (TReplay "build/disk6-like-level0.bin"))
+-- >>> parseTarget "ws://127.0.0.1:41234/ws"
+-- Right (TWs (WsUrl {wsPort = 41234, wsPath = "/ws"}))
+-- >>> parseTarget "ws://localhost:41234/ws"
+-- Left "--target ws://localhost:41234/ws: host localhost: 127.0.0.1 alone, written so (localhost may name ::1 first on macOS; D6)"
 parseTarget :: Text -> Either Text TargetSpec
 parseTarget t
-  | t == "sim"                         = Right TSim
-  | Just drive <- T.stripPrefix "sim+" t = TPair TSim <$> driveTarget drive
-  | otherwise                          = driveTarget t
+  | t == "sim"                                    = Right TSim
+  | T.any (== '+') t, any websocket (T.split (== '+') t) =
+      Left (refused ("a pair with a ws:// end: the Pair runner pairs the simulator in process with a drive, and a hub's "
+                     <> "simulator stands alone (M5c)"))
+  | websocket t                                   = TWs <$> first refused (wsUrlOf t)
+  | Just drive <- T.stripPrefix "sim+" t          = TPair TSim <$> driveTarget drive
+  | otherwise                                     = driveTarget t
   where
+    refused why = "--target " <> t <> ": " <> why
     driveTarget d
-      | any (`T.isPrefixOf` d) ["ws://", "wss://"] =
-          Left ("--target " <> d <> ": a ws:// target is M5c's (the mh_transport client, design 7.4), not built yet")
       | Just disk <- T.stripPrefix "/dev/" d, not (T.null disk) = Right (TDevice d)
       | Just file <- T.stripPrefix "replay:" d, not (T.null file) = Right (TReplay (T.unpack file))
       | otherwise =
-          Left ("--target " <> t <> ": not sim, /dev/diskN, replay:FILE, sim+/dev/diskN or sim+replay:FILE")
+          Left (refused "not sim, /dev/diskN, replay:FILE, sim+/dev/diskN, sim+replay:FILE or ws://127.0.0.1:PORT/PATH")
+
+-- | Whether a target names a websocket: @ws:\/\/@ or @wss:\/\/@.
+websocket :: Text -> Bool
+websocket d = any (`T.isPrefixOf` d) ["ws://", "wss://"]
+
+-- | A websocket target's URL, @ws:\/\/127.0.0.1:PORT\/PATH@, or why it is
+--   refused ('parseTarget'): the scheme, then a query or a fragment
+--   anywhere, user info, the host, the port, the path, the first refusal
+--   that applies.
+wsUrlOf :: Text -> Either Text WsUrl
+wsUrlOf t
+  | "wss://" `T.isPrefixOf` t        = Left "wss:// is TLS, M6's: M5c's hub is ws://127.0.0.1:PORT/PATH on loopback alone"
+  | T.any (`elem` ['?', '#']) rest   = Left ("a query or a fragment: refused, so that no token lands in the reports, which print "
+                                             <> "the target (the jig's own token is M6's)")
+  | T.any (== '@') authority         = Left "user info: refused, so that no credential lands in the reports, which print the target"
+  | host /= "127.0.0.1"              = Left hostRefused
+  | otherwise                        = WsUrl <$> portOf (T.stripPrefix ":" afterHost) <*> pathOf
+  where
+    rest              = fromMaybe t (T.stripPrefix "ws://" t)
+    (authority, path) = T.break (== '/') rest
+    -- an IPv6 literal's brackets kept whole, so that its colons are not taken for the port's
+    host
+      | "[" `T.isPrefixOf` authority = T.takeWhile (/= ']') authority <> "]"
+      | otherwise                    = T.takeWhile (/= ':') authority
+    afterHost = T.drop (T.length host) authority
+    hostRefused
+      | T.null host         = "no host: ws://127.0.0.1:PORT/PATH"
+      | host == "localhost" = "host localhost: 127.0.0.1 alone, written so (localhost may name ::1 first on macOS; D6)"
+      | otherwise           = "host " <> host <> ": 127.0.0.1 alone (the cross-host run is M6's, D4; Scott's answer Q1)"
+    portOf = \p -> case p of
+      Nothing                                       -> Left noPort
+      Just digits
+        | T.null digits                             -> Left noPort
+        | not (T.all isDigit digits)                -> Left (notDecimal digits)
+        | T.length digits > 1, "0" `T.isPrefixOf` digits -> Left (notDecimal digits)
+        | n == 0                                    -> Left ("port 0: an ephemeral port is the hub's to choose; give the one "
+                                                             <> "hsed-sim printed (PORT=<n>)")
+        | n > toInteger (maxBound :: Word16)        -> Left ("port " <> digits <> ": 1 to 65535")
+        | otherwise                                 -> Right (fromInteger n)
+        where n = fromMaybe 0 (readMaybe (T.unpack digits)) :: Integer
+    noPort = "no port: ws://127.0.0.1:PORT/PATH names the port hsed-sim printed (PORT=<n>)"
+    notDecimal digits = "port " <> digits <> ": 1 to 65535 in decimal, as hsed-sim prints it"
+    pathOf
+      | T.null path          = Left "no path: ws://127.0.0.1:PORT/PATH (hsed-sim's hub serves /ws)"
+      | T.all pathChar path  = Right path
+      | otherwise            = Left ("path " <> path <> ": a / and then letters, digits and ._~/- alone")
+    pathChar c = isAsciiUpper c || isAsciiLower c || isDigit c || c `elem` ("._~/-" :: String)
 
 
 -- * Options
@@ -111,10 +178,13 @@ data RunOptions = RunOptions
                                                  --   default leaves out on the simulator, each noted ("Hsed.Jig.Run".@leftOutByDefault@:
                                                  --   since M5b, a case whose Locking SP prerequisite @--locking-ofs@ does not meet)
   , roSim                   :: !SimParams        -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@,
-                                                 --   @--sim-sid-pin@, @--locking-ofs@)
-  , roHold                  :: !Int              -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@)
+                                                 --   @--sim-sid-pin@, @--locking-ofs@); on a @ws:\/\/@ target what the
+                                                 --   hub's published setup must say, checked when it opens ("Hsed.Jig.Target")
+  , roHold                  :: !Int              -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@),
+                                                 --   on a @ws:\/\/@ target asserted of the hub's as 'roSim' is
   , roProfile               :: !(Maybe FilePath) -- ^ a Level 0 response whose descriptors the simulator adds (@--profile@),
-                                                 --   read when the run starts
+                                                 --   read when the run starts (on a @ws:\/\/@ target, its descriptors'
+                                                 --   digest asserted of the hub's)
   , roReportDir             :: !FilePath
   , roCapture               :: !(Maybe FilePath) -- ^ where to write the drive's Level 0 response (@--capture-level0@)
   , roExpectSerial          :: !(Maybe Text)     -- ^ the serial the drive must have (@--expect-serial@)

@@ -29,8 +29,11 @@ is held; liveness from any message, junk and binary included, and the
 sweep's 4000; requests in arrival order on their own socket with no seq,
 protocol_error, ids; two sockets on one ComID; the reset op and its
 broadcast before its response; the control ops; the token's 4001; a full
-queue's 1008; hubClose's 1001, the hub serving on; and IF-SEND and IF-RECV
-answered as the in-process transport answers them.
+queue's 1008; the backlog that holds back a peer's requests while it does
+not read; a broadcast past the frames' limit refused; hubClose's 1001, the
+hub serving on; and IF-SEND and IF-RECV answered as the in-process
+transport answers them. And hsed-sim's usage errors, running as root among
+them, which no test can run as.
 -}
 module Hsed.Transport.Mhtx.HubSpec (spec) where
 
@@ -58,9 +61,10 @@ import           Hsed.Sim.Gen              (foldedAt, genStaticRequest)
 import           Hsed.Sim.Types            (LifeCycle (..), SimParams (..), SyncState (..), defaultSimParams)
 import           Hsed.Sim.View             (SimQuery (..), SimSetup (..), SomeQuery (..), answer, setupOf)
 import           Hsed.Transport.InProc     (InProcOpts (..), SimControl (..))
-import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..), memoryPair)
+import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..), memoryPair, messageLimit)
 import           Hsed.Transport.Mhtx.Frame (Allow (..), FromServer (..), Hello (..), Op (..), Reply (..), SedApp (..), SedEvt (..),
-                                            SedReq (..), SedRsp (..), fromServer, parseAnswer, pingText, reqText, sedAppOf)
+                                            SedReq (..), SedRsp (..), broadcastText, fromServer, parseAnswer, pingText, reqText,
+                                            rspText, sedAppOf)
 import           Hsed.Transport.Mhtx.Hub
 import           Hsed.Version              (hsedVersion)
 import           Hsed.Wire                 (Cap (..), Dir (..), Event (..), IfStatus (..), Request (..), Response (..), Unit (..), ifRecv,
@@ -84,6 +88,12 @@ spec = describe "Hsed.Transport.Mhtx.Hub" $ do
     it "runs a heartbeat whose interval is positive and whose timeout is above it" $ do
       map (uncurry heartbeatProblems) [(200, 600), (20000, 60000), (1, 2)] `shouldBe` [[], [], []]
       map (length . uncurry heartbeatProblems) [(0, 600), (-200, 600), (600, 600), (600, 200), (0, 0)] `shouldBe` [1, 1, 1, 1, 2]
+    it "refuses running as root (euid 0) beside parameters out of range and a heartbeat it cannot run, each a usage error" $ do
+      let root = "running as root (euid 0): hsed-sim runs as yourself, never as root"
+      usageProblems False defaultSimParams defaultHubOpts `shouldBe` []
+      usageProblems True defaultSimParams defaultHubOpts `shouldBe` [root]
+      usageProblems True defaultSimParams { spNComIds = 0 } defaultHubOpts { hoIntervalMs = 0 }
+        `shouldSatisfy` (\ps -> length ps == 3 && L.lastMaybe ps == Just root)
 
   describe "the files hsed-sim reads (--profile, --token-file)" $ do
     it "reads a regular file, or a link to one, outside /dev" $
@@ -141,6 +151,14 @@ spec = describe "Hsed.Transport.Mhtx.Hub" $ do
                                                 <> [KeyMap.fromList [("n", A.Number 1)], KeyMap.fromList [("type", A.Number 1)]])
         refused `shouldSatisfy` all isLeft
         hubSeq hub `shouldReturn` 2
+      it "refuses a broadcast whose frame, the object with its seq, is past the frames' limit, seq kept; one at the limit goes" $ \be -> do
+        hub <- newHub defaultHubOpts be
+        let sized n = KeyMap.fromList [("type", A.String "t"), ("s", A.String (T.replicate n "x"))]
+            room = fromIntegral messageLimit - B.length (broadcastText 1 (sized 0))
+        B.length (broadcastText 1 (sized room)) `shouldBe` fromIntegral messageLimit
+        hubBroadcast hub (sized (room + 1)) >>= (`shouldSatisfy` either ("past the frames' limit" `T.isInfixOf`) (const False))
+        hubSeq hub `shouldReturn` 0
+        hubBroadcast hub (sized room) `shouldReturn` Right 1
       it "sweeps and closes nothing when it has no peer" $ \be -> do
         hub <- newHub defaultHubOpts be
         hubSweep hub >> hubClose hub >> hubClose hub
@@ -344,6 +362,28 @@ spec = describe "Hsed.Transport.Mhtx.Hub" $ do
           _ <- helloOn client
           next client `shouldReturn` InClosed (Just (1008, "send queue full"))
 
+      it "takes a peer's next request only while the bytes queued to it are under the backlog, so that a peer that does not read holds back its own requests" $ \be -> do
+        hub <- newHub defaultHubOpts { hoBacklog = 1 } be
+        (client, server) <- memoryPair
+        gate <- newEmptyMVar
+        sending <- newEmptyMVar
+        let held = server { connSendText = \bytes' -> void (tryPutMVar sending ()) >> readMVar gate >> connSendText server bytes' }
+            described i = rspText (SedRsp (Just i) (Described (beApp be)))
+        withAsync (hubServe hub Nothing held) $ \_ -> do
+          -- the writer holds the hello in its send, nothing queued behind it
+          takeMVar sending
+          traverse_ (connSendText client . reqText . (`SedReq` OpDescribe)) [1, 2, 3]
+          backlogged <- timeout 2000000 (untilJust (hubBacklog hub <&> \n -> if n > 0 then Just n else Nothing))
+          backlogged `shouldBe` Just (B.length (described 1))
+          -- the worker waits: the second answer is not queued however long it is given (a bound, never a wait counted on)
+          threadDelay 20000
+          hubBacklog hub `shouldReturn` B.length (described 1)
+          putMVar gate ()
+          _ <- helloOn client
+          traverse (const (nextFrame client)) [1 :: Int, 2, 3]
+            `shouldReturn` [ ServerRsp (SedRsp (Just i) (Described (beApp be))) | i <- [1, 2, 3] ]
+          hubBacklog hub `shouldReturn` 0
+
       it "closes every peer with 1001 on hubClose, removed at once, and serves on: a peer reconnects to the same server id and seq" $ \be -> do
         hub <- newHub defaultHubOpts be
         _ <- hubBroadcast hub (typed "before")
@@ -446,6 +486,10 @@ untilPong :: Conn -> IO [FromServer]
 untilPong c = nextFrame c >>= \case
   ServerPong -> pure []
   frame      -> (frame :) <$> untilPong c
+
+-- | An action repeated, a millisecond apart, until it gives a value.
+untilJust :: IO (Maybe a) -> IO a
+untilJust act = act >>= maybe (threadDelay 1000 >> untilJust act) pure
 
 -- | A request and its response, the next frame.
 request :: Conn -> Integer -> Op -> IO SedRsp

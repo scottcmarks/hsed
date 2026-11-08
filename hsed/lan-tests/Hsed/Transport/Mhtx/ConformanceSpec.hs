@@ -26,7 +26,9 @@ gap the second time, and each connection's verdict is read as
 @{"seq": n}@ and its 400s, @GET \/clients@, a 426 and a 404); the
 binary-frame check (SPEC.md L21: a binary message ignored, and counted as
 liveness, hub.dart:83-86, which the Python hub breaks, design D5); a
-non-increasing id and bogus frames; and the token's 4001. The latencies the
+non-increasing id and bogus frames; a request from a web page or for
+another host refused with 403 (the M5c review); and the token's 4001, a
+token given twice, and the token asked of the hooks. The latencies the
 checks measure (a pong, the silent client's close, the live client's
 longest gap between pongs) are written to stderr (Scott's answer Q3: CI
 runs this at 200/600 ms, and a flake is a bug, never a reason to widen the
@@ -49,7 +51,7 @@ import           Hsed.Transport.Mhtx.Client (Backoff (..), ClientOpts (..), Miss
 import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeNormal, dialLoopback)
 import           Hsed.Transport.Mhtx.Frame  (FromServer (..), Hello (..), Op (..), Reply (..), SedReq (..), SedRsp (..), fromServer,
                                              pingText, reqText)
-import           Hsed.Transport.Mhtx.Hub    (Hub, HubOpts (..), defaultHubOpts, hubBroadcast, hubClientCount, hubClose, hubServerId)
+import           Hsed.Transport.Mhtx.Hub    (Hub, HubOpts (..), defaultHubOpts, hubBroadcast, hubClientCount, hubClose, hubSeq, hubServerId)
 
 
 spec :: Spec
@@ -156,12 +158,29 @@ beyond = do
                     , "{\"type\":\"pong\"}", "{\"type\":\"sed.evt\",\"seq\":1}", "{\"type\":\"sed.rsp\",\"id\":1}"]
       statuses `shouldBe` replicate 9 400
       hubBroadcast hub (event 1) `shouldReturn` Right 1
+    it "answers 413 to a body under 2 MiB whose broadcast, the object with its seq, is past it, the seq kept" $ conformant $ \port hub -> do
+      let body = "{\"type\":\"t\",\"s\":\"" <> B.replicate (2097152 - 4 - 19) 120 <> "\"}"
+      B.length body `shouldBe` 2097152 - 4
+      statusOf <$> rawHttp port (post "/emit" body) `shouldReturn` 413
+      hubSeq hub `shouldReturn` 0
     it "answers 426 to /ws without an upgrade, 404 elsewhere, and 404 to the hooks of a hub without them" $ do
       conformant $ \port _ -> traverse (fmap statusOf . rawHttp port) [get "/ws", get "/", get "/emit", post "/clients" "{}", get "/ws/"]
                                 `shouldReturn` [426, 404, 404, 404, 404]
       be <- lanBackend opts
       withHub opts { hoHooks = False } be $ \port _ ->
         traverse (fmap statusOf . rawHttp port) [post "/emit" "{\"type\":\"conformance_event\"}", get "/clients"] `shouldReturn` [404, 404]
+
+  describe "a request from a web page or for another host (no browser reaches the hub)" $ do
+    it "answers 403 to an upgrade, an emit or a count carrying an Origin header, or a Host other than 127.0.0.1 or localhost, before anything else" $
+      conformant $ \port hub -> do
+        let host = "127.0.0.1:" <> encodeUtf8 (tshow port)
+            origin = [("Origin", "http://evil.example")]
+        statuses <- traverse (fmap statusOf . rawHttp port)
+          [ upgrade host origin, withHeaders host origin (get "/clients"), withHeaders host origin (post "/emit" "{\"type\":\"t\"}")
+          , upgrade "evil.example" [], withHeaders "evil.example" [] (get "/clients"), withHeaders ("evil.example:" <> encodeUtf8 (tshow port)) [] (get "/clients")
+          , withHeaders host [] (get "/clients"), withHeaders ("localhost:" <> encodeUtf8 (tshow port)) [] (get "/clients") ]
+        statuses `shouldBe` [403, 403, 403, 403, 403, 403, 200, 200]
+        hubSeq hub `shouldReturn` 0
 
   describe "binary messages (SPEC.md L21; hub.dart:83-86)" $ do
     it "ignores a binary message: a ping after it is answered pong next, the socket open" $ conformant $ \port _ ->
@@ -190,7 +209,7 @@ beyond = do
         traverse_ (send a) ["{\"type\":\"conformance_bogus\"}", "{]", pingText]
         nextFrame a twoSeconds `shouldReturn` Just ServerPong
 
-  describe "--token-file (SPEC.md L92-95)" $
+  describe "--token-file (SPEC.md L92-95)" $ do
     it "closes a client whose token query parameter is missing or wrong with 4001 before hello, and greets the right one" $ do
       be <- lanBackend opts
       withHub opts { hoToken = Just "s3cret" } be $ \port hub -> do
@@ -198,6 +217,19 @@ beyond = do
           nextFrame p threeSeconds `shouldReturn` Nothing
           closeCode p `shouldReturn` Just 4001
         withProbe port "/ws?token=s3cret" $ \p -> helloOf p >>= \h -> helloServerId h `shouldBe` hubServerId hub
+    it "takes a request carrying the token twice as carrying none (4001), whichever comes first" $ do
+      be <- lanBackend opts
+      withHub opts { hoToken = Just "s3cret" } be $ \port _ ->
+        for_ ["/ws?token=s3cret&token=wrong", "/ws?token=wrong&token=s3cret", "/ws?token=s3cret&token=s3cret"] $ \path ->
+          withProbe port path $ \p -> closeCode p `shouldReturn` Just 4001
+    it "asks the hooks for the token too: 401 without it, 200 with it" $ do
+      be <- lanBackend opts
+      withHub opts { hoToken = Just "s3cret" } be $ \port hub -> do
+        traverse (fmap statusOf . rawHttp port) [get "/clients", post "/emit" "{\"type\":\"t\"}", get "/clients?token=wrong"]
+          `shouldReturn` [401, 401, 401]
+        hubSeq hub `shouldReturn` 0
+        traverse (fmap statusOf . rawHttp port) [get "/clients?token=s3cret", post "/emit?token=s3cret" "{\"type\":\"t\"}"]
+          `shouldReturn` [200, 200]
 
 
 -- | The conformance run's hub options: a heartbeat of 200 ms, a timeout of
@@ -352,6 +384,19 @@ get path = "GET " <> path <> " HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\
 post :: ByteString -> ByteString -> ByteString
 post path body = "POST " <> path <> " HTTP/1.1\r\nHost: 127.0.0.1\r\nContent-Type: application/json\r\nContent-Length: "
                  <> encodeUtf8 (tshow (B.length body)) <> "\r\nConnection: close\r\n\r\n" <> body
+
+-- | A request with its Host header replaced and headers added after it.
+withHeaders :: ByteString -> [(ByteString, ByteString)] -> ByteString -> ByteString
+withHeaders host extra request = case B.breakSubstring "Host: 127.0.0.1\r\n" request of
+  (front, back) -> front <> "Host: " <> host <> "\r\n" <> mconcat [ k <> ": " <> v <> "\r\n" | (k, v) <- extra ]
+                   <> B.drop (B.length "Host: 127.0.0.1\r\n") back
+
+-- | A websocket upgrade of /ws (RFC 6455 4.1) for a host, with headers added, asking warp to close after its
+--   response (an upgrade refused is answered and closed).
+upgrade :: ByteString -> [(ByteString, ByteString)] -> ByteString
+upgrade host extra = "GET /ws HTTP/1.1\r\nHost: " <> host <> "\r\nUpgrade: websocket\r\nConnection: close\r\n"
+  <> "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\nSec-WebSocket-Version: 13\r\n"
+  <> mconcat [ k <> ": " <> v <> "\r\n" | (k, v) <- extra ] <> "\r\n"
 
 -- | A response's status code (0 where its status line does not read).
 statusOf :: ByteString -> Int

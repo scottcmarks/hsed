@@ -22,8 +22,13 @@ requests in arrival order, answered on that socket with no @seq@ (design
 6.3); the reset op's seq-stamped broadcast before its response; the control
 ops, peek and release, only with @--allow-remote-control@, and reset only
 with @--allow-remote-reset@, otherwise answered unsupported; a token checked
-before hello (4001, SPEC.md L92-95); the hooks @POST \/emit@ and @GET
-\/clients@ only with @--conformance-hooks@; served by warp on the socket
+before hello (4001, SPEC.md L92-95), and asked of the hooks too; the hooks
+@POST \/emit@ and @GET \/clients@ only with @--conformance-hooks@; a request
+from a web page (an @Origin@ header, which a browser sends and hsed's
+client, the Dart conformance client and the Python fixture's do not) or
+for a host other than 127.0.0.1 or localhost (a @Host@ a DNS name rebound
+to 127.0.0.1 would carry) refused with 403 before anything else; served by
+warp on the socket
 "Hsed.Transport.Mhtx.Conn".'Hsed.Transport.Mhtx.Conn.bindLoopback' bound,
 127.0.0.1 alone ('parseListen'; Scott's answer Q1).
 
@@ -36,15 +41,21 @@ worker, which answers the requests in order. Registering a peer (reading
 every peer) are each one STM transaction, so that a peer's hello and the
 broadcasts it receives count every broadcast once (the guarantee hub.dart:66-77
 has from running those steps with no await between them). A queue is
-bounded ('hoQueue'): a peer whose queue is full is closed (1008) and
-removed rather than held in memory. When the hub closes a peer (the sweep,
+bounded in frames ('hoQueue') and in bytes ('hoBacklog'): the worker takes
+a peer's next request only while the bytes queued to it and not yet
+written are under the backlog, so that a client that sends and does not
+read is held back by its own socket (TCP's flow control) rather than held
+in the hub's memory; a peer whose queue is full in frames, or past the
+backlog by more than a message ('Hsed.Transport.Mhtx.Conn.messageLimit',
+which the broadcasts and pongs no worker holds back could reach), is
+closed (1008) and removed. When the hub closes a peer (the sweep,
 'hubClose', a full queue) it removes the peer at once, sends the close from
 the peer's writer, and waits a second at most for the peer's echo
 (conformance.dart:346 gives a close one second) before it ends the peer.
 
 The command line hsed-sim reads is checked here too, so that its rules are
-held by the suites: 'parseListen', 'heartbeatProblems', 'plainFileProblem'
-and 'readTokenFile'.
+held by the suites: 'parseListen', 'heartbeatProblems', 'usageProblems',
+'plainFileProblem' and 'readTokenFile'.
 -}
 module Hsed.Transport.Mhtx.Hub
   ( -- * Options
@@ -52,6 +63,7 @@ module Hsed.Transport.Mhtx.Hub
   , defaultHubOpts
   , parseListen
   , heartbeatProblems
+  , usageProblems
     -- * The files hsed-sim reads
   , plainFileProblem
   , readTokenFile
@@ -64,6 +76,7 @@ module Hsed.Transport.Mhtx.Hub
   , hubServerId
   , hubSeq
   , hubClientCount
+  , hubBacklog
   , hubServe
   , hubBroadcast
   , hubSweep
@@ -96,6 +109,7 @@ import           RIO.Directory                  (doesFileExist)
 import           System.Posix.Files             (getFileStatus, isRegularFile)
 #endif
 
+import           Hsed.Sha256                    (sha256)
 import           Hsed.Sim.Types                 (SimParams (..), foldProblemText, simParamsProblems)
 import           Hsed.Sim.View                  (ComIdView (..), SimQuery (..), SimSetup (..), SomeQuery (..), answer, setupOf)
 import           Hsed.Transport.InProc          (InProcOpts (..), SimControl (..), newInProc)
@@ -108,13 +122,18 @@ import           Hsed.Wire                      (Cap (..), Describe (..), IfStat
                                                  ifRecv, ifSend, inject)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- * Options
 
 -- | How a hub runs: its heartbeat's interval and timeout (hello's
 --   @heartbeat@, milliseconds), whether it allows the control ops (peek,
 --   release), the reset op and the conformance hooks, the token a client
---   must give (none: none asked), its clock (seconds, monotonic), and how
---   many frames a socket's send queue holds before the socket is closed.
+--   must give (none: none asked), its clock (seconds, monotonic), how
+--   many frames a socket's send queue holds before the socket is closed,
+--   and how many bytes queued to a socket and not yet written hold back its
+--   requests (the backlog).
 data HubOpts = HubOpts
   { hoIntervalMs   :: !Int
   , hoTimeoutMs    :: !Int
@@ -124,14 +143,18 @@ data HubOpts = HubOpts
   , hoToken        :: !(Maybe ByteString)
   , hoNow          :: IO Double
   , hoQueue        :: !Int
+  , hoBacklog      :: !Int
   }
 
 -- | A heartbeat of 20 s and a timeout of 60 s (design 6.3's hello,
 --   docs/spec-as-source.md:502), nothing allowed beyond commands and
 --   describe, no token, GHC's monotonic clock in seconds (not RIO's, which
 --   counts nanoseconds on macOS on Apple silicon: "Hsed.Wire"'s exchange
---   says so), and a send queue of 1024 frames (the scaffold's bound,
---   reversible).
+--   says so), a send queue of 1024 frames (the scaffold's bound,
+--   reversible), and a backlog of 8 MiB, four messages at the frames' limit
+--   (the M5c review's bound, reversible): what one socket can hold of the
+--   hub's memory is about the backlog and a message more, not 1024 answers
+--   of 1 MiB each.
 defaultHubOpts :: HubOpts
 defaultHubOpts = HubOpts
   { hoIntervalMs   = 20000
@@ -142,6 +165,7 @@ defaultHubOpts = HubOpts
   , hoToken        = Nothing
   , hoNow          = Clock.getMonotonicTime
   , hoQueue        = 1024
+  , hoBacklog      = 4 * fromIntegral messageLimit
   }
 
 -- | @--listen 127.0.0.1:PORT@: the port, 0 to 65535 in one to five decimal
@@ -198,6 +222,24 @@ heartbeatProblems interval dead =
        <> " (a client pinging every interval would be closed between its pings, SPEC.md L57-60)" | dead <= interval ]
 
 
+-- | What is wrong with the command line hsed-sim was given, before it reads
+--   a file or binds a socket (each a usage error, exit 2): the simulator's
+--   parameters out of range ("Hsed.Sim.Types".'simParamsProblems'), a
+--   heartbeat it cannot run ('heartbeatProblems'), and running as root
+--   (euid 0, whether it does given; design 13.34 (28)(a): hsed-sim runs as
+--   its user, never as root, whatever it was asked for).
+--
+-- >>> import Hsed.Sim.Types (defaultSimParams)
+-- >>> usageProblems False defaultSimParams defaultHubOpts
+-- []
+-- >>> usageProblems True defaultSimParams defaultHubOpts
+-- ["running as root (euid 0): hsed-sim runs as yourself, never as root"]
+usageProblems :: Bool -> SimParams -> HubOpts -> [Text]
+usageProblems root params opts =
+  simParamsProblems params <> heartbeatProblems (hoIntervalMs opts) (hoTimeoutMs opts)
+  <> [ "running as root (euid 0): hsed-sim runs as yourself, never as root" | root ]
+
+
 -- * The files hsed-sim reads
 
 -- | Why hsed-sim may not read a file a flag names (@--profile@,
@@ -229,7 +271,8 @@ plainFileProblem flag path = tryIO (canonicalizePath path) >>= \case
 --   why there is none: the file unreadable, or no byte left. Read as bytes,
 --   since mh_transport's hubs read no token themselves (the caller checks
 --   it before the hub serves, mh_transport.py:97-98), and compared with the
---   @token@ query parameter as its percent-decoding gives it. Never logged:
+--   @token@ query parameter as its percent-decoding gives it (a request
+--   carrying the parameter more than once taken as carrying none). Never logged:
 --   a reason names the file, never its contents.
 readTokenFile :: FilePath -> IO (Either Text ByteString)
 readTokenFile path = tryIO (readFileBinary path) <&> \case
@@ -308,13 +351,14 @@ data Hub = Hub
   , hLock    :: !(MVar ())
   }
 
--- | A peer: its number; the frames to send it, in order; its requests for
---   the worker, in order; the hub's clock when it last sent anything; the
---   close the hub asked for it (none yet); whether that close was sent; and
---   whether its serving is over.
+-- | A peer: its number; the frames to send it, in order, and their bytes;
+--   its requests for the worker, in order; the hub's clock when it last
+--   sent anything; the close the hub asked for it (none yet); whether that
+--   close was sent; and whether its serving is over.
 data Peer = Peer
   { pKey   :: !Int
   , pOut   :: !(TBQueue ByteString)
+  , pBytes :: !(TVar Int)
   , pIn    :: !(TBQueue FromClient)
   , pSeen  :: !(TVar Double)
   , pClose :: !(TVar (Maybe (Word16, Text)))
@@ -341,10 +385,14 @@ hubSeq = readTVarIO . hSeq
 hubClientCount :: Hub -> IO Int
 hubClientCount = fmap Map.size . readTVarIO . hPeers
 
+-- | The bytes queued to its peers now and not yet taken by their writers.
+hubBacklog :: Hub -> IO Int
+hubBacklog hub = atomically (readTVar (hPeers hub) >>= fmap sum . traverse (readTVar . pBytes) . Map.elems)
+
 -- | Serve one connection until it closes, given the token its request
 --   carried (the @token@ query parameter; none, none given): where the hub
 --   asks for one (@--token-file@), a token missing or not equal to it
---   (compared in constant time) has the connection closed with 4001 before
+--   ('tokenAccepted') has the connection closed with 4001 before
 --   hello (SPEC.md L92-95), and is never logged. 'runHub' reads the token
 --   from the upgrade's request; a test over memory gives it here.
 hubServe :: Hub -> Maybe ByteString -> Conn -> IO ()
@@ -364,15 +412,12 @@ hubServe hub given conn
 -- | Broadcast an object with the next @seq@, which it returns; or why not:
 --   a type of mh_transport's own (hello, ping, pong: SPEC.md L23-29), one of
 --   hsed's application layer (@sed.*@, which the hub alone sends, design
---   6.3), or no string type at all (every frame has one, SPEC.md L18-19).
---   The object's own @seq@, if it has one, is the hub's.
+--   6.3), no string type at all (every frame has one, SPEC.md L18-19), or a
+--   frame, the object with its @seq@, past the frames' limit, which no peer
+--   of hsed's would read ("Hsed.Transport.Mhtx.Conn".'messageLimit'; @seq@
+--   not advanced). The object's own @seq@, if it has one, is the hub's.
 hubBroadcast :: Hub -> A.Object -> IO (Either Text Integer)
-hubBroadcast hub o = case KeyMap.lookup "type" o of
-  Just (A.String t)
-    | t `elem` ["hello", "ping", "pong"] -> pure (Left ("type " <> t <> ": mh_transport's own, never broadcast (SPEC.md L23-29)"))
-    | "sed." `T.isPrefixOf` t           -> pure (Left ("type " <> t <> ": hsed's own layer, which the hub alone sends (design 6.3)"))
-    | otherwise                         -> Right <$> broadcastWith hub (`broadcastText` o)
-  _ -> pure (Left "no string type: every frame is a JSON object with a string type (SPEC.md L18-19)")
+hubBroadcast hub = fmap (first snd) . broadcastObject hub
 
 -- | Close every peer silent at or past the timeout, with 4000 and the reason
 --   @heartbeat timeout@ (SPEC.md L58-60), each removed at once.
@@ -457,8 +502,11 @@ closeWaitMicros :: Int
 closeWaitMicros = 1000000
 
 -- | The most an @/emit@ body may hold: 2 MiB, the frames' own limit
---   ("Hsed.Transport.Mhtx.Conn".'messageLimit'), which its broadcast must
---   fit.
+--   ("Hsed.Transport.Mhtx.Conn".'messageLimit'), read no further; its
+--   broadcast, the object as aeson writes it with @seq@ inserted, is held to
+--   the same limit by 'broadcastWith', so that a body just under it whose
+--   broadcast is not refused 413 rather than sent to peers that would
+--   close on it.
 emitMost :: Int
 emitMost = fromIntegral messageLimit
 
@@ -476,11 +524,13 @@ serverId = drawn ""
     alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
 
 -- | Whether a token a client gave is the one the hub asks for (none asked:
---   any), compared in constant time (memory's 'BA.constEq').
+--   any): their SHA-256 digests compared in constant time (memory's
+--   'BA.constEq', which returns at once on two lengths that differ, so that
+--   comparing the tokens themselves would tell a client the token's length).
 tokenAccepted :: Maybe ByteString -> Maybe ByteString -> Bool
 tokenAccepted want given = case want of
   Nothing -> True
-  Just w  -> maybe False (BA.constEq w) given
+  Just w  -> maybe False (BA.constEq (sha256 w) . sha256) given
 
 -- | A connection read until it closes.
 untilClosed :: Conn -> IO ()
@@ -498,8 +548,10 @@ attach hub = do
     writeTVar (hNext hub) (key + 1)
     out <- newTBQueue depth
     seq' <- readTVar (hSeq hub)
-    writeTBQueue out (helloText (Hello 1 (hId hub) seq' (hoIntervalMs opts) (hoTimeoutMs opts) (hApp hub)))
-    peer <- Peer key out <$> newTBQueue depth <*> newTVar now <*> newTVar Nothing <*> newTVar False <*> newTVar False
+    let hello = helloText (Hello 1 (hId hub) seq' (hoIntervalMs opts) (hoTimeoutMs opts) (hApp hub))
+    writeTBQueue out hello
+    peer <- Peer key out <$> newTVar (B.length hello) <*> newTBQueue depth <*> newTVar now <*> newTVar Nothing <*> newTVar False
+                         <*> newTVar False
     modifyTVar' (hPeers hub) (Map.insert key peer)
     pure peer
   where
@@ -521,22 +573,49 @@ closePeer hub peer code why = do
     Nothing -> writeTVar (pClose peer) (Just (code, why))
     Just _  -> pure ()
 
--- | A frame queued for a peer; a peer whose queue is full closed instead
---   (1008), and nothing queued.
+-- | A frame queued for a peer, its bytes counted; a peer whose queue is
+--   full closed instead (1008), and nothing queued: full in frames
+--   ('hoQueue'), or past the backlog by more than a message
+--   ('hoBacklog', 'messageLimit'), which only frames no worker holds back
+--   reach (broadcasts, pongs), the worker queueing an answer only under the
+--   backlog.
 enqueue :: Hub -> Peer -> ByteString -> STM ()
-enqueue hub peer frame = isFullTBQueue (pOut peer) >>= \case
-  True  -> closePeer hub peer codePolicy "send queue full"
-  False -> writeTBQueue (pOut peer) frame
+enqueue hub peer frame = do
+  full   <- isFullTBQueue (pOut peer)
+  queued <- readTVar (pBytes peer)
+  if full || queued + B.length frame > hoBacklog (hOpts hub) + fromIntegral messageLimit
+    then closePeer hub peer codePolicy "send queue full"
+    else writeTBQueue (pOut peer) frame >> writeTVar (pBytes peer) (queued + B.length frame)
 
 -- | A frame stamped with the next @seq@ broadcast: @seq@ + 1 and the frame
---   queued to every peer in one transaction (hub.dart:103-111); the @seq@.
-broadcastWith :: Hub -> (Integer -> ByteString) -> IO Integer
+--   queued to every peer in one transaction (hub.dart:103-111); the @seq@,
+--   or the frame's length where it is past the frames' limit
+--   ('messageLimit'), nothing broadcast and @seq@ not advanced.
+broadcastWith :: Hub -> (Integer -> ByteString) -> IO (Either Int Integer)
 broadcastWith hub frameAt = atomically $ do
   n <- (+ 1) <$> readTVar (hSeq hub)
-  writeTVar (hSeq hub) n
-  peers <- Map.elems <$> readTVar (hPeers hub)
-  traverse_ (\p -> enqueue hub p (frameAt n)) peers
-  pure n
+  let frame = frameAt n
+  if fromIntegral (B.length frame) > messageLimit
+    then pure (Left (B.length frame))
+    else do
+      writeTVar (hSeq hub) n
+      peers <- Map.elems <$> readTVar (hPeers hub)
+      traverse_ (\p -> enqueue hub p frame) peers
+      pure (Right n)
+
+-- | 'hubBroadcast' with the status @\/emit@ answers a refusal with: 400 for
+--   a type or none, 413 for a frame past the frames' limit.
+broadcastObject :: Hub -> A.Object -> IO (Either (H.Status, Text) Integer)
+broadcastObject hub o = case KeyMap.lookup "type" o of
+  Just (A.String t)
+    | t `elem` ["hello", "ping", "pong"] -> refused ("type " <> t <> ": mh_transport's own, never broadcast (SPEC.md L23-29)")
+    | "sed." `T.isPrefixOf` t           -> refused ("type " <> t <> ": hsed's own layer, which the hub alone sends (design 6.3)")
+    | otherwise                         -> first tooBig <$> broadcastWith hub (`broadcastText` o)
+  _ -> refused "no string type: every frame is a JSON object with a string type (SPEC.md L18-19)"
+  where
+    refused why = pure (Left (H.status400, why))
+    tooBig n = (H.status413, "a broadcast of " <> tshow n <> " bytes with its seq, past the frames' limit of " <> tshow messageLimit
+                             <> " (no peer would read it)")
 
 -- | A peer's reader: every message stamps the peer's liveness (hub.dart:83-86,
 --   binary and junk included), a stamp never going back (a monotonic clock's
@@ -562,25 +641,31 @@ reader hub conn peer = connReceive conn >>= \case
           False -> writeTBQueue (pIn peer) request
     reader hub conn peer
 
--- | A peer's writer: its queue sent in order, until the hub asks for its
---   close, which it sends instead of anything still queued.
+-- | A peer's writer: its queue sent in order, each frame's bytes no longer
+--   counted once it is taken, until the hub asks for its close, which it
+--   sends instead of anything still queued.
 writer :: Conn -> Peer -> IO ()
 writer conn peer = atomically (closing `orElse` queued) >>= \case
   Left (code, why) -> connClose conn code why >> atomically (writeTVar (pSent peer) True)
   Right frame      -> connSendText conn frame >> writer conn peer
   where
     closing = Left <$> (readTVar (pClose peer) >>= maybe retrySTM pure)
-    queued  = Right <$> readTBQueue (pOut peer)
+    queued  = do
+      frame <- readTBQueue (pOut peer)
+      modifyTVar' (pBytes peer) (subtract (B.length frame))
+      pure (Right frame)
 
 -- | A peer's worker: its requests answered in arrival order, each on the
---   peer's own socket. A request whose id is not above the last one
+--   peer's own socket, the next taken only while the bytes queued to the
+--   peer are under the backlog ('hoBacklog'), so that a peer that does not
+--   read holds back its own requests. A request whose id is not above the last one
 --   accepted on the socket, or one refused as it was read, is answered
 --   @protocol_error@ (its id where it had an integer one) and leaves the last
 --   accepted id as it was (design 6.3 as M5c decides it).
 worker :: Hub -> Peer -> IO ()
 worker hub peer = go 0
   where
-    go lastId = atomically (readTBQueue (pIn peer)) >>= \case
+    go lastId = atomically (readTVar (pBytes peer) >>= checkSTM . (< hoBacklog (hOpts hub)) >> readTBQueue (pIn peer)) >>= \case
       ClientBadReq rid why -> reply (SedRsp rid (ProtocolError why)) >> go lastId
       ClientReq (SedReq rid op)
         | rid <= lastId -> reply (SedRsp (Just rid) (ProtocolError ("id " <> tshow rid <> " is not above " <> tshow lastId
@@ -631,30 +716,61 @@ opReply hub = \case
         when (s == Good) . void $ broadcastWith hub (\n -> evtText (SedEvt n e comIds sessions))
         pure (Answered s mempty)
 
--- | The hub's HTTP application: @\/ws@, the hooks, 404.
+-- | The hub's HTTP application: a request from a web page or for another
+--   host refused ('foreignRequest', 403); then @\/ws@, the hooks (the token
+--   asked of them as of a websocket, 401 where it is missing or wrong), 404.
 application :: Hub -> Wai.Application
 application hub req respond = case (Wai.requestMethod req, Wai.pathInfo req) of
+  _ | Just why <- foreignRequest req -> respond (plain H.status403 [] why)
   (_, ["ws"]) -> case WaiWS.websocketsApp connectionOptions upgraded req of
     Just upgrade -> respond upgrade
     Nothing      -> respond (plain (H.mkStatus 426 "Upgrade Required") [("Upgrade", "websocket")] "ws: a websocket's path: ask for an upgrade (RFC 6455 4.1)")
-  (m, ["emit"])    | hooks, m == H.methodPost -> emitted hub req >>= respond
-  (m, ["clients"]) | hooks, m == H.methodGet  -> hubClientCount hub >>= respond . json H.status200 . A.object . pure . ("count" A..=)
+  (m, ["emit"])    | hooks, m == H.methodPost -> withToken (emitted hub req)
+  (m, ["clients"]) | hooks, m == H.methodGet  -> withToken (json H.status200 . A.object . pure . ("count" A..=) <$> hubClientCount hub)
   _ -> respond (plain H.status404 [] "not found")
   where
     hooks = hoHooks (hOpts hub)
     upgraded pending = WS.acceptRequest pending >>= hubServe hub token . fromWebSocket (tshow (Wai.remoteHost req))
-    token = join (L.lookup "token" (Wai.queryString req))
+    -- the token parameter given once (a request carrying it twice carries none), its value or empty
+    token = case [ fromMaybe "" v | (k, v) <- Wai.queryString req, k == "token" ] of
+      [t] -> Just t
+      _   -> Nothing
+    withToken answered
+      | tokenAccepted (hoToken (hOpts hub)) token = answered >>= respond
+      | otherwise = respond (json H.status401 (A.object ["error" A..= ("token missing or wrong" :: Text)]))
+
+-- | Why a request is not a local client's, if it is not: one carrying an
+--   @Origin@ header, which a browser sends with a page's websocket or
+--   cross-origin POST (RFC 6455 4.1 item 8; the Fetch standard) and none
+--   of the hub's clients does (hsed's, conformance.dart's dart:io socket,
+--   the Python fixture's tests); or one whose @Host@ names a host other than
+--   127.0.0.1 or localhost, as a page's would through a DNS name rebound to
+--   127.0.0.1. A request with no @Host@ (HTTP/1.0) is taken as local, the
+--   socket being 127.0.0.1's alone.
+--
+-- >>> let req hs = Wai.defaultRequest { Wai.requestHeaders = hs, Wai.requestHeaderHost = L.lookup "Host" hs }
+-- >>> map (isJust . foreignRequest . req) [[("Host", "127.0.0.1:8080")], [("Host", "localhost")], [], [("Host", "evil.example:8080")], [("Host", "127.0.0.1:80"), ("Origin", "http://127.0.0.1:80")]]
+-- [False,False,False,True,True]
+foreignRequest :: Wai.Request -> Maybe Text
+foreignRequest req
+  | isJust (L.lookup "Origin" (Wai.requestHeaders req)) =
+      Just "a request from a web page (an Origin header): the hub serves local clients alone, never a browser's page"
+  | Just host <- Wai.requestHeaderHost req, B.takeWhile (/= 58) host `notElem` ["127.0.0.1", "localhost"] =
+      Just "a request for another host (its Host header): the hub serves 127.0.0.1 alone"
+  | otherwise = Nothing
 
 -- | @POST \/emit@: a JSON object broadcast ('hubBroadcast'), answered 200
 --   @{"seq": n}@ (conformance_fixture.py:34-36); a body that is not a JSON
---   object, or an object 'hubBroadcast' refuses, 400 with the reason (SPEC.md
---   and the fixture give no status: the Python fixture's own is an
---   exception's 500, conformance_fixture.py:35); a body past 'emitMost' 413.
+--   object, or an object 'hubBroadcast' refuses for its type, 400 with the
+--   reason (SPEC.md and the fixture give no status: the Python fixture's
+--   own is an exception's 500, conformance_fixture.py:35); a body past
+--   'emitMost', or one whose broadcast, the object with its @seq@, is past
+--   the frames' limit, 413.
 emitted :: Hub -> Wai.Request -> IO Wai.Response
 emitted hub req = bounded 0 [] >>= \case
   Nothing   -> pure (json H.status413 (failure ("a body past " <> tshow emitMost <> " bytes, the frames' limit")))
   Just body -> case A.eitherDecodeStrict body of
-    Right (A.Object o) -> hubBroadcast hub o <&> either (json H.status400 . failure) (json H.status200 . A.object . pure . ("seq" A..=))
+    Right (A.Object o) -> broadcastObject hub o <&> either (\(s, why) -> json s (failure why)) (json H.status200 . A.object . pure . ("seq" A..=))
     Right _            -> pure (json H.status400 (failure "not a JSON object: a broadcast is one (SPEC.md L18-19)"))
     Left e             -> pure (json H.status400 (failure ("not JSON: " <> T.pack e)))
   where

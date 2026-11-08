@@ -22,7 +22,8 @@ It writes one line to stdout, @PORT=<n>@, once its socket listens, and
 logs to stderr (never the token). It exits 2 for a usage error: a flag it
 cannot read (@--listen@ another host among them), parameters out of range
 ("Hsed.Sim.Types".'Hsed.Sim.Types.simParamsProblems'), a heartbeat it
-cannot run ('heartbeatProblems'), running as root (euid 0), a @--profile@ or
+cannot run ('Hsed.Transport.Mhtx.Hub.heartbeatProblems'), running as root
+(euid 0; the three 'Hsed.Transport.Mhtx.Hub.usageProblems'), a @--profile@ or
 @--token-file@ that is not a regular file outside @\/dev@
 ('plainFileProblem', checked before either is read). It exits 1 when what
 it was given will not serve: a profile or token it cannot read, parameters
@@ -42,11 +43,11 @@ import           System.Posix.User        (getEffectiveUserID)
 
 import           Hsed.Sim.Flags           (lockingOFSName, parseLockingOFS, parseSidPin, parseUnits, unitName)
 import           Hsed.Sim.Profile         (loadProfile)
-import           Hsed.Sim.Types           (SimParams (..), defaultSimParams, simParamsProblems)
+import           Hsed.Sim.Types           (SimParams (..), defaultSimParams)
 import           Hsed.Transport.InProc    (InProcOpts (..))
 import           Hsed.Transport.Mhtx.Conn (bindLoopback)
-import           Hsed.Transport.Mhtx.Hub  (HubOpts (..), backendOf, defaultHubOpts, heartbeatProblems, hubClose, newHub,
-                                           parseListen, plainFileProblem, readTokenFile, runHub)
+import           Hsed.Transport.Mhtx.Hub  (HubOpts (..), backendOf, defaultHubOpts, hubClose, newHub, parseListen,
+                                           plainFileProblem, readTokenFile, runHub, usageProblems)
 import           Hsed.Version             (hsedVersion)
 
 
@@ -65,8 +66,7 @@ serve :: SimOptions -> IO ExitCode
 serve (SimOptions port opts params inProc profile tokenFile) = do
   root <- runningAsRoot
   files <- catMaybes <$> traverse (uncurry plainFileProblem) (given "--profile" profile <> given "--token-file" tokenFile)
-  case simParamsProblems params <> heartbeatProblems (hoIntervalMs opts) (hoTimeoutMs opts)
-       <> [ "running as root (euid 0): hsed-sim runs as yourself, never as root" | root ] <> files of
+  case usageProblems root params opts <> files of
     problems@(_ : _) -> complain problems $> ExitFailure 2
     []               -> readFiles >>= \case
       Left why                -> complain [why] $> ExitFailure 1
@@ -170,7 +170,7 @@ simOptions = mk
   <*> switch (long "conformance-hooks" <> help "serve POST /emit and GET /clients, for mh_transport's conformance suite")
   <*> optional (strOption (long "token-file" <> metavar "FILE"
         <> help ("close a client whose token query parameter is not this file's bytes, a line ending at their end left "
-                 <> "out (4001, before hello); a regular file outside /dev")))
+                 <> "out (4001, before hello), and refuse the hooks such a request (401); a regular file outside /dev")))
   where
     sim0 = defaultSimParams
     mk port intervalMs deadMs u () ofs sidPin hold discard profile control reset hooks token = SimOptions port

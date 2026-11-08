@@ -28,6 +28,9 @@ module Hsed.Transport.InProc
   ( InProcOpts (..)
   , SimControl (..)
   , newInProc
+    -- * The simulator seen from outside (M5c)
+  , inProcView
+  , inProcControl
   ) where
 
 import qualified RIO.Map            as Map
@@ -36,6 +39,7 @@ import           RIO
 import           Hsed.Sim           (step, syncOf)
 import           Hsed.Sim.Types     (FoldProblem, Input (..), Output (..), SimParams (..), SyncState (..), TPerState (..), initialState,
                                      initialStateProblems)
+import           Hsed.Sim.View      (Control (..), SimView (..), answer)
 import           Hsed.Version       (hsedVersion)
 import           Hsed.Wire          (mostCarried)
 import           Hsed.Wire.Internal (Cap (..), Describe (..), Dir (..), Event, IfStatus (..), Request (..), Response (..),
@@ -108,6 +112,17 @@ newInProc params opts = case initialStateProblems p of
             , scPeek    = (\(Sim st _) -> st) <$> readMVar var
             }
       pure (transport, control)
+
+-- | The simulator's state seen through its control: each query answered
+--   from the state as it is ("Hsed.Sim.View".'answer'), never refused (M5c,
+--   Option A: what the hub's peek op answers).
+inProcView :: SimControl -> SimView
+inProcView c = SimView (\q -> Right . answer q <$> scPeek c)
+
+-- | The simulator's control op: a ComID's prepared response released now
+--   (S2 to S3), never refused (what the hub's release op does).
+inProcControl :: SimControl -> Control
+inProcControl c = Control (\comid -> Right <$> scRelease c comid)
 
 -- | One command against the simulator, holding or releasing a ComID's
 --   prepared response as the transport's hold says: an IF-SEND that

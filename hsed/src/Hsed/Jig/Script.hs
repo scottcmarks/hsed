@@ -216,7 +216,6 @@ import qualified Data.Aeson             as A
 import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
-import qualified RIO.Map                as Map
 import           RIO
 import qualified RIO.Text               as T
 
@@ -243,7 +242,6 @@ import           Hsed.Gen.Core.Layouts  (ComPacket (..), ComPacketHeader (..), D
                                          STACK_RESETCommandResponse (..), STACK_RESETPending (..))
 import qualified Hsed.Gen.Core.Methods  as Methods
 import           Hsed.Gen.Core.StateTables (table45)
-import           Hsed.Gen.Core.TableDescs (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSPTPerInfoTablePreconfiguration, uSP_Locking)
@@ -256,9 +254,10 @@ import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
-import           Hsed.Sim.State         (cellNamedIn, cellOf, columnOf, rowWithUID)
 import           Hsed.Sim.Sync          (T45Row (..), t45Rows)
 import           Hsed.Sim.Types         (TPerState (..), maxComPacketSizeName)
+import           Hsed.Sim.View          (Credential (..), SimQuery (..))
+import qualified Hsed.Sim.View          as View (answer)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
@@ -1183,12 +1182,10 @@ cleared h = stackReset (shComId h) >>= \case
 -- | A cell of the simulator's state, by the SP's, the table's and the
 --   row's UIDs and the column's name, found in the description the SP holds
 --   ("Hsed.Sim.State".'Hsed.Sim.State.cellNamedIn'); 'Nothing' on a drive,
---   or where the state holds no such SP, row or cell.
+--   or where the state holds no such SP, row or cell: "Hsed.Sim.View"'s
+--   'CellOf' query, where M5c moved the reader.
 simCell :: UID -> UID -> UID -> Text -> Script (Maybe Cell)
-simCell sp table row name = peekSim <&> (>>= \st -> do
-  sps <- Map.lookup sp (tsSPs st)
-  r   <- rowWithUID sp table row st
-  cellNamedIn sps table name r)
+simCell sp table row name = peekSim <&> (>>= View.answer (CellOf sp table row name))
 
 -- | TPER_RESET (Opal 2.30 3.2.3 and Table 13, PDF 28-29): an IF-SEND of
 --   protocol 0x02 to ComID 0x0004 of one unit of zeros ('tperResetBytes': a
@@ -1475,15 +1472,6 @@ peekSim = asks reTarget >>= \case
   SimTarget _ control -> Just <$> liftIO (scPeek control)
   _                   -> pure Nothing
 
--- | An authority's credential as an SP of the simulator holds it: its
---   C_PIN object's PIN, TryLimit and Tries (Core 5.3.4.1.1.2, PDF 210).
-data Credential = Credential
-  { crPIN      :: !ByteString
-  , crTryLimit :: !Natural
-  , crTries    :: !Natural
-  }
-  deriving (Eq, Show)
-
 -- | An authority's credential read from the simulator's state, by the SP's
 --   UID and the authority's: the SP's Authority row of the UID, its
 --   Credential a reference to a C_PIN object of the SP (the Admin SP's, Opal
@@ -1491,19 +1479,10 @@ data Credential = Credential
 --   that object's PIN, TryLimit and Tries (Tables 25 and 41, PDF 48-49 and
 --   84; a limit the row does not give is 0), the columns found by name in
 --   the generated descriptions; 'Nothing' for an authority the SP lacks or
---   one with no credential.
+--   one with no credential: "Hsed.Sim.View"'s 'CredentialOf' query, where
+--   M5c moved the reader and 'Credential' (re-exported here).
 simCredential :: UID -> UID -> TPerState -> Maybe Credential
-simCredential sp authority st = do
-  authorityRow <- rowWithUID sp (tdTableUID authorityTableDesc) authority st
-  RefCell _ credential <- cellNamed authorityTableDesc "Credential" authorityRow
-  pinRow <- rowWithUID sp (tdTableUID c_PINTableDesc) credential st
-  BytesCell pin <- cellNamed c_PINTableDesc "PIN" pinRow
-  pure (Credential pin (count "TryLimit" pinRow) (count "Tries" pinRow))
-  where
-    cellNamed desc name row = columnOf desc name >>= (`cellOf` row)
-    count name row = case cellNamed c_PINTableDesc name row of
-      Just (UIntCell n) | n >= 0 -> fromInteger n
-      _                          -> 0
+simCredential sp authority = View.answer (CredentialOf sp authority)
 
 -- | A list of names with numbers, as Properties carries the host's and the
 --   TPer's properties (Core 5.2.2.1, PDF 140).

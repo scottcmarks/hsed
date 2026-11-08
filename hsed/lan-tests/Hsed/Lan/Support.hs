@@ -15,8 +15,10 @@ threads, each on a socket "Hsed.Transport.Mhtx.Conn".'bindLoopback' binds on
 no other process can take the port between them, and closed whatever the
 spec comes to ('withHub'), or on a port given, a hub started again where one
 stopped ('withHubOn'); over the default simulator's backend ('lanBackend');
-dials them as a client would ('probe'); and speaks HTTP to their hooks with
-one raw request, no HTTP client ('rawHttp').
+dials them as a client would ('probe'); speaks HTTP to their hooks with
+one raw request, no HTTP client ('rawHttp'); and holds what the specs
+share besides: a bound on an example's wait ('withinMicros') and a scripted
+hub's @app.sed@ ('tperApp').
 -}
 module Hsed.Lan.Support
   ( withHub
@@ -24,6 +26,8 @@ module Hsed.Lan.Support
   , lanBackend
   , probe
   , rawHttp
+  , withinMicros
+  , tperApp
   ) where
 
 import qualified Network.Socket            as N
@@ -33,8 +37,10 @@ import           RIO
 import qualified RIO.Text                  as T
 
 import           Hsed.Sim.Types            (defaultSimParams)
+import           Hsed.Sim.View             (setupOf)
 import           Hsed.Transport.InProc     (InProcOpts (..))
 import           Hsed.Transport.Mhtx.Conn  (Conn, bindLoopback, dialLoopback)
+import           Hsed.Transport.Mhtx.Frame (SedApp (..))
 import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, backendOf, hubClose, newHub, runHub)
 import           Hsed.Wire                 (Unit (..))
 
@@ -80,3 +86,22 @@ rawHttp port request = bracket open N.close $ \sock -> do
       N.connect sock (N.SockAddrInet (fromIntegral port) (N.tupleToHostAddress (127, 0, 0, 1))) `onException` N.close sock
       pure sock
     received sock = NB.recv sock 4096 >>= \chunk -> if B.null chunk then pure [] else (chunk :) <$> received sock
+
+-- | An action within the microseconds given, named: one that hangs fails its example, saying what was not done in
+--   time, not the suite.
+withinMicros :: Int -> String -> IO a -> IO a
+withinMicros micros what act = timeout micros act >>= maybe (throwString (what <> ": not in time")) pure
+
+-- | A scripted hub's app.sed: a TPer in bytes, everything allowed, the default setup.
+tperApp :: SedApp
+tperApp = SedApp
+  { saRole      = "tper"
+  , saImpl      = "hsed-sim test"
+  , saUnits     = UnitBytes
+  , saSsc       = Just "opal-2.30"
+  , saErrata    = Just "scott"
+  , saBaseComId = Just 0x1004
+  , saNComIds   = Just 1
+  , saAllows    = [minBound .. maxBound]
+  , saSetup     = Just (setupOf defaultSimParams 0)
+  }

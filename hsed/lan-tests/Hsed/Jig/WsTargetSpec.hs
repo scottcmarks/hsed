@@ -53,7 +53,7 @@ import           Hsed.CaseKey              (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Options          (RunOptions (..), TargetSpec (..), WsUrl (..), defaultRunOptions)
 import           Hsed.Jig.Run              (runJig)
 import           Hsed.Jig.Target           (hubRefusals)
-import           Hsed.Lan.Support          (probe, withHub, withHubOn)
+import           Hsed.Lan.Support          (probe, withHub, withHubOn, withinMicros)
 import           Hsed.Sha256               (sha256Hex)
 import           Hsed.Sim.Profile          (loadProfile)
 import           Hsed.Sim.Types            (LifeCycle (..), SimParams (..), defaultSimParams)
@@ -334,10 +334,6 @@ collect helloSeq' events conn = connReceive conn >>= \case
 -- | What a probe waits for, within 5 s: a hub that never sends it fails the example, not the suite.
 within :: String -> IO a -> IO a
 within = withinMicros 5000000
-
--- | 'within' the microseconds given.
-withinMicros :: Int -> String -> IO a -> IO a
-withinMicros micros what act = timeout micros act >>= maybe (throwString (what <> ": not in time")) pure
 
 -- | A field of a JSON object.
 at :: Text -> A.Value -> Maybe A.Value

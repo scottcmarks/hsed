@@ -28,12 +28,10 @@ import           RIO
 import qualified RIO.Text                   as T
 import           Test.Hspec
 
-import           Hsed.Sim.Types             (defaultSimParams)
-import           Hsed.Sim.View              (setupOf)
+import           Hsed.Lan.Support           (tperApp, withinMicros)
 import           Hsed.Transport.Mhtx.Client
 import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeHeartbeat, memoryPair)
-import           Hsed.Transport.Mhtx.Frame  (FromClient (..), Hello (..), SedApp (..), fromClient, helloText, pongText, sedAppValue)
-import           Hsed.Wire                  (Unit (..))
+import           Hsed.Transport.Mhtx.Frame  (FromClient (..), Hello (..), fromClient, helloText, pongText, sedAppValue)
 
 
 spec :: Spec
@@ -43,7 +41,9 @@ spec = describe "Hsed.Transport.Mhtx.Client, its heartbeat at 200/600 ms (SPEC.m
       -- each answered with pong, as a hub answers it, so that the client hears the hub within its 600 ms
       times <- replicateM 4 (pinged hub >> connSendText hub pongText >> Clock.getMonotonicTime)
       let gaps = zipWith (-) (drop 1 times) times
-      gaps `shouldSatisfy` all (\g -> g >= 0.19 && g < 0.4)
+      -- at least the interval; under the hub's 600 ms timeout, the one bound the protocol sets on a ping's lateness
+      -- (SPEC.md L57-60: a ping every interval_ms, a client silent past timeout_ms closed); the heartbeat never widened
+      gaps `shouldSatisfy` all (\g -> g >= 0.19 && g < 0.6)
   it "takes any message, a binary one among them, for proof of life; drops after the interval and the grace in silence, with 4000, and dials again" $ within $
     withHeartbeat $ \hubs hub -> do
       -- 1.4 s of messages every 200 ms, more than twice the 600 ms of silence that would drop it
@@ -80,20 +80,6 @@ heartbeatOpts hubs = ClientOpts
   , coBackoff             = Backoff 1000 2 4000 0
   }
 
--- | The double's app.sed: a TPer in bytes, everything allowed, the default setup.
-tperApp :: SedApp
-tperApp = SedApp
-  { saRole      = "tper"
-  , saImpl      = "hsed-sim test"
-  , saUnits     = UnitBytes
-  , saSsc       = Just "opal-2.30"
-  , saErrata    = Just "scott"
-  , saBaseComId = Just 0x1004
-  , saNComIds   = Just 1
-  , saAllows    = [minBound .. maxBound]
-  , saSetup     = Just (setupOf defaultSimParams 0)
-  }
-
 -- | The next message, which must be a ping.
 pinged :: Conn -> IO ()
 pinged hub = connReceive hub >>= \incoming -> fromClient incoming `shouldBe` ClientPing
@@ -106,4 +92,4 @@ untilClosed hub = connReceive hub >>= \case
 
 -- | An example's body within 5 s: a client that hangs fails its example, not the suite.
 within :: IO a -> IO a
-within act = timeout 5000000 act >>= maybe (throwString "not done within 5 s") pure
+within = withinMicros 5000000 "the example"

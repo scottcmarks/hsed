@@ -25,7 +25,7 @@ import           RIO
 import qualified RIO.Text                   as T
 import           Test.Hspec
 
-import           Hsed.Lan.Support           (withHubOn)
+import           Hsed.Lan.Support           (withHubOn, withinMicros)
 import           Hsed.Sim.Types             (defaultSimParams)
 import           Hsed.Transport.InProc      (InProcOpts (..))
 import           Hsed.Transport.Mhtx.Client
@@ -37,7 +37,7 @@ import           Hsed.Wire.Internal         (Transport (..))
 spec :: Spec
 spec = describe "Hsed.Transport.Mhtx.Client, its hub restarted" $
   it "fails what hub A held when A stops, hub B on A's port never seeing it; reconnects to B, the restart noticed; fails a request issued in the outage naming the restart, answers one after" $
-    within 20000000 (do
+    withinMicros 20000000 "the restart" (do
       gate <- newEmptyMVar
       arrived <- newEmptyMVar
       seenByB <- newTVarIO []
@@ -103,6 +103,3 @@ failedWith reason = \s -> case s of
 lastMaybe :: [a] -> Maybe a
 lastMaybe = foldl' (const Just) Nothing
 
--- | An example's body within the microseconds given: a client that hangs fails the example, not the suite.
-within :: Int -> IO a -> IO a
-within micros act = timeout micros act >>= maybe (throwString "not done in time") pure

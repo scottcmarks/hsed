@@ -82,6 +82,8 @@ module Hsed.Transport.Mhtx.Client
   , clientNotices
   , clientVerdicts
   , clientInFlight
+  , clientWaiting
+  , clientSettled
   , closeMhtx
   ) where
 
@@ -250,6 +252,7 @@ data ClientState = ClientState
   , stNotices       :: !(TVar [Text])               -- ^ newest first
   , stVerdicts      :: !(TVar [Missed])             -- ^ newest first
   , stResets        :: !(TVar (Set Integer))        -- ^ this client's reset requests whose @sed.evt@ has not come
+  , stWaiting       :: !(TVar Int)                  -- ^ requests waiting for a reconnect now
   , stSending       :: !(MVar ())                   -- ^ held from a request's id to its frame written, so that ids go
                                                     --   out in order (a hub refuses one not above the last, design 6.3)
   }
@@ -315,6 +318,7 @@ newState opts = ClientState (coName opts) (coRequestMicros opts) (coReconnectWai
   <*> newTVarIO []
   <*> newTVarIO []
   <*> newTVarIO mempty
+  <*> newTVarIO 0
   <*> newMVar ()
 
 -- | The @app.sed@ of the hello it opened on.
@@ -348,6 +352,24 @@ clientVerdicts = atomically . drain . stVerdicts . mcState
 -- | The ids of its requests registered and not yet ended, in order.
 clientInFlight :: MhtxClient -> IO [Integer]
 clientInFlight = fmap Map.keys . readTVarIO . stPending . mcState
+
+-- | How many of its requests are waiting for a reconnect now (issued while
+--   it was not connected): what a test waits for before it lets the
+--   reconnect happen, rather than a delay.
+clientWaiting :: MhtxClient -> IO Int
+clientWaiting = readTVarIO . stWaiting . mcState
+
+-- | Once it is connected again, or will never be (closed or latched), or
+--   its wait for a reconnect has passed (a request's own: 3 s by
+--   'clientOpts'): what the run does before it hears the client's notices
+--   ("Hsed.Jig.Script".@heedNotices@), so that a reconnect under way when a
+--   case ends is heard before the next case, not refused in its
+--   prerequisites (the M5c review). Connected, it returns at once.
+clientSettled :: MhtxClient -> IO ()
+clientSettled c = void . timeout (stWaitMicros st) . atomically $ readTVar (stLink st) >>= \case
+  Unlinked _ _ -> retrySTM
+  _            -> pure ()
+  where st = mcState c
 
 -- | Close it: requests in flight failed, the socket closed with 1000.
 closeMhtx :: MhtxClient -> IO ()
@@ -551,7 +573,12 @@ answered st live rsp = for_ (rspId rsp) $ \rid ->
 
 -- | A reset's broadcast: its @seq@ kept; this client's own if one of its
 --   resets waits for its answer (the hub broadcasts before it answers),
---   another client's noticed otherwise.
+--   another client's noticed otherwise. A @sed.evt@ names no requester
+--   (docs/wire.md), so that while this client's reset waits, another
+--   client's reset that the hub runs first is taken for this client's, and
+--   this client's own then noticed as another's: the count of resets noticed
+--   is right, their attribution not (the M5c review; M5c runs one client per
+--   hub).
 evented :: ClientState -> Live -> SedEvt -> STM ()
 evented st live evt = do
   writeTVar (stLastSeen st) (Just (lvServerId live, evtSeq evt))
@@ -616,7 +643,8 @@ request st op = mask_ $ issue Nothing >>= \case
   Waiting _             -> pure (Left ("not connected to " <> stName st))
   where
     issue since = withMVar (stSending st) (const (atomically (tryRegister st op since) >>= written)) >>= \case
-      Waiting gen -> timeout (stWaitMicros st) (atomically (relinked st gen))
+      Waiting gen -> bracket_ (atomically (modifyTVar' (stWaiting st) (+ 1))) (atomically (modifyTVar' (stWaiting st) (subtract 1)))
+                       (timeout (stWaitMicros st) (atomically (relinked st gen)))
                        >>= maybe (Refused <$> notConnected) (const (issue (Just gen)))
       other       -> pure other
     -- the frame written on the connection the request was registered on, never on a later one

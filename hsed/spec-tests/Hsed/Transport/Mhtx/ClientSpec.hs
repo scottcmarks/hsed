@@ -16,11 +16,13 @@ the real hub over memory (design 11 M5c, group G3's acceptance): open refuses no
 @v@ other than 1, an @app.sed@ that does not read, a role other than @tper@, unknown units, a
 close before hello and a dial refused; ids 1, 2, 3 ..., none reused after a reconnect, each
 registered before its write (answers given at once never lost); an unknown id, a @sed.rsp@ that
-carries @seq@ and a @sed.evt@ never taken for an answer; a timeout a transport failure, the
+carries @seq@ and a @sed.evt@ never taken for an answer; a ping from the hub answered pong
+(SPEC.md L64-66); a timeout a transport failure, the
 entry gone however the wait ends (an asynchronous exception inside @mask_@ among them), a late
 answer ignored; a dropped socket fails what it carried, none re-sent; a request issued while
 disconnected sent after a reconnect judged none, refused naming a restart or broadcasts missed
-otherwise, each noticed; a changed @app.sed@ latches the client; 'backoffDelay' and
+otherwise, each noticed (the hello given once the client says the request waits,
+'clientWaiting', no delay counted on); a changed @app.sed@ latches the client; 'backoffDelay' and
 'judgeMissed' as mh_transport's Dart (backoff.dart:27-35, client.dart:397-406, SPEC.md
 L81-85); the transport as the in-process one (a length past what the unit carries refused with
 nothing sent, a protocol error a transport failure, the reset op's answer, unsupported
@@ -49,8 +51,8 @@ import           Hsed.Transport.InProc      (InProcOpts (..), inProcView)
 import           Hsed.Transport.Mhtx.Client
 import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeBadToken, codeGoingAway, memoryPair)
 import           Hsed.Transport.Mhtx.Frame  (Allow (..), FromClient (..), Hello (..), Op (..), Reply (..), SedApp (..), SedEvt (..),
-                                             SedReq (..), SedRsp (..), answerValue, evtText, fromClient, helloText, rspText,
-                                             sedAppValue)
+                                             SedReq (..), SedRsp (..), answerValue, evtText, fromClient, helloText, pingText,
+                                             pongText, rspText, sedAppValue)
 import           Hsed.Transport.Mhtx.Hub    (Backend (..), HubOpts (..), backendOf, defaultHubOpts, hubServe, newHub)
 import           Hsed.Wire                  (Describe (..), Event (..), IfStatus (..), Response (..), Unit (..), describeTransport,
                                              ifRecv, ifSend, inject, mostCarried, unitOf)
@@ -87,6 +89,13 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
       openMhtx (testOpts' (\_ -> pure (Left "connection refused"))) >>= \case
         Left why -> why `shouldSatisfy` T.isInfixOf "connection refused"
         Right c  -> closeMhtx c >> expectationFailure "opened on a refused dial")
+
+  describe "the hub's ping (SPEC.md L64-66)" $
+    it "answers a ping from the hub with pong" $ within (
+      withClient $ \_ _ hub -> do
+        connSendText hub pingText
+        -- the client's own pings, every 10 s by the double's hello, never reach this example
+        untilPongFrom hub)
 
   describe "requests" $ do
     it "numbers them 1, 2, 3 ..., none reused after a reconnect, each registered before its write (answers given at once are never lost)" $ within (
@@ -331,13 +340,25 @@ reissued hello act = withClient $ \hubs c hub -> do
   hub2 <- atomically (readTQueue hubs)
   r <- async (ifRecv (clientTransport c) 1 0x1004 16)
   -- the request waiting for the reconnect before the hello is given (a request issued once the reconnect is taken
-  -- is sent on it, whatever its hello said)
-  threadDelay 5000
+  -- is sent on it, whatever its hello said): the client says so, no delay counted on
+  untilWaiting c
   sendHello hub2 hello
   act c hub2 r
 
+-- | Once a request of the client waits for a reconnect (polled every 100 us; the example's own bound ends it).
+untilWaiting :: MhtxClient -> IO ()
+untilWaiting c = clientWaiting c >>= \n -> unless (n > 0) (threadDelay 100 >> untilWaiting c)
+
 sendHello :: Conn -> Hello -> IO ()
 sendHello hub = connSendText hub . helloText
+
+-- | Read the hub's side until a text frame is exactly pong (fromClient sorts a pong as one to ignore, so the raw
+--   frame is compared).
+untilPongFrom :: Conn -> IO ()
+untilPongFrom hub = connReceive hub >>= \case
+  InText t | t == pongText -> pure ()
+  InClosed c               -> throwString ("closed before a pong: " <> show c)
+  _                        -> untilPongFrom hub
 
 -- | An answer to a request's id.
 answer :: Conn -> Integer -> Reply -> IO ()

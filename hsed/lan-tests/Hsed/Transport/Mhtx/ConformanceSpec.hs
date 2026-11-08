@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes        #-}
 
 {-|
 Module      : Hsed.Transport.Mhtx.ConformanceSpec
@@ -20,9 +21,11 @@ through 'hubBroadcast' and 'hubClientCount' as conformance_hub_test.dart:14-20
 does; and check 8 (conformance.dart:237-275) with hsed's client, which
 has no stop and start that keep what it last saw: the hub closes every peer
 with 1001 and serves on ('hubClose', its server id and @seq@ kept), the
-client reconnects by itself after a fixed 250 ms, a broadcast made in that
-gap the second time, and each connection's verdict is read as
-'clientVerdicts' gives it (design 13.34). Besides them: the hooks over raw HTTP (@POST \/emit@'s 200
+client reconnects by itself, its dial held at a gate the test opens once
+the close (and the first time a broadcast) is done, so that the broadcast
+is missed whatever the scheduler does, and each connection's verdict is
+read as 'clientVerdicts' gives it (design 13.34 (26) L2, as the M5c review
+corrected it). Besides them: the hooks over raw HTTP (@POST \/emit@'s 200
 @{"seq": n}@ and its 400s, @GET \/clients@, a 426 and a 404); the
 binary-frame check (SPEC.md L21: a binary message ignored, and counted as
 liveness, hub.dart:83-86, which the Python hub breaks, design D5); a
@@ -46,8 +49,8 @@ import qualified RIO.Text                  as T
 import           Test.Hspec
 
 import           Hsed.Lan.Support           (lanBackend, rawHttp, withHub)
-import           Hsed.Transport.Mhtx.Client (Backoff (..), ClientOpts (..), Missed (..), MhtxClient, clientOpts, clientVerdicts,
-                                             closeMhtx, openMhtx)
+import           Hsed.Transport.Mhtx.Client (Backoff (..), ClientOpts (..), Dialer, Missed (..), MhtxClient, clientOpts,
+                                             clientVerdicts, closeMhtx, openMhtx)
 import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeNormal, dialLoopback)
 import           Hsed.Transport.Mhtx.Frame  (FromServer (..), Hello (..), Op (..), Reply (..), SedReq (..), SedRsp (..), fromServer,
                                              pingText, reqText)
@@ -58,19 +61,24 @@ spec :: Spec
 spec = describe "Hsed.Transport.Mhtx.Hub on 127.0.0.1 at 200/600 ms (mh_transport SPEC.md L113-129)" $ do
   checks
   it "8. has the client judge missed broadcasts: unknown, then some, then none, each connection within 5 s (conformance.dart:237-275)" $
-    conformant $ \port hub -> bracket (openMhtx (reconnecting port) >>= either (throwString . T.unpack) pure) closeMhtx $ \client -> do
-      opened  <- verdictsOf client
-      started <- Clock.getMonotonicTime
-      hubClose hub
-      hubBroadcast hub (event 3) `shouldReturn` Right 1
-      missed  <- verdictsOf client
-      again   <- Clock.getMonotonicTime
-      hubClose hub
-      kept    <- verdictsOf client
-      done    <- Clock.getMonotonicTime
-      [opened, missed, kept] `shouldBe` [[MissedUnknown], [MissedSome], [MissedNone]]
-      note ("check 8: unknown, then some " <> ms (again - started) <> " after the first close, then none " <> ms (done - again)
-            <> " after the second")
+    conformant $ \port hub -> do
+      gate <- newTVarIO True
+      bracket (openMhtx (reconnecting gate port) >>= either (throwString . T.unpack) pure) closeMhtx $ \client -> do
+        opened <- verdictsOf client
+        -- each reconnect held at the gate while the hub closes the client and, the first time, broadcasts: the
+        -- broadcast lands while the client is away however the threads are scheduled
+        let away act = atomically (writeTVar gate False) >> hubClose hub >> act >> atomically (writeTVar gate True)
+        away (hubBroadcast hub (event 3) `shouldReturn` Right 1)
+        started <- Clock.getMonotonicTime
+        missed  <- verdictsOf client
+        again   <- Clock.getMonotonicTime
+        away (pure ())
+        resumed <- Clock.getMonotonicTime
+        kept    <- verdictsOf client
+        done    <- Clock.getMonotonicTime
+        [opened, missed, kept] `shouldBe` [[MissedUnknown], [MissedSome], [MissedNone]]
+        note ("check 8: unknown, then some " <> ms (again - started) <> " after the gate opened, then none " <> ms (done - resumed)
+              <> " after it opened again")
   beyond
 
 -- | SPEC.md's checks 1 to 7, as conformance.dart runs them.
@@ -254,11 +262,17 @@ pinging p stop = readTVarIO stop >>= \done -> unless done $ do
 -- * Check 8's client
 
 -- | hsed's client of the hub, which requires a hello (conformance.dart:239-243's
---   @requireHello@), reconnecting 250 ms after a drop, no jitter: long
---   enough for a broadcast made at once to be missed, well within the
---   check's 5 s for a connection (conformance.dart:245-249).
-reconnecting :: Word16 -> ClientOpts
-reconnecting port = (clientOpts port "/ws") { coBackoff = Backoff 250000 2 250000 0 }
+--   @requireHello@), reconnecting at once after a drop, no jitter, each dial
+--   waiting first until the gate is open: the test holds the client away
+--   while the hub closes it and broadcasts, as the Dart suite's stop and
+--   start do (conformance.dart:251-263), rather than racing a backoff (the
+--   M5c review: a stall past a fixed 250 ms failed the check).
+reconnecting :: TVar Bool -> Word16 -> ClientOpts
+reconnecting gate port = base { coDial = gated, coBackoff = Backoff 0 2 0 0 }
+  where
+    base = clientOpts port "/ws"
+    gated :: Dialer
+    gated act = atomically (readTVar gate >>= checkSTM) >> coDial base act
 
 -- | The verdicts on the connections the client has taken since last asked,
 --   polled every 10 ms until there is one, for 5 s at most

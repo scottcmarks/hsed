@@ -33,7 +33,7 @@ import qualified RIO.Text                  as T
 import           System.Environment        (lookupEnv)
 import           Test.Hspec
 
-import           Hsed.Lan.Support          (lanBackend, needsG1, withHub)
+import           Hsed.Lan.Support          (lanBackend, withHub)
 import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..), dialLoopback)
 import           Hsed.Transport.Mhtx.Frame (FromServer (..), Hello (..), fromServer, pingText)
 import           Hsed.Transport.Mhtx.Hub   (defaultHubOpts)
@@ -44,7 +44,6 @@ spec = describe "Hsed.Transport.Mhtx.Hub on 127.0.0.1, its default heartbeat" $
   it "keeps a client pinging every 20 s past warp's 30 s timeout, and one silent until the hub's 4000, never cut first by warp (HSED_LAN_SOAK=1)" $ do
     soak <- lookupEnv "HSED_LAN_SOAK"
     unless (soak == Just "1") $ pendingWith "a soak of about 80 s at the default heartbeat of 20000/60000 ms: run with HSED_LAN_SOAK=1"
-    needsG1
     be <- lanBackend defaultHubOpts
     withHub defaultHubOpts be $ \port _ -> do
       (pinging, silent) <- concurrently (client port (pings [0, 20, 40, 45]))

@@ -39,7 +39,7 @@ import           RIO
 import qualified RIO.Text                  as T
 import           Test.Hspec
 
-import           Hsed.Lan.Support          (lanBackend, needsG1, rawHttp, withHub)
+import           Hsed.Lan.Support          (lanBackend, rawHttp, withHub)
 import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..), codeNormal, dialLoopback)
 import           Hsed.Transport.Mhtx.Frame (FromServer (..), Hello (..), Op (..), Reply (..), SedReq (..), SedRsp (..), fromServer,
                                             pingText, reqText)
@@ -48,11 +48,11 @@ import           Hsed.Transport.Mhtx.Hub   (Hub, HubOpts (..), defaultHubOpts, h
 
 spec :: Spec
 spec = describe "Hsed.Transport.Mhtx.Hub on 127.0.0.1 at 200/600 ms (mh_transport SPEC.md L113-129)" $ do
-  before_ needsG1 checks
+  checks
   it "8. has the client judge missed broadcasts: unknown, then some, then none (conformance.dart:237-275)" $
     pendingWith ("with group G3's MhtxClient: the lead makes it real at the integration, through reconnects the hub forces on one "
                  <> "server id (hubClose), the verdicts read as the client's notices (design 13.34)")
-  before_ needsG1 beyond
+  beyond
 
 -- | SPEC.md's checks 1 to 7, as conformance.dart runs them.
 checks :: Spec

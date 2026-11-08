@@ -24,7 +24,6 @@ module Hsed.Lan.Support
   , lanBackend
   , probe
   , rawHttp
-  , needsG1
   ) where
 
 import qualified Network.Socket            as N
@@ -32,12 +31,10 @@ import qualified Network.Socket.ByteString as NB
 import qualified RIO.ByteString            as B
 import           RIO
 import qualified RIO.Text                  as T
-import           Test.Hspec                (pendingWith)
 
 import           Hsed.Sim.Types            (defaultSimParams)
 import           Hsed.Transport.InProc     (InProcOpts (..))
-import           Hsed.Transport.Mhtx.Conn  (Conn, bindLoopback, connectionOptions, dialLoopback)
-import           Hsed.Transport.Mhtx.Frame (pingText)
+import           Hsed.Transport.Mhtx.Conn  (Conn, bindLoopback, dialLoopback)
 import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, backendOf, hubClose, newHub, runHub)
 import           Hsed.Wire                 (Unit (..))
 
@@ -83,14 +80,3 @@ rawHttp port request = bracket open N.close $ \sock -> do
       N.connect sock (N.SockAddrInet (fromIntegral port) (N.tupleToHostAddress (127, 0, 0, 1))) `onException` N.close sock
       pure sock
     received sock = NB.recv sock 4096 >>= \chunk -> if B.null chunk then pure [] else (chunk :) <$> received sock
-
--- | Pending, naming group G1, while group G1's frames and connections are
---   the scaffold's stubs (M5c): every example of the suite binds, dials and
---   codes frames through them. Part 2 of group G2 deletes this once G1 is
---   merged.
-needsG1 :: IO ()
-needsG1 = do
-  stubbed <- or <$> sequence [stub (void (evaluate connectionOptions)), stub (void (evaluate (B.length pingText)))]
-  when stubbed $ pendingWith "group G1's Hsed.Transport.Mhtx.Frame and Conn (bindLoopback, dialLoopback, the codecs): pending until G1 is merged"
-  where
-    stub act = try act <&> either (\e -> "group G1 (" `T.isInfixOf` tshow (e :: SomeException)) (const False)

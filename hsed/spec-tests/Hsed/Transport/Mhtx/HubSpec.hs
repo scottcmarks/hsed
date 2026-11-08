@@ -21,7 +21,7 @@ one line ending left out. The backend's @app.sed@ and what each flag allows;
 a hub with no peer, its server id, its @seq@ advancing with none connected,
 the broadcasts it refuses.
 
-Over memory ("Hsed.Transport.Mhtx.Conn".'memoryPair', group G1's), its clock
+Over memory ("Hsed.Transport.Mhtx.Conn".'memoryPair'), its clock
 a variable the test sets ('Clock') and its TPer the real in-process
 simulator: hello first; seq shared and never skipped or repeated, however
 peers attach while broadcasts run; pong for every ping, even while a request
@@ -146,7 +146,7 @@ spec = describe "Hsed.Transport.Mhtx.Hub" $ do
         hubSweep hub >> hubClose hub >> hubClose hub
         hubClientCount hub `shouldReturn` 0
 
-    describe "over memory (group G1's frames and connections)" $ before_ needsG1 $ do
+    describe "over memory" $ do
       it "says hello first: v 1, its server id, seq 0, its heartbeat, and the backend's app.sed" $ \be -> do
         hub <- newHub defaultHubOpts { hoIntervalMs = 20, hoTimeoutMs = 60 } be
         withPeer hub Nothing $ \c -> do
@@ -378,19 +378,6 @@ backendWith opts params inProc = backendOf opts params inProc >>= either (throwS
 -- | Bytes, no hold: the in-process run's own options.
 bytes :: InProcOpts
 bytes = InProcOpts UnitBytes 0
-
-
--- * Group G1's
-
--- | Pending, naming group G1, while group G1's frames and connections are
---   the scaffold's stubs (M5c): every example over memory needs memoryPair
---   and the codecs. Part 2 of group G2 deletes this once G1 is merged.
-needsG1 :: IO ()
-needsG1 = do
-  stubbed <- or <$> sequence [stub (evaluate (B.length pingText)), stub (void memoryPair)]
-  when stubbed $ pendingWith "group G1's Hsed.Transport.Mhtx.Frame and Conn (memoryPair, the codecs): pending until G1 is merged"
-  where
-    stub act = try act <&> either (\e -> "group G1 (" `T.isInfixOf` tshow (e :: SomeException)) (const False)
 
 
 -- * A clock the test sets

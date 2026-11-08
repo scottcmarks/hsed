@@ -30,15 +30,40 @@ generated code or the executables imports a function of the portable C
 (cbits/hsed_cdb.c, compiled into every build), which hsed's doctests,
 interpreting the library's sources, could not link. The sources are read
 when the suite runs (stack runs it in the package's directory).
+
+Since M5c (design 11 M5c, the LAN leg) two more. hsed-sim, which serves the
+simulator to other processes, reaches no module of the jig and none of a
+drive's: the imports of its modules (@app/hsed-sim@) followed through every
+module of @src@ and @gen@ they reach, to a fixed point, name no
+@Hsed.Jig.*@ module, nor "Hsed.Transport.Kext", "Hsed.Transport.MacKext",
+"Hsed.Transport.Cdb", "Hsed.Transport.Drive" or "Hsed.Transport.Replay" (the
+walk shown transitive by hsed-jig's Main, which reaches the kext's transport
+through modules it imports, never directly). And nothing listens but through
+"Hsed.Transport.Mhtx.Conn", whose one bind takes a port alone and binds
+127.0.0.1 (D6; Scott's answer Q1): no other module of @src@, @app@ or
+@lan-tests@ names a function that binds a listening socket, Network.Socket's
+bind or listen (a listen unbound binds the wildcard address), warp's run,
+runEnv or runSettings (whose default host is every IPv4 address; warp's
+runSettingsSocket, which serves a socket already bound, is not one), or
+websockets' runServer, runServerWith, runServerWithOptions or
+makeListenSocket; a module names one where its import of the function's
+module lists it, brings it into scope unqualified (an open import, or a
+hiding list that leaves it), or writes it qualified by the import's alias or
+module; and the wildcard address 0.0.0.0 is written in none of them.
 -}
 module Hsed.CapabilitySpec (spec) where
 
 import           Control.Exception       (TypeError (..))
+import           Prelude                 (until)
+import qualified RIO.Char                as C
 import qualified RIO.List                as L
+import qualified RIO.Map                 as Map
 import           RIO
 import           RIO.Directory           (doesDirectoryExist, doesFileExist, listDirectory)
 import           RIO.FilePath            (dropExtension, splitDirectories, takeExtension, (</>))
+import qualified RIO.Set                 as Set
 import qualified RIO.Text                as T
+import qualified RIO.Text.Partial        as T'
 import           Test.Hspec
 
 import           Hsed.Capability.Refused (coercedToReadWrite, readOnlyAsReadWrite)
@@ -92,6 +117,22 @@ spec = do
       sources <- concat <$> traverse modulesUnder sourceDirs
       [ name | (name, text) <- sources, "unsafeCoerce" `T.isInfixOf` text ] `shouldBe` []
 
+  describe "hsed-sim (design 11 M5c)" $
+    it "imports, through every module of src and gen its imports reach, no Hsed.Jig module and none of a drive's (Kext, MacKext, Cdb, Drive, Replay)" $ do
+      library <- Map.fromList . concat <$> traverse modulesUnder ["src", "gen"]
+      -- the walk is transitive: hsed-jig's Main reaches the kext's transport through the modules it imports
+      jigMain <- decodeUtf8Lenient <$> readFileBinary ("app" </> "hsed-jig" </> "Main.hs")
+      (importsOf jigMain, Set.member "Hsed.Transport.MacKext" (importClosure library (importsOf jigMain)))
+        `shouldSatisfy` (\(direct, reached) -> "Hsed.Transport.MacKext" `notElem` direct && reached)
+      simModules <- modulesUnder ("app" </> "hsed-sim")
+      filter outsideSim (Set.toList (importClosure library (concatMap (importsOf . snd) simModules))) `shouldBe` []
+
+  describe "listening (design 11 M5c; D6 and Scott's answer Q1: 127.0.0.1 alone)" $
+    it "is Hsed.Transport.Mhtx.Conn's alone: no other module of src, app or lan-tests names a function that binds a listening socket, and none writes 0.0.0.0" $ do
+      sources <- concat <$> traverse modulesUnder ["src", "app", "lan-tests"]
+      [ (name, why) | (name, text) <- sources, name /= "Hsed.Transport.Mhtx.Conn", why <- listenersNamed text ] `shouldBe` []
+      [ name | (name, text) <- sources, "0.0.0.0" `T.isInfixOf` text ] `shouldBe` []
+
 -- | A deferred type error that says a 'ReadOnly transport is no 'ReadWrite one.
 capabilityMismatch :: TypeError -> Bool
 capabilityMismatch (TypeError msg) = all (`L.isInfixOf` msg) ["ReadOnly", "ReadWrite"]
@@ -138,6 +179,95 @@ importsOf = mapMaybe imported . T.lines
       "import" : rest -> listToMaybe (map moduleName (dropWhile (`elem` ["qualified", "safe", "{-#", "SOURCE", "#-}"]) rest))
       _               -> Nothing
     moduleName = T.takeWhile (\c -> c /= '(' && c /= ' ')
+
+-- | The modules a list of imports reaches, walked to a fixed point through
+--   the sources a map holds by module name: each module named, and in turn
+--   the modules each one the map holds imports (one of another package, or
+--   of hsed-core, ends its branch).
+importClosure :: Map Text Text -> [Text] -> Set Text
+importClosure sources roots = fst (until (Set.null . snd) step (Set.empty, Set.fromList roots))
+  where
+    step (seen, frontier) =
+      let seen' = seen <> frontier
+      in (seen', Set.fromList [ m | name <- Set.toList frontier, Just text <- [Map.lookup name sources], m <- importsOf text ]
+                   `Set.difference` seen')
+
+-- | A module hsed-sim may not reach: the jig's, and a drive's transports and
+--   what they are built on.
+outsideSim :: Text -> Bool
+outsideSim name =
+  "Hsed.Jig." `T.isPrefixOf` name
+  || name `elem` ["Hsed.Transport.Kext", "Hsed.Transport.MacKext", "Hsed.Transport.Cdb", "Hsed.Transport.Drive", "Hsed.Transport.Replay"]
+
+-- | The functions that bind a listening socket, by the module that exports
+--   them (and the modules under it): network's bind, and its listen, which
+--   on a socket not bound binds the wildcard address; warp's runners but
+--   runSettingsSocket, which serves a socket already bound; websockets'
+--   servers (s1-sources, read from the packages' sources at M5c's S1.0).
+listeners :: [(Text, [Text])]
+listeners =
+  [ ("Network.Socket", ["bind", "listen"])
+  , ("Network.Wai.Handler.Warp", ["run", "runEnv", "runSettings"])
+  , ("Network.WebSockets", ["runServer", "runServerWith", "runServerWithOptions", "makeListenSocket"])
+  ]
+
+-- | Each function of 'listeners' a source names, and how: listed by an
+--   import of its module (not as hidden), in scope unqualified by an import
+--   with no list or a hiding list that leaves it, or written qualified by the
+--   import's alias or by the module's name.
+listenersNamed :: Text -> [Text]
+listenersNamed text =
+  [ idModule d <> "." <> f <> ": " <> how
+  | d <- importDecls text
+  , (family, fs) <- listeners
+  , idModule d == family || (family <> ".") `T.isPrefixOf` idModule d
+  , f <- fs
+  , Just how <- [naming d f]
+  ]
+  where
+    naming d f
+      | not (idHiding d), f `elem` fromMaybe [] (idList d)                         = Just "listed by its import"
+      | not (idQualified d), maybe True (\l -> idHiding d && f `notElem` l) (idList d) = Just "in scope unqualified"
+      | any (\q -> standsAlone (q <> "." <> f)) (maybe [] pure (idAlias d) <> [idModule d]) = Just "written qualified"
+      | otherwise                                                                  = Nothing
+    -- a qualified name written as a word of its own, no longer name's part
+    standsAlone qname = any (\(front, back) -> not (endsIdent front) && not (startsIdent (T.drop (T.length qname) back)))
+                            (T'.breakOnAll qname text)
+    endsIdent   = T.any identChar . T.takeEnd 1
+    startsIdent = T.any identChar . T.take 1
+    identChar c = C.isAlphaNum c || c == '_' || c == '\''
+
+-- | An import declaration: the module, whether qualified, its alias, whether
+--   its list hides, and the names its list holds (none without a list).
+data ImportDecl = ImportDecl
+  { idModule    :: !Text
+  , idQualified :: !Bool
+  , idAlias     :: !(Maybe Text)
+  , idHiding    :: !Bool
+  , idList      :: !(Maybe [Text])
+  }
+
+-- | A source's import declarations, each read whole: a line that begins
+--   @import@ and the indented lines after it, their comments left out.
+importDecls :: Text -> [ImportDecl]
+importDecls = mapMaybe (importDecl . T.unwords) . declarations . map (fst . T'.breakOn "--") . T.lines
+  where
+    declarations ls = case dropWhile (not . ("import " `T.isPrefixOf`)) ls of
+      []         -> []
+      (l : rest) -> let (more, others) = span (maybe False (C.isSpace . fst) . T.uncons) rest in (l : more) : declarations others
+    importDecl line = case filter (`notElem` ["safe", "{-#", "SOURCE", "#-}"]) (T.words (T.takeWhile (/= '(') line)) of
+      "import" : ws | m : more <- filter (/= "qualified") ws -> Just ImportDecl
+        { idModule    = m
+        , idQualified = "qualified" `elem` ws
+        , idAlias     = case dropWhile (/= "as") more of
+                          _ : a : _ -> Just a
+                          _         -> Nothing
+        , idHiding    = "hiding" `elem` more
+        , idList      = case T'.breakOn "(" line of
+                          (_, list) | T.null list -> Nothing
+                                    | otherwise   -> Just (T.words (T.map (\c -> if c `elem` ("()," :: String) then ' ' else c) list))
+        }
+      _ -> Nothing
 
 -- | A module's export list: from its @module@ line to its @where@.
 exportList :: Text -> Text

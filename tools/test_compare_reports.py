@@ -1,8 +1,9 @@
 """Unit tests for tools/compare_reports.py over small hand-made reports (no jig run needed): the normalising of the
-version, the start and the report directory; the JSON compared as values, its lists aligned; the Markdown and the
-JUnit compared as lines; each allowance, --allow-keys by path and by bare name, --allow-texts by replacement and with
-an empty OLD for what B alone has, --allow-md-sections by heading; the runs of two tools/jig-runs.sh directories
-paired by name; and the exit status. The module's doctests run with them.
+version, the start, the report directory and a ws:// target's own port; the JSON compared as values, its lists
+aligned; the Markdown and the JUnit compared as lines; each allowance, --allow-keys by path and by bare name,
+--allow-texts by replacement and with an empty OLD for what B alone has, --allow-md-sections by heading, --allow-target
+by what the target alone makes differ; the runs of two tools/jig-runs.sh directories paired by name; and the exit
+status. The module's doctests run with them.
 
 Run:  .venv/bin/python -I -m unittest discover -s tools -p 'test_compare_reports.py'   (make compare-test)
 """
@@ -42,9 +43,9 @@ def report(version=VERSION, started=STARTED, report_dir="/scratch/a/run1"):
     }
 
 
-def markdown(version=VERSION, started="2026-11-06T13:45:12Z", cases=("- UCT-01: pass", "- ETC-02: pass"), extra=()):
+def markdown(version=VERSION, started="2026-11-06T13:45:12Z", cases=("- UCT-01: pass", "- ETC-02: pass"), extra=(), target="sim"):
     return "\n".join([
-        "# hsed-jig run: sim", "",
+        f"# hsed-jig run: {target}", "",
         f"- hsed: {version}", f"- started: {started}", "- IF-SENDs passed to a drive's transport: 0", "- exit: 0", "",
         "## Targets", "", "| role | impl |", "|---|---|", f"| sim | hsed-sim {version} |", "",
         "## Cases", "", *cases, "",
@@ -52,19 +53,36 @@ def markdown(version=VERSION, started="2026-11-06T13:45:12Z", cases=("- UCT-01: 
         "## Transcript", "", "```", "# not a heading: fenced", "```", ""])
 
 
-def junit(version=VERSION, started="2026-11-06T13:45:12"):
+def junit(version=VERSION, started="2026-11-06T13:45:12", target="sim", slug="sim"):
     return "\n".join([
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<testsuites name="hsed-jig" tests="3" failures="0" skipped="0">',
-        f'  <testsuite name="hsed-jig sim" tests="3" failures="0" skipped="0" timestamp="{started}">',
+        f'  <testsuite name="hsed-jig {target}" tests="3" failures="0" skipped="0" timestamp="{started}">',
         "    <properties>",
         f'      <property name="hsed" value="{version}"/>',
         '      <property name="if_send_issued" value="0"/>',
         "    </properties>",
-        '    <testcase classname="hsed-jig.sim" name="UCT-01"/>',
-        '    <testcase classname="hsed-jig.sim" name="ETC-02"/>',
-        '    <testcase classname="hsed-jig.sim" name="exit code"/>',
+        f'    <testcase classname="hsed-jig.{slug}" name="UCT-01"/>',
+        f'    <testcase classname="hsed-jig.{slug}" name="ETC-02"/>',
+        f'    <testcase classname="hsed-jig.{slug}" name="exit code"/>',
         "  </testsuite>", "</testsuites>", ""])
+
+
+def ws_report(port, observation="read"):
+    """A ws:// run's JSON report (M5c): its target ws://127.0.0.1:PORT/ws, which its end records as opened."""
+    r = report()
+    url = f"ws://127.0.0.1:{port}/ws"
+    r["options"]["target"] = url
+    r["targets"] = [{"role": "tper", "impl": "hsed-sim " + VERSION, "opened": url}]
+    r["cases"][0]["observations"][0]["value"] = observation
+    return r
+
+
+def sim_report():
+    """A sim run's JSON report whose end is the in-process TPer, as a ws:// run's is the hub's (no opened)."""
+    r = report()
+    r["targets"] = [{"role": "tper", "impl": "hsed-sim " + VERSION}]
+    return r
 
 
 class Reports(unittest.TestCase):
@@ -372,6 +390,93 @@ class Lines(Reports):
             status, out = self.compare(self.write(f"a{n}"), joined)
             self.assertEqual(status, 1, out)
             self.assertIn("md 2, xml 0: 2 not allowed", out)
+
+
+class Targets(Reports):
+    """M5c's ws:// runs: each run's port normalised where it stands as the target's port, so that two ws:// sets
+    compare with no allowance; --allow-target for a sim run against a ws:// run, each side's slug from its JSON
+    report's name."""
+
+    def write_ws(self, where, port, observation="read", md=None):
+        slug = f"ws-127.0.0.1-{port}-ws"
+        return self.write(where, stem=f"jig-{slug}-20261106T134512Z", json_report=ws_report(port, observation),
+                          md=md if md is not None else markdown(target=f"ws://127.0.0.1:{port}/ws"),
+                          xml=junit(target=f"ws://127.0.0.1:{port}/ws", slug=slug))
+
+    def write_sim(self, where):
+        return self.write(where, json_report=sim_report())
+
+    def test_two_ws_runs_on_their_own_ports_are_equal_with_no_allowance(self):
+        status, out = self.compare(self.write_ws("a", 50123), self.write_ws("b", 61007))
+        self.assertEqual(status, 0, out)
+        self.assertIn("json 0, md 0, xml 0: equal under the allowances", out)
+
+    def test_the_port_is_normalised_only_where_it_stands_as_the_target_port(self):
+        a = self.write_ws("a", 50123, observation="port 50123 of ws://127.0.0.1:50123/ws")
+        b = self.write_ws("b", 61007, observation="port 61007 of ws://127.0.0.1:61007/ws")
+        status, out = self.compare(a, b)
+        self.assertEqual(status, 1, out)
+        self.assertIn("json 1, md 0, xml 0: 1 not allowed", out)
+        self.assertIn('"port 50123 of ws://127.0.0.1:<port>/ws" vs "port 61007 of ws://127.0.0.1:<port>/ws"', out)
+        self.assertEqual(C.port_normaliser("ws://127.0.0.1:50/ws")("ws://127.0.0.1:500/ws ws-127.0.0.1-50-ws"),
+                         "ws://127.0.0.1:500/ws ws-127.0.0.1-<port>-ws")
+
+    def test_allow_target_allows_a_sim_run_against_a_ws_run_and_the_other_way(self):
+        sim, ws = self.write_sim("sim"), self.write_ws("ws", 50123)
+        status, out = self.compare(sim, ws)
+        self.assertEqual(status, 1, out)
+        self.assertIn("json 2, md 1, xml 4: 7 not allowed", out)
+        status, out = self.compare(sim, ws, "--allow-target", "--show-allowed")
+        self.assertEqual(status, 0, out)
+        self.assertIn("json 2 (2 allowed), md 1 (1 allowed), xml 4 (4 allowed): equal under the allowances", out)
+        self.assertIn("allowed by --allow-target: json options.target", out)
+        self.assertIn("allowed by --allow-target: json targets[0].opened", out)
+        self.assertEqual(self.compare(self.write_ws("ws2", 61007), self.write_sim("sim2"), "--allow-target")[0], 0)
+
+    def test_allow_target_allows_nothing_else(self):
+        ws = self.write_ws("ws", 50123, md=markdown(target="ws://127.0.0.1:50123/ws", cases=("- UCT-01: fail", "- ETC-02: pass")))
+        status, out = self.compare(self.write_sim("sim"), ws, "--allow-target")
+        self.assertEqual(status, 1, out)
+        self.assertIn('md line 16 (Cases): "- UCT-01: pass" vs "- UCT-01: fail"', out)
+        b_report = ws_report(50123)
+        b_report["options"]["locking_ofs"] = "manufactured"
+        b = self.write("ws2", stem="jig-ws-127.0.0.1-50123-ws-20261106T134512Z", json_report=b_report,
+                       md=markdown(target="ws://127.0.0.1:50123/ws"), xml=junit(target="ws://127.0.0.1:50123/ws", slug="ws-127.0.0.1-50123-ws"))
+        status, out = self.compare(self.write_sim("sim2"), b, "--allow-target")
+        self.assertEqual(status, 1, out)
+        self.assertIn("json options.locking_ofs", out)
+
+    def test_a_line_is_allowed_where_the_target_or_the_slug_alone_reads_as_b_s(self):
+        swaps = [("sim", "ws://127.0.0.1:<port>/ws"), ("sim", "ws-127.0.0.1-<port>-ws")]
+        self.assertTrue(C.reads_as('<testsuite name="hsed-jig sim" tests="3">', '<testsuite name="hsed-jig ws://127.0.0.1:<port>/ws" tests="3">', swaps))
+        self.assertTrue(C.reads_as('<testcase classname="hsed-jig.sim" name="UCT-01"/>', '<testcase classname="hsed-jig.ws-127.0.0.1-<port>-ws" name="UCT-01"/>', swaps))
+        self.assertTrue(C.reads_as("| tper | hsed-sim <hsed> | sim |", "| tper | hsed-sim <hsed> | ws://127.0.0.1:<port>/ws |", swaps))
+        self.assertFalse(C.reads_as("# hsed-jig run: sim", "# hsed-jig run: ws://127.0.0.1:<port>/ws2", swaps))
+        self.assertFalse(C.reads_as("- UCT-01: pass on sim", "- UCT-01: fail on ws://127.0.0.1:<port>/ws", swaps))
+
+    def test_each_side_s_slug_is_read_from_its_own_json_report_s_name(self):
+        self.assertEqual(C.slug_of(Path("d/jig-ws-127.0.0.1-50123-ws-20261106T134512Z.json")), "ws-127.0.0.1-50123-ws")
+        self.assertEqual(C.slug_of(Path("jig-replay-a.b-20261106T134512Z-3.json")), "replay-a.b")
+        self.assertEqual(C.slug_of(Path("report.json")), "")
+        sim = self.write("sim", stem="jig-elsewhere-20261106T134512Z", json_report=sim_report())
+        status, out = self.compare(sim, self.write_ws("ws", 50123), "--allow-target")
+        self.assertEqual(status, 1, out)
+        self.assertIn("xml 4 (1 allowed): 3 not allowed", out)
+
+    def test_two_sets_of_runs_under_the_allowance(self):
+        rows = ["run\texit\tentries\treport\targs"]
+        for name, port in (("1", 50123), ("1m", 50124)):
+            path = self.write_ws(f"ws/run{name}", port)
+            rows.append(f"{name}\t0\t3\t{path.relative_to(self.root / 'ws')}\t--target ws://127.0.0.1:{port}/ws")
+        (self.root / "ws" / "runs.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+        rows = ["run\texit\tentries\treport\targs"]
+        for name in ("1", "1m"):
+            path = self.write_sim(f"sim/run{name}")
+            rows.append(f"{name}\t0\t3\t{path.relative_to(self.root / 'sim')}\t--target sim")
+        (self.root / "sim" / "runs.tsv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+        status, out = self.compare(self.root / "sim", self.root / "ws", "--allow-target")
+        self.assertEqual(status, 0, out)
+        self.assertIn("2 runs: equal under the allowances", out)
 
 
 class Locating(Reports):

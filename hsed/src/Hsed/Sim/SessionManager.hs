@@ -98,6 +98,7 @@ import qualified RIO.List                  as L
 import qualified RIO.Map                   as Map
 import           RIO
 
+import           Hsed.CaseKey              (CaseKey (..), TestId (..))
 import           Hsed.Core.Call            (MethodCall (..), MethodHeader (..), Parameters (..))
 import           Hsed.Core.Method          (MethodSignature (..), Param (..), SigResponse (..), Signature (..), invocation,
                                             invocationWith, responseParameters)
@@ -117,7 +118,6 @@ import qualified Hsed.Gen.Core.Properties  as P
 import           Hsed.Gen.Core.TableDescs  (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs   (uAuthorityTable, uC_PINTable, uSPTable)
 import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uProperties, uSMUID, uSP_Admin, uStartSession)
-import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
 import           Hsed.Sim.Behaviour        (Behaviour (..), Invoked (..), Reply (..), SomeBehaviour, forMethod, runSome)
 import           Hsed.Sim.State            (cellOf, columnOf, openSession, rowWithUID, spLifeCycle, tperProperty, updateRow)
 import           Hsed.Sim.Types            (ComIdState (..), LifeCycle (..), Session (..), SimParams (..), TPerState (..),

@@ -31,7 +31,7 @@ import           Prelude            (Show (showsPrec), showParen, showString, sh
 import           RIO
 import           Test.QuickCheck    (Property)
 
-import           Hsed.Jig.Catalogue (CaseKey)
+import           Hsed.CaseKey       (CaseKey)
 
 
 -- | A law, as its code states it.

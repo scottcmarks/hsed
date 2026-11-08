@@ -50,6 +50,7 @@ import           RIO                      hiding (set)
 import           Test.QuickCheck          (Gen, Property, arbitrary, chooseInt, counterexample, elements, forAll, listOf, oneof, shuffle,
                                            sublistOf, suchThat, vectorOf, (.&&.), (===))
 
+import           Hsed.CaseKey             (CaseKey (..), TestId (..))
 import           Hsed.Core.CellBlock      (CellBlock (..), CellTarget (..), CellsAsked (..), RowAddress (..), cellBlock,
                                            cellBlockValue, columnRange, noCells, resolveCells)
 import           Hsed.Core.Table          (Cell (..), Col (..), Row, TableDesc (..), cellValue, columnOf)
@@ -64,7 +65,6 @@ import           Hsed.Gen.Core.UIDs       (uAuthority_Admins, uAuthority_Anybody
                                            uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
 import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
-import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
 import           Hsed.Sim.Access          (grantedColumns)
 import           Hsed.Sim.Behaviour       (Behaviour (..), FailItem (..), Fails (..), Invoked (..), Reply (..), SomeBehaviour,
                                            forMethod)

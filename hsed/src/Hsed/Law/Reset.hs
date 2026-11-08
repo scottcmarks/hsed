@@ -55,11 +55,11 @@ import qualified RIO.Map                  as Map
 import           RIO
 import           Test.QuickCheck          (Property, counterexample, elements, forAll, (===))
 
+import           Hsed.CaseKey             (CaseKey (..), TestId (..))
 import           Hsed.Core.Table          (Cell (..), Row, columnOf)
 import           Hsed.Core.UID            (UID)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingTable, uMBRControlTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs       (uSP_Admin)
-import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
 import           Hsed.Law                 (Law (..))
 import           Hsed.Sim                 (step)
 import           Hsed.Sim.Gen             (genState)

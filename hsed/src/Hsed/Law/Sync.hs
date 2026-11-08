@@ -36,11 +36,11 @@ import           RIO
 import           Test.QuickCheck           (Gen, Property, arbitrary, conjoin, counterexample, elements, forAll, oneof, suchThat,
                                             (===), (==>))
 
+import           Hsed.CaseKey              (CaseKey (..), TestId (..))
 import           Hsed.Core.Record          (encodeRecord)
 import           Hsed.Core.Sync            (Setting (..), StateRow (..), StateTable (..))
 import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..))
 import qualified Hsed.Gen.Core.StateTables as StateTables
-import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
 import           Hsed.Law                  (Law (..))
 import           Hsed.Sim                  (step, syncOf)
 import           Hsed.Sim.Gen              (genNoActionPayload, genOverfullPayload, genState, genStaticRequest,

@@ -61,6 +61,7 @@ import qualified RIO.Map                 as Map
 import           RIO
 import           Test.QuickCheck         (Gen, chooseInt, conjoin, counterexample, elements, forAll, forAllShow, oneof, (===))
 
+import           Hsed.CaseKey            (CaseKey (..), TestId (..))
 import           Hsed.Core.Call          (MethodCall (..), MethodResponse (..), Parameters (..))
 import           Hsed.Core.CellBlock     (cellBlockValue, columnRange, noCells)
 import           Hsed.Core.Method        (invocation)
@@ -71,7 +72,6 @@ import           Hsed.Gen.Core.Codes     (StatusCode (..), pattern SUCCESS)
 import           Hsed.Gen.Core.Layouts   (DataSubPacket (..))
 import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.UIDs      (uC_PIN_SID, uLocking_GlobalRange)
-import           Hsed.Jig.Catalogue      (CaseKey (..), TestId (..))
 import           Hsed.Law                (Law (..))
 import           Hsed.Packet             (DecodedFrame (..), PacketFrame (..), decodePacket)
 import           Hsed.Sim.Gen            (genResetColumns, genState, genTxnSession, genTxnSessionAt)

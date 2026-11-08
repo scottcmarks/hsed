@@ -58,12 +58,12 @@ import           Prelude            (Show (showsPrec), showParen, showString, sh
 import           RIO
 import           Test.QuickCheck    (Property)
 
+import           Hsed.CaseKey       (CaseKey)
 import           Hsed.Core.Call     (MethodCall)
 import           Hsed.Core.Method   (Method (..), ParamError, fromCall)
 import           Hsed.Core.UID      (UID)
 import           Hsed.Core.Value    (Value)
 import           Hsed.Gen.Core.Codes (StatusCode)
-import           Hsed.Jig.Catalogue (CaseKey)
 import           Hsed.Sim.Types     (Session, TPerState)
 
 

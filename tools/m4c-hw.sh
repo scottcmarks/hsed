@@ -121,9 +121,10 @@ disk_of() {
     fi
 }
 
-# What a loaded kext UUID was read to be (design 13.12): build 625's arm64e slice, signed 2024-05-07, and its two ad hoc
-# rebuilds of 2026-11-07 (TPerDriver's docs/kext625-panic-2026-11-07.md, sections 6 and 7), from the same source,
-# macos-driver tag 1.49.1 (513e429) with sedutil 802774a, older than 2be586e (the privilege check) and 7856c9c (the whitelist).
+# What a loaded kext UUID was read to be (design 13.12): build 625's arm64e slice, signed 2024-05-07, and its three ad hoc
+# rebuilds of 2026-11-07 (TPerDriver's docs/kext625-panic-2026-11-07.md, sections 6 and 7, and docs/kext625-audit-2026-11-07.md,
+# sections 1 and 8), from the same source, macos-driver tag 1.49.1 (513e429) with sedutil 802774a, older than 2be586e (the
+# privilege check) and 7856c9c (the whitelist); 625.3 adds the audit's patches 01 to 04.
 known_uuid() {
     case "$1" in
         373BA509-89F7-3B36-A977-BB65C7635F1B)
@@ -131,7 +132,9 @@ known_uuid() {
         2011DD44-AA2E-358F-BF94-786B490F0A1D)
             echo "build 625.1, ad hoc (SIP off), 2026-11-07: 625 with its free() fixed; it still panicked on its debug hex dump of an empty VPD page (PrintBufferToIOLog's size-0 wrap): install 625.2 instead; no privilege check, no command whitelist: hsed's Guard and shim are the safety" ;;
         4A0A3A8C-4C10-3B63-A423-8559C7E94CEC)
-            echo "build 625.2, ad hoc (SIP off), 2026-11-07: 625 with both debug-only faults fixed (free(), PrintBufferToIOLog), 625's dispatch and 436-byte DTA Device Info; no privilege check, no command whitelist: hsed's Guard and shim are the safety" ;;
+            echo "build 625.2, ad hoc (SIP off), 2026-11-07: 625 with both debug-only faults fixed (free(), PrintBufferToIOLog), 625's dispatch and 436-byte DTA Device Info; superseded by 625.3, whose patches bound three parses that read past their buffers on some devices' data; no privilege check, no command whitelist: hsed's Guard and shim are the safety" ;;
+        66E5D9A1-0BD7-3BCC-AA6D-9B78003B2E05)
+            echo "build 625.3, ad hoc (SIP off), installed 2026-11-07 22:21: 625.2 with TPerDriver's audit patches 01-04 (the Level 0 feature walk and the VPD 83h, 00h and 80h parses bounded by the buffer and the bytes received, each INQUIRY its own CDB), 625's dispatch and 436-byte DTA Device Info; still a debug build, whose probe of a VPD page the bridge does not list (C1h) hung the SED's RTL9210 at its first boot, so that macOS dropped the bridge: see the SED attached before H2; no privilege check, no command whitelist: hsed's Guard and shim are the safety" ;;
         *) echo "" ;;
     esac
 }
@@ -293,7 +296,7 @@ H3. M3's Level 0 capture, while FixtureSpec's six examples still pend: one IF-RE
     nothing bound, no --allow-mounted needed:
       sudo build/bin/hsed-jig --target /dev/$DISK --tests UCT-01 --expect-serial "$SERIAL" \
           --capture-level0 spec/fixtures/disk6-level0.bin --report-dir build/report
-    Expect exit 0, and on stderr the user client opened (SAT, the kext's build: 625.2 since 2026-11-07), one command line with the CDB
+    Expect exit 0, and on stderr the user client opened (SAT, the kext's build: 625.3 since 2026-11-07 22:21), one command line with the CDB
     a1 08 0e 01 04 00 01 00 00 5c 00 00, kIOReturnSuccess (0x00000000), 2048 bytes transferred, the capture's sha256, and
     the user client closed. Then, as yourself (both exit 0):
       R=$(ls -t build/report/jig-dev-$DISK-*.json | head -1)

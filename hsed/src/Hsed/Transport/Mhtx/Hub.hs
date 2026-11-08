@@ -405,11 +405,17 @@ hubClose hub = do
 --   bound (warp's runSettingsSocket, which binds nothing), and sweep its
 --   peers every heartbeat interval ('hubSweep'), until killed: what
 --   hsed-sim runs and the LAN suite's hubs run, nothing else beside it.
---   @\/ws@ upgraded to a websocket (warp's timeout paused for it first, so
---   that warp's 30 s never closes a socket the heartbeat keeps:
---   s1-sources, Warp.hs:490-491), the token read from its query; @\/ws@
+--   @\/ws@ upgraded to a websocket, the token read from its query; @\/ws@
 --   without an upgrade 426; with @--conformance-hooks@ @POST \/emit@ and
---   @GET \/clients@; anything else 404. An exception warp would show is
+--   @GET \/clients@; anything else 404. warp's connection timeout is set
+--   above the heartbeat's window ('warpTimeout'), so that warp never cuts a
+--   websocket before the hub's sweep would: warp tickles its timeout at every
+--   byte a websocket sends or receives (its Response.hs:254-262), which undoes
+--   the pause warp offers (Warp.hs:490-491: a tickle sets the handle active
+--   again), and kills a connection idle through two of its periods, so that
+--   at warp's 30 s a client silent for 30 to 60 s, which the hub's default
+--   heartbeat keeps until 60 s and then closes with 4000, would be cut first
+--   with no close code (SoakSpec shows it). An exception warp would show is
 --   written to stderr, but a handshake's, which holds the request's path,
 --   its token with it.
 runHub :: Hub -> Socket -> IO ()
@@ -417,7 +423,7 @@ runHub hub sock = race_ sweeping (Warp.runSettingsSocket settings sock (applicat
   where
     sweeping = forever (threadDelay intervalMicros >> hubSweep hub)
     intervalMicros = fromInteger (min (toInteger (maxBound :: Int)) (toInteger (hoIntervalMs (hOpts hub)) * 1000))
-    settings = Warp.setOnException shown Warp.defaultSettings
+    settings = Warp.setTimeout (warpTimeout (hOpts hub)) (Warp.setOnException shown Warp.defaultSettings)
     shown _ e
       | handshake e                          = pure ()
       | Warp.defaultShouldDisplayException e = hPutBuilder stderr (getUtf8Builder ("hsed hub: " <> displayShow e <> "\n"))
@@ -426,6 +432,24 @@ runHub hub sock = race_ sweeping (Warp.runSettingsSocket settings sock (applicat
 
 
 -- * Internals
+
+-- | warp's connection timeout for a hub, in seconds: past the most a
+--   websocket's silence lasts before the hub's sweep closes it (the timeout
+--   and an interval, 'hubSweep' running every interval), a second more,
+--   and never below warp's own 30 s, which an HTTP request to the hooks
+--   keeps. warp kills a connection only after more than one such period of
+--   silence, so that the hub's sweep is always the first to close a silent
+--   websocket, with its 4000.
+--
+-- >>> warpTimeout defaultHubOpts
+-- 81
+-- >>> warpTimeout defaultHubOpts { hoIntervalMs = 200, hoTimeoutMs = 600 }
+-- 30
+warpTimeout :: HubOpts -> Int
+warpTimeout opts = fromInteger (max 30 (min most (seconds + 1)))
+  where
+    seconds = (toInteger (hoTimeoutMs opts) + toInteger (hoIntervalMs opts) + 999) `div` 1000
+    most    = toInteger (maxBound :: Int) `div` 1000000   -- warp counts it in microseconds, an Int
 
 -- | How long a peer the hub closed is kept for its echo of the close: a
 --   second, the wait conformance.dart:346 gives a close.
@@ -515,11 +539,12 @@ broadcastWith hub frameAt = atomically $ do
   pure n
 
 -- | A peer's reader: every message stamps the peer's liveness (hub.dart:83-86,
---   binary and junk included); a ping is answered with pong at once, a
---   request handed to the worker (a peer with too many waiting closed,
---   1008), anything else ignored (SPEC.md L19-21); once the hub has asked
---   for the peer's close, nothing is answered. It ends when the connection
---   closes.
+--   binary and junk included), a stamp never going back (a monotonic clock's
+--   own order, kept whatever clock the options give); a ping is answered with
+--   pong at once, a request handed to the worker (a peer with too many
+--   waiting closed, 1008), anything else ignored (SPEC.md L19-21); once the
+--   hub has asked for the peer's close, nothing is answered. It ends when the
+--   connection closes.
 reader :: Hub -> Conn -> Peer -> IO ()
 reader hub conn peer = connReceive conn >>= \case
   InClosed _ -> pure ()
@@ -527,7 +552,7 @@ reader hub conn peer = connReceive conn >>= \case
     sorted <- evaluate (fromClient incoming)
     now <- hoNow (hOpts hub)
     atomically $ do
-      writeTVar (pSeen peer) now
+      modifyTVar' (pSeen peer) (max now)
       closing <- isJust <$> readTVar (pClose peer)
       unless closing $ case sorted of
         ClientPing    -> enqueue hub peer pongText
@@ -595,19 +620,22 @@ opReply hub = \case
     locked  = withMVar (hLock hub) . const
     answered r = Answered (status r) (rpayload r)
     unsupported what flag = Answered (Unsupported (what <> " is not allowed: hsed-sim allows it with " <> flag)) mempty
+    -- the event and its broadcast one step even to a cancel (the requester gone), so that no peer misses a reset that
+    -- happened; neither blocks, the hub's lock held
     reset e = do
       st <- scPeek ctl
       let comIds   = map cvComId (answer ComIds st)
           sessions = answer Sessions st
-      s <- inject tr e
-      when (s == Good) . void $ broadcastWith hub (\n -> evtText (SedEvt n e comIds sessions))
-      pure (Answered s mempty)
+      uninterruptibleMask_ $ do
+        s <- inject tr e
+        when (s == Good) . void $ broadcastWith hub (\n -> evtText (SedEvt n e comIds sessions))
+        pure (Answered s mempty)
 
 -- | The hub's HTTP application: @\/ws@, the hooks, 404.
 application :: Hub -> Wai.Application
 application hub req respond = case (Wai.requestMethod req, Wai.pathInfo req) of
   (_, ["ws"]) -> case WaiWS.websocketsApp connectionOptions upgraded req of
-    Just upgrade -> Warp.pauseTimeout req >> respond upgrade
+    Just upgrade -> respond upgrade
     Nothing      -> respond (plain (H.mkStatus 426 "Upgrade Required") [("Upgrade", "websocket")] "ws: a websocket's path: ask for an upgrade (RFC 6455 4.1)")
   (m, ["emit"])    | hooks, m == H.methodPost -> emitted hub req >>= respond
   (m, ["clients"]) | hooks, m == H.methodGet  -> hubClientCount hub >>= respond . json H.status200 . A.object . pure . ("count" A..=)
@@ -640,8 +668,14 @@ emitted hub req = bounded 0 [] >>= \case
 
 -- | A response of JSON.
 json :: H.Status -> A.Value -> Wai.Response
-json s = Wai.responseLBS s [(H.hContentType, "application/json")] . A.encode
+json s = sized s [(H.hContentType, "application/json")] . A.encode
 
 -- | A response of plain text, a line.
 plain :: H.Status -> H.ResponseHeaders -> Text -> Wai.Response
-plain s headers = Wai.responseLBS s ((H.hContentType, "text/plain; charset=utf-8") : headers) . BL.fromStrict . encodeUtf8 . (<> "\n")
+plain s headers = sized s ((H.hContentType, "text/plain; charset=utf-8") : headers) . BL.fromStrict . encodeUtf8 . (<> "\n")
+
+-- | A response whose body's length its headers give, so that warp sends it
+--   as it is, not in HTTP/1.1's chunks (warp's Response.hs:378-381), which a
+--   raw reader would have to undo.
+sized :: H.Status -> H.ResponseHeaders -> BL.ByteString -> Wai.Response
+sized s headers body = Wai.responseLBS s ((H.hContentLength, encodeUtf8 (tshow (BL.length body))) : headers) body

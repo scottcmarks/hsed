@@ -28,11 +28,8 @@ nothing sent, a protocol error a transport failure, the reset op's answer, unsup
 included, its description and unit from @app.sed@); the view and the control as the hub's
 peek and release. Every wait is the test's (the options' microseconds), none over about 10 ms
 in an example that passes, so that hsed-test keeps its budget (design 13.34). No socket is
-opened: memory alone.
-
-The examples over memory need group G1's frames and connections, and those against the real
-hub group G2's hub: until G3 rebases onto them (M5c's merge order G1, G4, G2, G3) each is
-pending, naming the group ('awaiting').
+opened: memory alone. The client against a hub on 127.0.0.1, restarted under it, is
+"Hsed.Transport.Mhtx.RestartSpec"'s (hsed-lan-test).
 -}
 module Hsed.Transport.Mhtx.ClientSpec (spec) where
 
@@ -78,10 +75,10 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         `shouldBe` [MissedNone, MissedSome, MissedUnknown, MissedUnknown, MissedUnknown, MissedUnknown, MissedUnknown]
 
   describe "openMhtx, one attempt (SPEC.md L37, L45, L99-104)" $ do
-    it "opens on a hello of v 1 whose app.sed says a TPer answers, its app.sed the client's" $ awaiting "G1" >> within (
+    it "opens on a hello of v 1 whose app.sed says a TPer answers, its app.sed the client's" $ within (
       withClient $ \_ c _ -> clientApp c `shouldBe` tperApp)
-    it "refuses no hello within the wait, v other than 1, an app.sed that does not read, role drive, unknown units, a close before hello and a refused dial, each saying why" $ awaiting "G1" >> within (do
-      refusedBy (const (pure ())) "no hello within 20 ms"
+    it "refuses no hello within the wait, v other than 1, an app.sed that does not read, role drive, unknown units, a close before hello and a refused dial, each saying why" $ within (do
+      refusedOpts (\o -> o { coHelloMicros = 4000 }) (const (pure ())) "no hello within 4 ms"
       refusedBy (`sendHello` (helloOf "server-a" 0 tperApp) { helloV = 2 }) "hello's v is 2, not 1"
       refusedBy (`sendHello` (helloOf "server-a" 0 tperApp) { helloApp = KM.fromList [("sed", A.String "a TPer")] }) "hello's app.sed does not read"
       refusedBy (`sendHello` helloOf "server-a" 0 tperApp { saRole = "drive" }) "hello's app.sed.role is drive, not tper"
@@ -92,7 +89,7 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         Right c  -> closeMhtx c >> expectationFailure "opened on a refused dial")
 
   describe "requests" $ do
-    it "numbers them 1, 2, 3 ..., none reused after a reconnect, each registered before its write (answers given at once are never lost)" $ awaiting "G1" >> within (
+    it "numbers them 1, 2, 3 ..., none reused after a reconnect, each registered before its write (answers given at once are never lost)" $ within (
       withClient $ \hubs c hub -> do
         ids <- replicateM 20 (answeredAtOnce hub (ifRecv (clientTransport c) 1 0x1004 16))
         ids `shouldBe` [1 .. 20]
@@ -101,7 +98,7 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         sendHello hub2 (helloOf "server-a" 0 tperApp)
         answeredAtOnce hub2 (ifRecv (clientTransport c) 1 0x1004 16) `shouldReturn` 21
         clientInFlight c `shouldReturn` [])
-    it "ignores an unknown id, a sed.rsp that carries seq and a sed.evt: none is taken for the answer" $ awaiting "G1" >> within (
+    it "ignores an unknown id, a sed.rsp that carries seq and a sed.evt: none is taken for the answer" $ within (
       withClient $ \_ c hub -> do
         r <- async (ifRecv (clientTransport c) 1 0x1004 16)
         req <- requested hub
@@ -111,10 +108,10 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         answer hub (reqId req) (Answered Good (B.replicate 16 7))
         wait r `shouldReturn` Response Good (B.replicate 16 7)
         clientNotices c `shouldReturn` ["a reset by another client: power_cycle, seq 1"])
-    it "fails one not answered in its wait with a transport failure, its entry gone; a late answer is ignored" $ awaiting "G1" >> within (
-      withClientOpts (\o -> o { coRequestMicros = 10000 }) $ \_ c hub -> do
+    it "fails one not answered in its wait with a transport failure, its entry gone; a late answer is ignored" $ within (
+      withClientOpts (\o -> o { coRequestMicros = 3000 }) $ \_ c hub -> do
         r <- ifRecv (clientTransport c) 1 0x1004 16
-        status r `shouldSatisfy` failedWith "no answer from memory within 10 ms: the request was sent, and is never sent again"
+        status r `shouldSatisfy` failedWith "no answer from memory within 3 ms: the request was sent, and is never sent again"
         clientInFlight c `shouldReturn` []
         late <- requested hub
         answer hub (reqId late) (Answered Good (B.replicate 16 1))
@@ -122,14 +119,14 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         req <- requested hub
         answer hub (reqId req) (Answered Good (B.replicate 16 2))
         wait next `shouldReturn` Response Good (B.replicate 16 2))
-    it "leaves no entry when its wait is cancelled by an asynchronous exception inside mask_ (as the transcript records a command under mask_, the host's exchange its timeout)" $ awaiting "G1" >> within (
+    it "leaves no entry when its wait is cancelled by an asynchronous exception inside mask_ (as the transcript records a command under mask_, the host's exchange its timeout)" $ within (
       withClient $ \_ c hub -> do
-        timeout 5000 (mask_ (ifRecv (clientTransport c) 1 0x1004 16)) `shouldReturn` Nothing
+        timeout 2000 (mask_ (ifRecv (clientTransport c) 1 0x1004 16)) `shouldReturn` Nothing
         _ <- requested hub
         clientInFlight c `shouldReturn` [])
 
   describe "a connection lost (nothing sent is ever sent again: an IF-RECV in S3 delivers once, Hsed.Sim.Sync)" $ do
-    it "fails every request it carried, IF-RECV included, with a transport failure; none is sent again after the reconnect" $ awaiting "G1" >> within (
+    it "fails every request it carried, IF-RECV included, with a transport failure; none is sent again after the reconnect" $ within (
       withClient $ \hubs c hub -> do
         let tr = clientTransport c
         carried <- traverse async [ifSend tr 1 0x1004 16 "a ComPacket", ifRecv tr 1 0x1004 16, ifRecv tr 1 0x1004 2048]
@@ -143,26 +140,26 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         (reqId req, reqOp req) `shouldBe` (4, OpIfRecv 1 0x1004 16)
         answer hub2 (reqId req) (Answered Good (B.replicate 16 0))
         wait afterwards `shouldReturn` Response Good (B.replicate 16 0))
-    it "sends a request issued while disconnected once a reconnect's hello says nothing was missed (same server_id and seq)" $ awaiting "G1" >> within (
+    it "sends a request issued while disconnected once a reconnect's hello says nothing was missed (same server_id and seq)" $ within (
       reissued (helloOf "server-a" 0 tperApp) $ \c hub2 r -> do
         req <- requested hub2
         answer hub2 (reqId req) (Answered Good (B.replicate 16 3))
         wait r `shouldReturn` Response Good (B.replicate 16 3)
         clientNotices c `shouldReturn` []
         clientVerdicts c `shouldReturn` [MissedUnknown, MissedNone])
-    it "fails a request issued while disconnected after a new server_id, naming the restart, which it notices" $ awaiting "G1" >> within (
+    it "fails a request issued while disconnected after a new server_id, naming the restart, which it notices" $ within (
       reissued (helloOf "server-b" 0 tperApp) $ \c _ r -> do
         let restart = "the hub restarted, server_id server-a -> server-b: a new TPer at its OFS"
         status <$> wait r `shouldReturn` TransportFailure ("not sent: " <> restart)
         clientNotices c `shouldReturn` [restart]
         clientVerdicts c `shouldReturn` [MissedUnknown, MissedUnknown])
-    it "fails a request issued while disconnected after broadcasts were missed (the same server_id, a greater seq), which it notices" $ awaiting "G1" >> within (
+    it "fails a request issued while disconnected after broadcasts were missed (the same server_id, a greater seq), which it notices" $ within (
       reissued (helloOf "server-a" 1 tperApp) $ \c _ r -> do
         let missed = "broadcasts missed, seq 0 -> 1: a reset may have happened"
         status <$> wait r `shouldReturn` TransportFailure ("not sent: " <> missed)
         clientNotices c `shouldReturn` [missed]
         clientVerdicts c `shouldReturn` [MissedUnknown, MissedSome])
-    it "is latched by a reconnect whose app.sed is not the first's: every request then fails, the latch noticed, no reconnect tried" $ awaiting "G1" >> within (
+    it "is latched by a reconnect whose app.sed is not the first's: every request then fails, the latch noticed, no reconnect tried" $ within (
       withClient $ \hubs c hub -> do
         connClose hub codeGoingAway "the double's drop"
         hub2 <- atomically (readTQueue hubs)
@@ -175,29 +172,29 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         isNothing <$> atomically (tryReadTQueue hubs) `shouldReturn` True)
 
   describe "the heartbeat (SPEC.md L57-62)" $ do
-    it "pings every interval after hello" $ awaiting "G1" >> within (
+    it "pings every interval after hello" $ within (
       withHello (helloOf "server-a" 0 tperApp) { helloIntervalMs = 2 } id $ \_ _ hub ->
         replicateM_ 3 (pinged hub))
-    it "takes any message, a binary one among them, for proof of life, and drops and redials after the interval and the grace in silence" $ awaiting "G1" >> within (
+    it "takes any message, a binary one among them, for proof of life, and drops and redials after the interval and the grace in silence" $ within (
       withHello (helloOf "server-a" 0 tperApp) { helloIntervalMs = 2 } (\o -> o { coGraceMicros = 10000 }) $ \hubs _ hub -> do
-        -- 24 ms of messages every 3 ms, twice the 12 ms of silence that would drop it
-        replicateM_ 8 (connSendBinary hub "\0" >> threadDelay 3000)
+        -- 18 ms of messages every 3 ms, half as long again as the 12 ms of silence that would drop it
+        replicateM_ 6 (connSendBinary hub "\0" >> threadDelay 3000)
         isNothing <$> atomically (tryReadTQueue hubs) `shouldReturn` True
         untilClosed hub >>= (`shouldBe` Just (codeHeartbeat, "heartbeat timeout"))
         void (atomically (readTQueue hubs)))
 
   describe "the transport (as the in-process one, Hsed.Transport.InProc)" $ do
-    it "refuses a length past what its unit carries Other Invalid Command Parameter, nothing sent" $ awaiting "G1" >> within (
+    it "refuses a length past what its unit carries Other Invalid Command Parameter, nothing sent" $ within (
       withClient $ \_ c hub -> do
         ifRecv (clientTransport c) 1 0x1004 (mostCarried UnitBytes + 1) `shouldReturn` Response OtherInvalidCommandParameter mempty
         answeredAtOnce hub (ifRecv (clientTransport c) 1 0x1004 16) `shouldReturn` 1)
-    it "gives a protocol_error as a transport failure naming it" $ awaiting "G1" >> within (
+    it "gives a protocol_error as a transport failure naming it" $ within (
       withClient $ \_ c hub -> do
         r <- async (ifRecv (clientTransport c) 1 0x1004 16)
         req <- requested hub
         answer hub (reqId req) (ProtocolError "len over 1 MiB")
         status <$> wait r `shouldReturn` TransportFailure "the hub's protocol_error: len over 1 MiB")
-    it "causes an event as the reset op, its own sed.evt no notice, the answer's status given, unsupported with its detail" $ awaiting "G1" >> within (
+    it "causes an event as the reset op, its own sed.evt no notice, the answer's status given, unsupported with its detail" $ within (
       withClient $ \_ c hub -> do
         let tr = clientTransport c
         good <- async (inject tr PowerCycle)
@@ -211,12 +208,12 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         answer hub (reqId req2) (Answered (Unsupported "hsed-sim answers reset with --allow-remote-reset alone") mempty)
         wait refused `shouldReturn` Unsupported "hsed-sim answers reset with --allow-remote-reset alone"
         clientNotices c `shouldReturn` [])
-    it "describes itself and counts its unit as app.sed says, the device none" $ awaiting "G1" >> within (
+    it "describes itself and counts its unit as app.sed says, the device none" $ within (
       withClient $ \_ c _ -> do
         describeTransport (clientTransport c)
           `shouldBe` Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing
         unitOf (clientTransport c) `shouldBe` UnitBytes)
-    it "views the simulator as the hub's peek op and releases a ComID as its release op" $ awaiting "G1" >> within (
+    it "views the simulator as the hub's peek op and releases a ComID as its release op" $ within (
       withClient $ \_ c hub -> do
         let ranges = [uLocking_GlobalRange, uSP_Admin]
         viewed <- async (peekView (clientView c) LockingRanges)
@@ -235,7 +232,7 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         wait refused `shouldReturn` Left "peek: unsupported: --allow-remote-control")
 
   describe "against the real hub (Hsed.Transport.Mhtx.Hub.hubServe over memory)" $
-    it "answers as its backend answers in process: its description, what it allows, Level 0 Discovery, the ComIDs viewed" $ awaiting "G1 and G2" >> slowly (do
+    it "answers as its backend answers in process: its description, what it allows, Level 0 Discovery, the ComIDs viewed" $ slowly (do
       let hubOpts = defaultHubOpts { hoAllowControl = True, hoAllowReset = True }
       backend <- backendOf hubOpts defaultSimParams (InProcOpts UnitBytes 0) >>= either (throwString . T.unpack) pure
       hub <- newHub hubOpts backend
@@ -249,11 +246,6 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         ifRecv tr 1 1 2048 `shouldReturnSame` ifRecv (beTransport backend) 1 1 2048
         (fmap (map cvComId) <$> peekView (clientView c) ComIds)
           `shouldReturnSame` (fmap (map cvComId) <$> peekView (inProcView (beControl backend)) ComIds))
-
--- | Pending until the groups named merge (M5c's merge order G1, G4, G2, G3): the example is written against their
---   signatures and runs once G3 rebases onto them.
-awaiting :: String -> Expectation
-awaiting groups = pendingWith ("awaiting group " <> groups <> "'s merge (M5c): written against its signatures, run once G3 rebases onto it")
 
 -- | backoff.dart:27-35's delays over attempts 0-8, at draws 0, 0.5 and 0.999 (1 s doubling to 30 s, jitter 0.5),
 --   reckoned in IEEE doubles and rounded as Dart rounds, a half away from zero.
@@ -331,9 +323,13 @@ withHello hello changed act = do
 -- | An open refused: the double's first connection given to an action (a hello, a close, nothing), the refusal saying
 --   what is given.
 refusedBy :: (Conn -> IO ()) -> Text -> Expectation
-refusedBy onHub reason = do
+refusedBy = refusedOpts id
+
+-- | 'refusedBy' with the client's options changed.
+refusedOpts :: (ClientOpts -> ClientOpts) -> (Conn -> IO ()) -> Text -> Expectation
+refusedOpts changed onHub reason = do
   hubs <- newTQueueIO
-  opening <- async (openMhtx (testOpts' (memoryDialer hubs)))
+  opening <- async (openMhtx (changed (testOpts' (memoryDialer hubs))))
   atomically (readTQueue hubs) >>= onHub
   wait opening >>= \case
     Left why -> why `shouldSatisfy` T.isInfixOf reason

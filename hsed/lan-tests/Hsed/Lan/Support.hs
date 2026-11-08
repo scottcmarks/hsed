@@ -14,25 +14,32 @@ threads, each on a socket "Hsed.Transport.Mhtx.Conn".'bindLoopback' binds on
 127.0.0.1 and an ephemeral port (D6), kept from the bind to the close so that
 no other process can take the port between them, and closed whatever the
 spec comes to ('withHub'), or on a port given, a hub started again where one
-stopped ('withHubOn'); dials them as a client would ('probe'); and speaks
-HTTP to their hooks with one raw request, no HTTP client ('rawHttp'). Built
-on the LAN leg's modules, which groups G1 and G2 write: until they do, each
-says so.
+stopped ('withHubOn'); over the default simulator's backend ('lanBackend');
+dials them as a client would ('probe'); and speaks HTTP to their hooks with
+one raw request, no HTTP client ('rawHttp').
 -}
 module Hsed.Lan.Support
   ( withHub
   , withHubOn
+  , lanBackend
   , probe
   , rawHttp
+  , needsG1
   ) where
 
 import qualified Network.Socket            as N
 import qualified Network.Socket.ByteString as NB
 import qualified RIO.ByteString            as B
 import           RIO
+import qualified RIO.Text                  as T
+import           Test.Hspec                (pendingWith)
 
-import           Hsed.Transport.Mhtx.Conn  (Conn, bindLoopback, dialLoopback)
-import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, hubClose, newHub, runHub)
+import           Hsed.Sim.Types            (defaultSimParams)
+import           Hsed.Transport.InProc     (InProcOpts (..))
+import           Hsed.Transport.Mhtx.Conn  (Conn, bindLoopback, connectionOptions, dialLoopback)
+import           Hsed.Transport.Mhtx.Frame (pingText)
+import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, backendOf, hubClose, newHub, runHub)
+import           Hsed.Wire                 (Unit (..))
 
 
 -- | A hub over a backend, served in the suite's own threads on 127.0.0.1
@@ -50,6 +57,12 @@ withHubOn :: Word16 -> HubOpts -> Backend -> (Word16 -> Hub -> IO a) -> IO a
 withHubOn port opts backend act = bracket (bindLoopback port) (N.close . fst) $ \(sock, bound) ->
   bracket (newHub opts backend) hubClose $ \hub ->
     withAsync (runHub hub sock) $ \serving -> link serving >> act bound hub
+
+-- | The backend of the default simulator (bytes, no hold) for these
+--   options, as hsed-sim serves it with no simulator flag; a failure where
+--   there is none.
+lanBackend :: HubOpts -> IO Backend
+lanBackend opts = backendOf opts defaultSimParams (InProcOpts UnitBytes 0) >>= either (throwString . T.unpack) pure
 
 -- | An action over a websocket to the hub's @\/ws@ on 127.0.0.1's port,
 --   connected within 5 s (conformance.dart:88's wait for a frame), or why
@@ -70,3 +83,14 @@ rawHttp port request = bracket open N.close $ \sock -> do
       N.connect sock (N.SockAddrInet (fromIntegral port) (N.tupleToHostAddress (127, 0, 0, 1))) `onException` N.close sock
       pure sock
     received sock = NB.recv sock 4096 >>= \chunk -> if B.null chunk then pure [] else (chunk :) <$> received sock
+
+-- | Pending, naming group G1, while group G1's frames and connections are
+--   the scaffold's stubs (M5c): every example of the suite binds, dials and
+--   codes frames through them. Part 2 of group G2 deletes this once G1 is
+--   merged.
+needsG1 :: IO ()
+needsG1 = do
+  stubbed <- or <$> sequence [stub (void (evaluate connectionOptions)), stub (void (evaluate (B.length pingText)))]
+  when stubbed $ pendingWith "group G1's Hsed.Transport.Mhtx.Frame and Conn (bindLoopback, dialLoopback, the codecs): pending until G1 is merged"
+  where
+    stub act = try act <&> either (\e -> "group G1 (" `T.isInfixOf` tshow (e :: SomeException)) (const False)

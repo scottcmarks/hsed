@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -29,6 +28,7 @@ import qualified RIO.Text            as T
 import           Hsed.Jig.Catalogue  (parseCaseKeys)
 import           Hsed.Jig.Cli        (Command (..), runCommand)
 import           Hsed.Jig.Options    (RunOptions (..), defaultRunOptions, lockingOFSName, parseLockingOFS, parseSidPin, parseTarget)
+import           Hsed.Sim.Flags      (parseUnits, unitName)
 import           Hsed.Sim.Types      (SimParams (..))
 import           Hsed.Version        (hsedVersion)
 import           Hsed.Wire           (Unit (..), mostCarried)
@@ -108,8 +108,8 @@ runOptions = options <**> laterMilestones
                       <> "a key naming a whole test selects every case of it (ETC-21 both) (default: every case of the catalogue but, on "
                       <> "the simulator, those whose Locking SP prerequisite --locking-ofs does not meet, each noted in the transcript; "
                       <> "on a drive or a replay alone, every case)"))
-      <*> option (eitherReader units)
-            (long "units" <> metavar "UNITS" <> value (spUnits sim0) <> showDefaultWith unitName
+      <*> option (eitherReader parseUnits)
+            (long "units" <> metavar "UNITS" <> value (spUnits sim0) <> showDefaultWith (T.unpack . unitName)
              <> help "simulator: what transfer lengths count, bytes or blocks512")
       <*> switch (long "hold-processing" <> help "simulator: hold a prepared response in S2 for one IF-RECV")
       <*> optional (option auto (long "hold-ifrecvs" <> metavar "N"
@@ -170,13 +170,6 @@ runOptions = options <**> laterMilestones
     level0Len s = case readMaybe s of
       Just n | n >= 1 && n <= toInteger mostLevel0 -> Right (fromInteger n)
       _ -> Left ("--level0-len " <> s <> ": a length of 1 to " <> show mostLevel0 <> " bytes")
-    units = \case
-      "bytes"     -> Right UnitBytes
-      "blocks512" -> Right UnitBlocks512
-      u           -> Left ("--units " <> u <> ": bytes or blocks512")
-    unitName = \case
-      UnitBytes     -> "bytes"
-      UnitBlocks512 -> "blocks512"
 
 -- | The options no milestone builds yet, read and refused (a usage error),
 --   each saying why (design 9.3, 11): writes to a drive are M6's; the

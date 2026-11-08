@@ -79,8 +79,11 @@ commands the Guard refused, why the run was stopped, a drive's pre-flight
 notes, each end's Properties exchange with the host's properties and, for
 a pair, the two compared ("Hsed.Jig.PairProperties"). A pair's ends run each
 case in turn, the simulator first, each case's verdicts joined, each with
-its end's name, its transport's role (@tper@, @drive@, @drive-replay@: the
-one name the transcript's entries carry, "Hsed.Jig.Transcript"); then the
+its end's name, its transport's role (@tper@, @drive@, @drive-replay@) made
+unique by position since M5c (a pair of two simulators' second, @tper-2@;
+design 13.33 (28)): the one name the transcript's entries carry
+("Hsed.Jig.Transcript"), the reports recording beside it what was opened
+for a @ws://@ end ("Hsed.Jig.Report"); then the
 two Level 0 responses are compared
 ("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not. A drive
 is never asked for Level 0 again once it was asked (a failed kext command
@@ -196,20 +199,20 @@ import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), cata
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, Policy, decide, driveAllowed, driveInfo, driveIssued, drivePolicy,
                                          driveTransport, readOnlyMethods, recoverMethods)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName)
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName, renderWsUrl)
 import           Hsed.Jig.Pair          (pairFails, pairLevel0)
 import           Hsed.Jig.PairProperties (pairProperties, propertiesFail)
 import           Hsed.Jig.Preflight     (preflightDrive)
 import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common, level0OutsideSync, listAt, sessionsUnobservable)
 import           Hsed.Jig.Recover       (recoverScript)
-import           Hsed.Jig.Report        (CaseResult (..), RunResult (..), renderTarget, summary, writeReports)
+import           Hsed.Jig.Report        (CaseResult (..), EndRecord (..), RunResult (..), renderTarget, summary, writeReports)
 import           Hsed.Jig.Script        (Credential (..), Interrupted (..), RunCtx (..), RunEnv (..), Script, SessionHandle (..),
                                          Verdict (..), admitsStackReset, attempt, baseComId, describeStatus, discover, drain,
                                          emptyRunCtx, ifRecvOn, maskAnswersSince, spName, stackReset, t45Of, t45On,
                                          transcriptMark, verdictText)
-import           Hsed.Jig.Simulator     (Simulator (..))
+import           Hsed.Jig.Simulator     (Opened (..), Simulator (..))
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
-import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
+import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recordingAs)
 import           Hsed.Level0            (Level0)
 import           Hsed.Sim.Profile       (loadProfile)
 import           Hsed.Sim.Types         (ComIdLife (Associated), LifeCycle (..), SimParams (..), SyncState (..), lifeCycleValue,
@@ -553,35 +556,58 @@ runExit outside stopped failed
 
 -- * The ends of a run
 
--- | One end of a run: its name (its transport's role, the name the
---   transcript's entries carry: @tper@, @drive@, @drive-replay@), its
---   environment, and for a drive the drive behind the Guard, which holds
---   the transcript of what was issued to it and what the IORegistry says
---   of it.
+-- | One end of a run: its name (its transport's role, @tper@, @drive@,
+--   @drive-replay@, made unique by position, 'endNames': the name the
+--   transcript's entries carry), what was opened for it where that says
+--   more than the role (a @ws://@ simulator's URL), its environment, and
+--   for a drive the drive behind the Guard, which holds the transcript of
+--   what was issued to it and what the IORegistry says of it.
 data End = End
-  { endName  :: !Text
-  , endEnv   :: !RunEnv
-  , endDrive :: !(Maybe GuardedDrive)
+  { endName   :: !Text
+  , endOpened :: !(Maybe Text)
+  , endEnv    :: !RunEnv
+  , endDrive  :: !(Maybe GuardedDrive)
   }
 
--- | A target's ends: the simulator's transport recording into the run's
---   transcript; a drive as the target opened it, behind the Guard and
---   recording into the run's transcript and its own already.
+-- | A target's ends, in order, each named by its role made unique by
+--   position ('endNames'; design 13.33 (28)): the simulator's transport
+--   recording into the run's transcript under the end's name, whether the
+--   simulator was opened in process or over the LAN leg (its URL kept for
+--   the reports); a drive as the target opened it, behind the Guard and
+--   recording into the run's transcript and its own already, under its
+--   role.
 endsOf :: RunOptions -> Transcript -> LogFunc -> IORef (Maybe Text) -> Target -> IO [End]
-endsOf opts t lf stop = \case
-  SimTarget tr sim     -> pure <$> end (roleOf tr) (SimTarget (recording t tr) sim) Nothing
-  DriveTarget g        -> pure <$> end (roleOf (driveTransport g)) (DriveTarget g) (Just g)
-  PairTarget a b       -> (<>) <$> endsOf opts t lf stop a <*> endsOf opts t lf stop b
+endsOf opts t lf stop tg = traverse end (zip (endNames (map fst leaves)) (map snd leaves))
   where
+    leaves = leavesOf tg
+    leavesOf = \case
+      SimTarget tr sim -> [(roleOf tr, Left (tr, sim))]
+      DriveTarget g    -> [(roleOf (driveTransport g), Right g)]
+      PairTarget a b   -> leavesOf a <> leavesOf b
     roleOf tr = dRole (describeTransport tr)
-    end name tg drive = do
+    end (name, leaf) = do
       channel <- newChannel
       ctx <- newIORef emptyRunCtx
-      pure (End name (RunEnv tg t channel ctx opts stop lf) drive)
+      let env target = RunEnv target t channel ctx opts stop lf
+      pure $ case leaf of
+        Left (tr, sim) -> End name (openedOf sim) (env (SimTarget (recordingAs name t tr) sim)) Nothing
+        Right g        -> End name Nothing (env (DriveTarget g)) (Just g)
+    -- a simulator's URL where it was opened over the LAN leg; nothing more where the role says it all
+    openedOf sim = case simOpened sim of
+      InProcess -> Nothing
+      OverWs u  -> Just (renderWsUrl u)
 
--- | What an end's transport says it is.
-endDescribe :: End -> Maybe Describe
-endDescribe e = case reTarget (endEnv e) of
+-- | Ends' names from their roles, in order, made unique by position
+--   (design 13.33 (28)): an end the first of its role is named by the role;
+--   each one after it by the role and its place among that role's ends,
+--   @tper@, @tper-2@.
+endNames :: [Text] -> [Text]
+endNames roles = [ if k == 1 then r else r <> "-" <> tshow k | (i, r) <- zip [1 ..] roles, let k = length (filter (== r) (take i roles)) ]
+
+-- | An end as the reports record it among the targets: what its transport
+--   says it is, its name, and what was opened for it.
+endRecord :: End -> Maybe EndRecord
+endRecord e = (\d -> EndRecord d (endName e) (endOpened e)) <$> case reTarget (endEnv e) of
   SimTarget tr _ -> Just (describeTransport tr)
   DriveTarget g  -> Just (describeTransport (driveTransport g))
   PairTarget _ _ -> Nothing
@@ -646,7 +672,7 @@ runOn opts started chosen leftOut preflightNotes t stop tg = do
           { rrOptions        = opts
           , rrVersion        = hsedVersion
           , rrStarted        = started
-          , rrTargets        = mapMaybe endDescribe ends
+          , rrTargets        = mapMaybe endRecord ends
           , rrCases          = results
           , rrTranscript     = transcript
           , rrLevel0         = level0s

@@ -46,6 +46,7 @@ module Hsed.Jig.Transcript
   , entries
   , numberOf
   , recording
+  , recordingAs
   , ifSendsIssued
     -- * Secrets
   , maskSecrets
@@ -126,7 +127,16 @@ entries (Transcript ref) = reverse <$> readIORef ref
 --   a transport failure, then the exception rethrown as it was: it may have
 --   reached the drive.
 recording :: Transcript -> Transport c -> Transport c
-recording t tr = tr
+recording t tr = recordingAs (dRole (tDescribe tr)) t tr
+
+-- | 'recording' with each command added under an end's name rather than
+--   the transport's role: what a run's simulator end records under (since
+--   M5c, the role made unique by position, @tper@, @tper-2@, so that a pair
+--   of two simulators' entries tell their ends apart, design 13.33 (28);
+--   "Hsed.Jig.Run"), the name a run's reports give the end. A drive's
+--   recording is the Guard's, under its role ("Hsed.Jig.Guard").
+recordingAs :: Text -> Transcript -> Transport c -> Transport c
+recordingAs end t tr = tr
   { tExchange = \q -> mask_ $ E.try (tExchange tr q) >>= \case
       Right r -> r <$ record t (Issued 0 end q r)
       Left e  -> do
@@ -137,7 +147,6 @@ recording t tr = tr
       s <- tInject tr ev
       s <$ record t (Note 0 ("event " <> tshow ev <> ": " <> ifStatusName s))
   }
-  where end = dRole (tDescribe tr)
 
 -- | How many IF-SENDs the entries issued.
 ifSendsIssued :: [TEntry] -> Int

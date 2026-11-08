@@ -116,7 +116,7 @@ sample = RunResult
   { rrOptions        = defaultRunOptions
   , rrVersion        = "Version 0.1.0.1 [test]"
   , rrStarted        = noon
-  , rrTargets        = [Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing]
+  , rrTargets        = [endByRole (Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing)]
   , rrCases          =
       [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] [] [] True
       , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)]
@@ -150,7 +150,7 @@ sample = RunResult
 paired :: RunResult
 paired = sample
   { rrOptions       = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
-  , rrTargets       = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
+  , rrTargets       = rrTargets sample <> [endByRole (Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin"))]
   , rrCases         = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] [] []
                           [("tper", Pass), ("drive-replay", Skipped "no Level 0")] False ]
   , rrPair          = Just (PairReport [0x0005] [0x0403] [] [] [])
@@ -298,7 +298,7 @@ blockOf tokens = Request IfSend 1 0x1004 512 (bytes <> B.replicate (512 - B.leng
 onDriveM4c :: RunResult
 onDriveM4c = sample
   { rrOptions       = defaultRunOptions { roTarget = TDevice "/dev/disk22" }
-  , rrTargets       = [Describe "drive" "kext test" UnitBlocks512 Nothing Nothing Nothing (Just "/dev/disk22")]
+  , rrTargets       = [endByRole (Describe "drive" "kext test" UnitBlocks512 Nothing Nothing Nothing (Just "/dev/disk22"))]
   , rrPolicies      = [("drive", AllowList 0x1004 (readOnlyMethods <> [AllowStackReset]))]
   , rrOutsidePolicy = [("drive", setSend)]
   , rrBlocked       = 1
@@ -637,6 +637,46 @@ spec = do
         silently (verifyTranscript (dir </> "not.json") False False) `shouldReturn` ExitFailure 1
         silently (verifyTranscript (dir </> "absent.json") False False) `shouldReturn` ExitFailure 1
 
+  describe "ends named by what was opened (design 13.33 (28), M5c)" $ do
+    let issuedSendOn end = A.object
+          [ "n" A..= (1 :: Int), "entry" A..= ("issued" :: Text), "end" A..= (end :: Text)
+          , "request" A..= A.object ["op" A..= ("if_send" :: Text), "proto" A..= (1 :: Int), "comid" A..= (4100 :: Int), "len" A..= (512 :: Int)]
+          , "response" A..= A.object ["status" A..= ("good" :: Text), "len" A..= (0 :: Int)] ]
+        target fields = A.object (["impl" A..= ("a test" :: Text), "units" A..= ("bytes" :: Text)] <> fields)
+        handMade dir name targets es = (dir </> name) <$ writeFileBinary (dir </> name) (toStrictBytes (A.encode (A.object
+          ["targets" A..= (targets :: [A.Value]), "transcript" A..= (es :: [A.Value])])))
+        tper = Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing
+    it "writes a target's opened for a ws:// end and its end where its name is not its role, and neither for an end named by its role, as before M5c" $ do
+      let targetsOf ends = [ t | A.Array ts <- maybeToList (at "targets" (A.toJSON sample { rrTargets = ends })), t <- toList ts ]
+      targetsOf [endByRole tper] `shouldBe` [A.toJSON tper]
+      targetsOf [EndRecord tper "tper" (Just "ws://127.0.0.1:41234/ws")] `shouldBe` [editKey "opened" (const "ws://127.0.0.1:41234/ws") (A.toJSON tper)]
+      targetsOf [endByRole tper, EndRecord tper "tper-2" Nothing] `shouldBe` [A.toJSON tper, editKey "end" (const "tper-2") (A.toJSON tper)]
+    it "classes a ws:// target with opened as the simulator's in verify-transcript, its IF-SENDs counting for no drive's; another opened, even with the role tper, as no simulator" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        ws <- handMade dir "ws.json" [target ["role" A..= ("tper" :: Text), "opened" A..= ("ws://127.0.0.1:41234/ws" :: Text)]] [issuedSendOn "tper"]
+        silently (verifyTranscript ws True True) `shouldReturn` ExitSuccess
+        other <- handMade dir "other.json" [target ["role" A..= ("tper" :: Text), "opened" A..= ("/dev/disk4" :: Text)]] [issuedSendOn "tper"]
+        silently (verifyTranscript other True False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript other False False) `shouldReturn` ExitSuccess
+    it "reads an old report, without opened or end, as before: tper's IF-SEND the simulator's where a target's role is tper, unreadable where none is, a drive's on another end" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        old <- handMade dir "old.json" [target ["role" A..= ("tper" :: Text)], target ["role" A..= ("drive-replay" :: Text)]] [issuedSendOn "tper"]
+        silently (verifyTranscript old True True) `shouldReturn` ExitSuccess
+        none <- handMade dir "none.json" [target ["role" A..= ("drive" :: Text)]] [issuedSendOn "tper"]
+        silently (verifyTranscript none True False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript none False True) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript none False False) `shouldReturn` ExitSuccess
+        drive <- handMade dir "drive.json" [target ["role" A..= ("tper" :: Text)], target ["role" A..= ("drive" :: Text)]] [issuedSendOn "drive"]
+        silently (verifyTranscript drive True False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript drive False False) `shouldReturn` ExitSuccess
+    it "matches entries to a target with end by that name: tper-2's IF-SEND the simulator's where the second target is named so, a drive's where it is not" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        named <- handMade dir "named.json" [target ["role" A..= ("tper" :: Text)], target ["role" A..= ("tper" :: Text), "end" A..= ("tper-2" :: Text)]]
+                          [issuedSendOn "tper-2"]
+        silently (verifyTranscript named True True) `shouldReturn` ExitSuccess
+        unnamed <- handMade dir "unnamed.json" [target ["role" A..= ("tper" :: Text)], target ["role" A..= ("tper" :: Text)]] [issuedSendOn "tper-2"]
+        silently (verifyTranscript unnamed True False) `shouldReturn` ExitFailure 1
+
   describe "diffReports" $
     it "compares two reports' Level 0 responses as the Pair runner does" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
@@ -846,7 +886,7 @@ spec = do
             exchange tperMax = ( [("MaxComPacketSize", 4096)]
                                , PropertiesAnswer [("MaxComPacketSize", tperMax), ("MaxPacketSize", 2028)] (Just [("MaxComPacketSize", 4096)]) )
             report sub end ex = writeReports (dir </> sub) quiet
-              { rrTargets    = [Describe end "a test" UnitBlocks512 Nothing Nothing Nothing Nothing]
+              { rrTargets    = [endByRole (Describe end "a test" UnitBlocks512 Nothing Nothing Nothing Nothing)]
               , rrLevel0     = [(end, level0)]
               , rrProperties = [(end, fst ex, snd ex)] }
               <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)

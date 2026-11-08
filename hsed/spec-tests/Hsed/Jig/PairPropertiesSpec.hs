@@ -32,11 +32,17 @@ it. The rules follow the requirements they are given: one rebound, the
 judgement follows. Then the JSON and the lines the reports print, and two
 simulators run through UCT-02 as a pair, the second standing for a drive
 that reports a larger MaxComPacketSize and a property more, the report
-carrying the comparison.
+carrying the comparison; its ends named by their role made unique by
+position (design 13.33 (28), M5c), @tper@ and @tper-2@, in its verdicts,
+its transcript and its Properties, its targets recording @end@ for the
+second alone; and @hsed-jig diff@ comparing each report's last end,
+@tper-2@, not the first end of its role.
 -}
 module Hsed.Jig.PairPropertiesSpec (spec) where
 
 import qualified Data.Aeson               as A
+import qualified Data.Aeson.KeyMap        as KM
+import qualified RIO.List                 as L
 import           RIO
 import           RIO.Directory            (listDirectory)
 import           RIO.FilePath             (takeExtension, (</>))
@@ -50,6 +56,7 @@ import           Hsed.Jig.Catalogue       (parseCaseKeys)
 import           Hsed.Jig.Options         (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Pair            (Judgement (..))
 import           Hsed.Jig.PairProperties
+import           Hsed.Jig.Report          (diffReports)
 import           Hsed.Jig.Run             (runOpened)
 import           Hsed.Jig.Script          (PropertiesAnswer (..))
 import           Hsed.Jig.Simulator       (inProcess)
@@ -91,6 +98,26 @@ setProperty :: Text -> Maybe Integer -> [(Text, Integer)] -> [(Text, Integer)]
 setProperty name = \case
   Nothing -> filter ((/= name) . fst)
   Just v  -> \ps -> if any ((== name) . fst) ps then [ (n, if n == name then v else w) | (n, w) <- ps ] else ps <> [(name, v)]
+
+-- | A field of a JSON object edited (null where it lacks it), or the value
+--   as it is where it is no object.
+editField :: Text -> (A.Value -> A.Value) -> A.Value -> A.Value
+editField k f = \case
+  A.Object o -> let key = fromString (T.unpack k) in A.Object (KM.insert key (f (fromMaybe A.Null (KM.lookup key o))) o)
+  v          -> v
+
+-- | A report with one end's Properties exchange's TPer property set, by
+--   the end's name.
+withTPerProperty :: Text -> Text -> Integer -> A.Value -> A.Value
+withTPerProperty end name v = editField "properties" $ \case
+  A.Array es -> A.Array (fmap (\e -> if at "end" e == Just (A.String end) then editField "tper" (editField name (const (A.toJSON v))) e else e) es)
+  other      -> other
+
+-- | A JSON array's elements; none for anything else.
+elementsOf :: Maybe A.Value -> [A.Value]
+elementsOf = \case
+  Just (A.Array xs) -> toList xs
+  _                 -> []
 
 -- | An answer with a TPer property set or removed.
 tperSet :: Text -> Maybe Integer -> PropertiesAnswer -> PropertiesAnswer
@@ -356,3 +383,16 @@ spec = do
         at "pair_properties" json `shouldBe` Just (A.toJSON (Compared
           [PropDiff "MaxComPacketSize" TPerSide (Just 2048) (Just 65536) "TPer minimum 2048 (Opal 2.30 Table 17, PDF 33-34)" Allowed] [] ["MaxAggTokenSize"]))
         fmap length (at "properties" json >>= \case { A.Array es -> Just es; _ -> Nothing }) `shouldBe` Just 2
+        -- the ends named by their role made unique by position (design 13.33 (28)), the second's targets entry carrying end alone
+        [ (at "role" t', at "end" t', at "opened" t') | t' <- elementsOf (at "targets" json) ]
+          `shouldBe` [(Just "tper", Nothing, Nothing), (Just "tper", Just "tper-2", Nothing)]
+        [ at "end" e | c <- elementsOf (at "cases" json), e <- elementsOf (at "ends" c) ] `shouldBe` [Just "tper", Just "tper-2"]
+        L.nub [ at "end" e | e <- elementsOf (at "transcript" json), at "entry" e == Just "issued" ] `shouldBe` [Just "tper", Just "tper-2"]
+        map (at "end") (elementsOf (at "properties" json)) `shouldBe` [Just "tper", Just "tper-2"]
+        -- hsed-jig diff compares the last end, tper-2: the second's exchange below Table 17 fails it, the first's is not compared
+        let written name v = (dir </> name) <$ writeFileBinary (dir </> name) (toStrictBytes (A.encode v))
+        report <- written "pair.json" json
+        lastBelow <- written "last-below.json" (withTPerProperty "tper-2" "MaxPacketSize" 2000 json)
+        firstBelow <- written "first-below.json" (withTPerProperty "tper" "MaxPacketSize" 2000 json)
+        silently (diffReports report lastBelow) `shouldReturn` ExitFailure 1
+        silently (diffReports report firstBelow) `shouldReturn` ExitSuccess

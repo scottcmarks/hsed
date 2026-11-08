@@ -688,6 +688,7 @@ spec = do
           _   -> throwString ("not one report in " <> reports)
         [ (at "verdict" c, at "reason" c) | A.Array cs <- maybeToList (at "cases" json), c <- toList cs ]
           `shouldBe` [(Just "skipped", Just (A.String ("prerequisite unmet: SyncIdle: the simulator's state: " <> refused)))]
+        [ at "opened" e | A.Array es <- maybeToList (at "targets" json), e <- toList es ] `shouldBe` [Just "ws://127.0.0.1:41234/ws"]
 
   describe "withSession" $ do
     it "opens the session, runs the step, ends the session: two IF-SENDs and a pass" $ do

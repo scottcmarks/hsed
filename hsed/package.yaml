@@ -59,13 +59,13 @@ library:
   - base16-bytestring  # hex in transcripts, reports and the capture sidecar (M3)
   - bytestring         # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)
   - containers         # Hsed.Gen.Core.TableUIDs (Data.Map)
-  - cryptonite         # Hsed.Jig.Sha256: the capture's SHA-256 (M3 review; in the snapshot, as hsed-spec's)
+  - cryptonite         # Hsed.Sha256: the capture's SHA-256 (M3 review; in the snapshot, as hsed-spec's), the setup's digests (M5c)
   - directory          # Hsed.Jig.Files, the reports (M3)
   - filepath
   - githash            # GitHash.Extras.GitVersion: both executables' version, and Hsed.Version's (M3)
   - http-types         # the mh_transport hub's HTTP statuses and headers (M5c)
   - lens               # Hsed.App
-  - memory             # Hsed.Jig.Sha256: cryptonite's digest as bytes (Data.ByteArray); the frames' base64 (M5c)
+  - memory             # Hsed.Sha256: cryptonite's digest as bytes (Data.ByteArray); the frames' base64 (M5c)
   - network            # Hsed.Transport.Mhtx.Conn: the one socket bound, on 127.0.0.1 alone, and the one dialled (M5c)
   - QuickCheck         # Hsed.Law's properties, Hsed.Sim.Gen's generators (M3)
   - random             # the mh_transport client's reconnect backoff, its jitter (M5c)

@@ -47,7 +47,6 @@ module Hsed.Jig.Cases.SPF02
 
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
-import qualified RIO.Map               as Map
 import           RIO
 
 import           Hsed.Core.Call        (MethodResponse (..))
@@ -70,12 +69,10 @@ import           Hsed.Jig.Script       (MethodOutcome (..), RunEnv (..), Script,
                                         expectMethodStatus, expectStatus, expectT45, framesOf, getCells, ifRecvOn, ifRecvWith,
                                         observe, peekSim, rawIfSend, returnedOf, sendInSession, sendLength, simOnly, statusName,
                                         t45On, t45RowOf, unmet, withSession)
-import           Hsed.Jig.Simulator    (Simulator (..))
-import           Hsed.Jig.Target       (Target (..))
-import           Hsed.Sim              (syncOf)
 import           Hsed.Sim.Bytes        (byteRange)
 import           Hsed.Sim.Sync         (T45Row (..))
-import           Hsed.Sim.Types        (ByteTable (..), SPState (..), SyncState (..), TPerState (..))
+import           Hsed.Sim.Types        (ByteTable (..), SyncState (..))
+import           Hsed.Sim.View         (ComIdView (..), SimQuery (..))
 import           Hsed.Wire             (ExchangeOpts (..), IfStatus (..), Response)
 
 
@@ -127,11 +124,7 @@ emptyAtoms = fmap (fromMaybe (Skipped "the simulator's alone")) . simOnly $ do
                   (controlComPacket base (foldMap generate (L.replicate 4 Empty)))
   len <- sendLength bytes
   rawIfSend base len bytes >>= expectStatus "the IF-SEND of four Empty atoms" Good
-  after <- asks reTarget >>= \t -> case t of
-    SimTarget _ sim -> case simStateInProc sim of
-      Just peek -> liftIO (syncOf base <$> peek)
-      Nothing   -> unmet "not yet written: group G4 (Hsed.Jig.Cases.SPF02.emptyAtoms: the base ComID's state read through the simulator's view)"
-    _               -> pure Nothing
+  after <- (>>= fmap cvSync . L.find ((== base) . cvComId)) <$> peekSim ComIds
   unless (after == Just S1) (unmet ("after the IF-SEND the ComID is in " <> maybe "no state" tshow after <> ", not S1"))
   ifRecvOn base >>= expectT45 "the next IF-RECV" base AllReturnedNoData
   pure Pass
@@ -232,11 +225,10 @@ byteString = \case
 --   simulator's state holds it ("Hsed.Sim.Bytes".'byteRange' of its byte
 --   table, Opal 2.30 Table 36, PDF 54).
 dataStoreRows :: Script Verdict
-dataStoreRows = peekSim >>= \case
+dataStoreRows = peekSim (ByteTableOf uSP_Locking dataStoreTable) >>= \case
   Nothing -> pure (Skipped "the simulator's alone")
-  Just st -> do
-    table <- maybe (unmet "the simulator's Locking SP holds no DataStore byte table (Opal 2.30 Table 36, PDF 54)") pure
-                   (Map.lookup uSP_Locking (tsSPs st) >>= Map.lookup dataStoreTable . spsBytes)
+  Just held -> do
+    table <- maybe (unmet "the simulator's Locking SP holds no DataStore byte table (Opal 2.30 Table 36, PDF 54)") pure held
     a <- admin1
     withSession a $ \h -> do
       outcome <- getCells h dataStoreTable (byteRows 0 1023) >>= exchanged name

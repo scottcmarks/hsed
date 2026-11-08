@@ -16,14 +16,10 @@ its control ("Hsed.Sim.View".'Control': a ComID's prepared response
 released), and what happened to it meanwhile that the run must hear of
 ('simNotices': a hub that restarted, broadcasts missed, another client's
 reset; none in process). 'inProcess' is the in-process simulator's, over
-its "Hsed.Transport.InProc".'SimControl'.
-
-'simStateInProc' is transitional: the in-process state itself, which the
-jig's reads of the simulator still take at M5c's scaffold (four of them:
-"Hsed.Jig.Run"'s @establish@ twice, "Hsed.Jig.Script".@peekSim@, SPF-02's
-extension); group G4 turns each into a query of 'simView' and deletes it, so
-that a @ws://@ simulator, which has no such state in the jig's process, is
-read the same way.
+its "Hsed.Transport.InProc".'SimControl'. The jig reads the simulator's
+state through the view alone, in process as over the LAN leg, where it has
+no state of its own to read ("Hsed.Jig.Script".@peekSim@;
+"Hsed.CapabilitySpec").
 -}
 module Hsed.Jig.Simulator
   ( Opened (..)
@@ -34,9 +30,8 @@ module Hsed.Jig.Simulator
 import           RIO
 
 import           Hsed.Jig.Options      (WsUrl)
-import           Hsed.Sim.Types        (TPerState)
 import           Hsed.Sim.View         (Control, SimView)
-import           Hsed.Transport.InProc (SimControl (..), inProcControl, inProcView)
+import           Hsed.Transport.InProc (SimControl, inProcControl, inProcView)
 
 
 -- | How a run's simulator was opened.
@@ -48,21 +43,19 @@ data Opened
 -- | The simulator a run's 'Hsed.Jig.Target.SimTarget' carries beside its
 --   transport.
 data Simulator = Simulator
-  { simOpened      :: !Opened
-  , simView        :: !SimView
-  , simControl     :: !Control
-  , simNotices     :: IO [Text]                -- ^ what happened to the simulator since last asked, each once
-  , simStateInProc :: !(Maybe (IO TPerState))  -- ^ transitional: the in-process state; group G4 deletes it
+  { simOpened  :: !Opened
+  , simView    :: !SimView
+  , simControl :: !Control
+  , simNotices :: IO [Text]  -- ^ what happened to the simulator since last asked, each once
   }
 
 -- | The in-process simulator, over its control: its view and its control
 --   from it ("Hsed.Transport.InProc".'inProcView', 'inProcControl'), no
---   notices, its state read as the control reads it.
+--   notices.
 inProcess :: SimControl -> Simulator
 inProcess c = Simulator
-  { simOpened      = InProcess
-  , simView        = inProcView c
-  , simControl     = inProcControl c
-  , simNotices     = pure []
-  , simStateInProc = Just (scPeek c)
+  { simOpened  = InProcess
+  , simView    = inProcView c
+  , simControl = inProcControl c
+  , simNotices = pure []
   }

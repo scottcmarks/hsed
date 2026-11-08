@@ -50,6 +50,13 @@ makeListenSocket; a module names one where its import of the function's
 module lists it, brings it into scope unqualified (an open import, or a
 hiding list that leaves it), or writes it qualified by the import's alias or
 module; and the wildcard address 0.0.0.0 is written in none of them.
+
+And one of group G4's (M5c): the jig reads the simulator's state through
+its view alone ("Hsed.Sim.View"'s queries, "Hsed.Jig.Script".@peekSim@;
+Option A), in process as over the LAN leg: no module under @src/Hsed/Jig@
+names the state's type (@TPerState@), the in-process control's reader of
+it (@scPeek@), or the scaffold's transitional accessor
+(@simStateInProc@), comments included.
 -}
 module Hsed.CapabilitySpec (spec) where
 
@@ -133,6 +140,13 @@ spec = do
       [ (name, why) | (name, text) <- sources, name /= "Hsed.Transport.Mhtx.Conn", why <- listenersNamed text ] `shouldBe` []
       [ name | (name, text) <- sources, "0.0.0.0" `T.isInfixOf` text ] `shouldBe` []
 
+  describe "the simulator's state, seen from the jig (design 11 M5c, Option A)" $
+    it "is read through the simulator's view alone: no module under src/Hsed/Jig names TPerState, scPeek or simStateInProc" $ do
+      jig <- modulesUnder ("src" </> "Hsed" </> "Jig")
+      jig `shouldSatisfy` any ((== "Hsed.Jig.Script") . fst)
+      [ (name, word) | (name, text) <- jig, word <- ["TPerState", "scPeek", "simStateInProc"], word `T.isInfixOf` text, word `standsIn` text ]
+        `shouldBe` []
+
 -- | A deferred type error that says a 'ReadOnly transport is no 'ReadWrite one.
 capabilityMismatch :: TypeError -> Bool
 capabilityMismatch (TypeError msg) = all (`L.isInfixOf` msg) ["ReadOnly", "ReadWrite"]
@@ -211,15 +225,19 @@ listeners =
   , ("Network.WebSockets", ["runServer", "runServerWith", "runServerWithOptions", "makeListenSocket"])
   ]
 
--- | Each function of 'listeners' a source names, and how: listed by an
---   import of its module (not as hidden), in scope unqualified by an import
---   with no list or a hiding list that leaves it, or written qualified by the
---   import's alias or by the module's name.
+-- | Each function of 'listeners' a source names, and how ('namesFrom').
 listenersNamed :: Text -> [Text]
-listenersNamed text =
+listenersNamed = namesFrom listeners
+
+-- | Each function of a list of them by module a source names, and how:
+--   listed by an import of its module (not as hidden), in scope unqualified
+--   by an import with no list or a hiding list that leaves it, or written
+--   qualified by the import's alias or by the module's name.
+namesFrom :: [(Text, [Text])] -> Text -> [Text]
+namesFrom functions text =
   [ idModule d <> "." <> f <> ": " <> how
   | d <- importDecls text
-  , (family, fs) <- listeners
+  , (family, fs) <- functions
   , idModule d == family || (family <> ".") `T.isPrefixOf` idModule d
   , f <- fs
   , Just how <- [naming d f]
@@ -228,14 +246,21 @@ listenersNamed text =
     naming d f
       | not (idHiding d), f `elem` fromMaybe [] (idList d)                         = Just "listed by its import"
       | not (idQualified d), maybe True (\l -> idHiding d && f `notElem` l) (idList d) = Just "in scope unqualified"
-      | any (\q -> standsAlone (q <> "." <> f)) (maybe [] pure (idAlias d) <> [idModule d]) = Just "written qualified"
+      | any (\q -> (q <> "." <> f) `standsIn` text) (maybe [] pure (idAlias d) <> [idModule d]) = Just "written qualified"
       | otherwise                                                                  = Nothing
-    -- a qualified name written as a word of its own, no longer name's part
-    standsAlone qname = any (\(front, back) -> not (endsIdent front) && not (startsIdent (T.drop (T.length qname) back)))
-                            (T'.breakOnAll qname text)
+
+-- | Whether a name is written in a text as a word of its own, no longer
+--   name's part (the last part of a qualified one counts:
+--   @Hsed.Transport.InProc.scPeek@ writes @scPeek@).
+standsIn :: Text -> Text -> Bool
+standsIn name text = any (\(front, back) -> not (endsIdent front) && not (startsIdent (T.drop (T.length name) back))) (T'.breakOnAll name text)
+  where
     endsIdent   = T.any identChar . T.takeEnd 1
     startsIdent = T.any identChar . T.take 1
-    identChar c = C.isAlphaNum c || c == '_' || c == '\''
+
+-- | A character of a Haskell name.
+identChar :: Char -> Bool
+identChar c = C.isAlphaNum c || c == '_' || c == '\''
 
 -- | An import declaration: the module, whether qualified, its alias, whether
 --   its list hides, and the names its list holds (none without a list).

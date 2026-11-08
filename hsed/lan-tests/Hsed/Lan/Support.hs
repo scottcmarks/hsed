@@ -13,13 +13,15 @@ The LAN suite (hsed-lan-test, design 11 M5c) runs its hubs in its own
 threads, each on a socket "Hsed.Transport.Mhtx.Conn".'bindLoopback' binds on
 127.0.0.1 and an ephemeral port (D6), kept from the bind to the close so that
 no other process can take the port between them, and closed whatever the
-spec comes to ('withHub'); dials them as a client would ('probe'); and
-speaks HTTP to their hooks with one raw request, no HTTP client ('rawHttp').
-Built on the LAN leg's modules, which groups G1 and G2 write: until they do,
-each says so.
+spec comes to ('withHub'), or on a port given, a hub started again where one
+stopped ('withHubOn'); dials them as a client would ('probe'); and speaks
+HTTP to their hooks with one raw request, no HTTP client ('rawHttp'). Built
+on the LAN leg's modules, which groups G1 and G2 write: until they do, each
+says so.
 -}
 module Hsed.Lan.Support
   ( withHub
+  , withHubOn
   , probe
   , rawHttp
   ) where
@@ -37,9 +39,17 @@ import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, hubClose, new
 --   and an ephemeral port for the action's length, then closed, its socket
 --   with it: the action given the port and the hub.
 withHub :: HubOpts -> Backend -> (Word16 -> Hub -> IO a) -> IO a
-withHub opts backend act = bracket (bindLoopback 0) (N.close . fst) $ \(sock, port) ->
+withHub = withHubOn 0
+
+-- | 'withHub' on 127.0.0.1's port given (0, an ephemeral one): a hub
+--   started where another was stopped, on its port again (ReuseAddr), as
+--   RestartSpec's hub B takes hub A's. The hub's serving is linked to the
+--   action, so that a hub that fails fails the spec at once, not as a probe's
+--   timeout.
+withHubOn :: Word16 -> HubOpts -> Backend -> (Word16 -> Hub -> IO a) -> IO a
+withHubOn port opts backend act = bracket (bindLoopback port) (N.close . fst) $ \(sock, bound) ->
   bracket (newHub opts backend) hubClose $ \hub ->
-    withAsync (runHub hub sock) $ \_ -> act port hub
+    withAsync (runHub hub sock) $ \serving -> link serving >> act bound hub
 
 -- | An action over a websocket to the hub's @\/ws@ on 127.0.0.1's port,
 --   connected within 5 s (conformance.dart:88's wait for a frame), or why

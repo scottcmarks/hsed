@@ -141,9 +141,14 @@ hubSeq _hub = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.hu
 hubClientCount :: Hub -> IO Int
 hubClientCount _hub = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.hubClientCount)"
 
--- | Serve one connection until it closes.
-hubServe :: Hub -> Conn -> IO ()
-hubServe _hub _conn = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.hubServe)"
+-- | Serve one connection until it closes, given the token its request
+--   carried (the @token@ query parameter; none, none given): where the hub
+--   asks for one (@--token-file@), a token missing or not equal to it
+--   (compared in constant time) has the connection closed with 4001 before
+--   hello (SPEC.md L92-95), and is never logged. 'runHub' reads the token
+--   from the upgrade's request; a test over memory gives it here.
+hubServe :: Hub -> Maybe ByteString -> Conn -> IO ()
+hubServe _hub _token _conn = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.hubServe)"
 
 -- | Broadcast an object with the next @seq@, which it returns; or why not
 --   (a reserved type, a @sed.*@ type).
@@ -158,7 +163,10 @@ hubSweep _hub = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.
 hubClose :: Hub -> IO ()
 hubClose _hub = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.hubClose)"
 
--- | Serve the hub on a listening socket (warp's runSettingsSocket), until
---   killed.
+-- | Serve the hub on a listening socket, the one
+--   "Hsed.Transport.Mhtx.Conn".'Hsed.Transport.Mhtx.Conn.bindLoopback'
+--   bound (warp's runSettingsSocket, which binds nothing), and sweep its
+--   peers every heartbeat interval ('hubSweep'), until killed: what
+--   hsed-sim runs and the LAN suite's hubs run, nothing else beside it.
 runHub :: Hub -> Socket -> IO ()
 runHub _hub _socket = throwString "not yet written: group G2 (Hsed.Transport.Mhtx.Hub.runHub)"

@@ -100,7 +100,7 @@ import           Hsed.Sim.Types                 (SimParams (..), foldProblemText
 import           Hsed.Sim.View                  (ComIdView (..), SimQuery (..), SimSetup (..), SomeQuery (..), answer, setupOf)
 import           Hsed.Transport.InProc          (InProcOpts (..), SimControl (..), newInProc)
 import           Hsed.Transport.Mhtx.Conn       (Conn (..), Incoming (..), codeBadToken, codeGoingAway, codeHeartbeat, codePolicy,
-                                                 connectionOptions, fromWebSocket)
+                                                 connectionOptions, fromWebSocket, messageLimit)
 import           Hsed.Transport.Mhtx.Frame      (Allow (..), FromClient (..), Hello (..), Op (..), Reply (..), SedApp (..), SedEvt (..),
                                                  SedReq (..), SedRsp (..), answerValue, broadcastText, evtText, fromClient, helloText,
                                                  pongText, rspText, sedAppValue)
@@ -457,10 +457,10 @@ closeWaitMicros :: Int
 closeWaitMicros = 1000000
 
 -- | The most an @/emit@ body may hold: 2 MiB, the frames' own limit
---   ("Hsed.Transport.Mhtx.Conn"'s message size), which its broadcast must
+--   ("Hsed.Transport.Mhtx.Conn".'messageLimit'), which its broadcast must
 --   fit.
 emitMost :: Int
-emitMost = 2 * 1024 * 1024
+emitMost = fromIntegral messageLimit
 
 -- | A server id: 12 characters of [a-z0-9] (hub.dart:170-173), each drawn
 --   uniformly from the system's random bytes (cryptonite's 'Random.getRandomBytes'),

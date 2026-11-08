@@ -62,9 +62,9 @@ Since M5c each end is named by its role made unique by position (@tper@,
 beside the role where it says more (design 13.33 (28)): a target gives
 @opened@ for a @ws://@ end (its URL) and @end@ where its name is not its
 role, neither otherwise, so that a report of a run before M5c reads as it
-did. A reader classes an end as the simulator's by what was opened, @sim@
-or a @ws://@ URL, or, where the report records nothing opened, by its role
-@tper@ ('simulatorOpened'); entries are matched to ends by name, and
+did. A reader classes an end as the simulator's by its role @tper@ and,
+where the report records it, by what was opened, @sim@ or a @ws://@ URL,
+both saying so ('simulatorOpened'); entries are matched to ends by name, and
 @diff@ takes each report's last end by position.
 
 The target's part of a report's name is @sim@, @dev-disk22@,
@@ -206,15 +206,19 @@ data EndRecord = EndRecord
 endByRole :: Describe -> EndRecord
 endByRole d = EndRecord d (dRole d) Nothing
 
--- | Whether an end is the simulator's (design 13.33 (28)): by what was
---   opened for it where the report records that, the simulator in process
---   (@sim@) or over the LAN leg (@ws://@); otherwise by its role, @tper@, as
---   every report before M5c has it.
+-- | Whether an end is the simulator's (design 13.33 (28)): its role @tper@,
+--   as every report before M5c has it, and, where the report records what
+--   was opened for it, the simulator in process (@sim@) or over the LAN leg
+--   (@ws://@). Both must say so: what was opened never makes a drive's end
+--   the simulator's (the M5c review), nor a role the simulator's what was
+--   opened as a device.
 --
 -- >>> map (uncurry simulatorOpened) [(Nothing, "tper"), (Nothing, "drive"), (Just "ws://127.0.0.1:41234/ws", "tper"), (Just "sim", "tper"), (Just "/dev/disk4", "tper")]
 -- [True,False,True,True,False]
+-- >>> map (uncurry simulatorOpened) [(Just "sim", "drive"), (Just "ws://127.0.0.1:41234/ws", "drive"), (Just "sim", "drive-replay")]
+-- [False,False,False]
 simulatorOpened :: Maybe Text -> Text -> Bool
-simulatorOpened opened role = maybe (role == "tper") (\o -> o == "sim" || "ws://" `T.isPrefixOf` o) opened
+simulatorOpened opened role = role == "tper" && maybe True (\o -> o == "sim" || "ws://" `T.isPrefixOf` o) opened
 
 -- | What a run came to.
 data RunResult = RunResult
@@ -288,6 +292,21 @@ slug = \case
   TWs u     -> T.intercalate "-" (["ws", "127.0.0.1", tshow (wsPort u)] <> map safe (filter (not . T.null) (T.split (== '/') (wsPath u))))
   where
     safe = T.map (\c -> if C.isAlphaNum c || c `elem` ['-', '_', '.'] then c else '_')
+
+-- | A target as a JUnit classname has it (@hsed-jig.@ before it): its slug,
+--   but a @ws:\/\/@ target's @ws-loopback-PATH@, its ephemeral port left out
+--   (a new port each run would be a new class to a CI's test history) and
+--   no dot (which a JUnit consumer reads as a package's separator); the URL
+--   stays in the testsuite's name and the JSON (the M5c review).
+--
+-- >>> map junitClass [TSim, TWs (WsUrl 55911 "/ws"), TWs (WsUrl 1 "/a.b/c"), TPair TSim (TReplay "x.bin")]
+-- ["sim","ws-loopback-ws","ws-loopback-a_b-c","sim+replay-x"]
+junitClass :: TargetSpec -> Text
+junitClass = \case
+  TWs u     -> T.intercalate "-" (["ws", "loopback"] <> map (T.map (\c -> if C.isAlphaNum c || c `elem` ['-', '_'] then c else '_'))
+                                                        (filter (not . T.null) (T.split (== '/') (wsPath u))))
+  TPair a b -> junitClass a <> "+" <> junitClass b
+  t         -> slug t
 
 -- | A target as @--target@ takes it.
 renderTarget :: TargetSpec -> Text
@@ -705,8 +724,8 @@ secretLines rr
                 <> [""]
 
 -- | Whether a run had the simulator for an end, in process or over the LAN
---   leg ('simulatorOpened': by what was opened for an end where it says, by
---   a role of @tper@ otherwise, "Hsed.Transport.InProc").
+--   leg ('simulatorOpened': by a role of @tper@, "Hsed.Transport.InProc",
+--   and what was opened for the end where the report says).
 hasSimulator :: RunResult -> Bool
 hasSimulator rr = any isSimulator (rrTargets rr)
 
@@ -892,7 +911,7 @@ junit rr = T.unlines $
   <> concatMap testcase tests
   <> [ "  </testsuite>", "</testsuites>" ]
   where
-    target = slug (roTarget (rrOptions rr))
+    target = junitClass (roTarget (rrOptions rr))
     secretOf s = describeSecret s <> ", " <> secretsText rr <> (if shortSecret s then "; " <> shortWarning else "")
     tests  = [ (caseTitle (crKey cr), crVerdict cr) | cr <- rrCases rr ]
              <> [ (renderCaseKey (crKey cr) <> " extension: " <> n, v) | cr <- rrCases rr, (n, v) <- crExtensions cr ]
@@ -1101,9 +1120,9 @@ data Reread
 
 -- | The names of the ends a report's targets class as the simulator's
 --   (design 13.33 (28)): each target named by its @end@, or by its @role@
---   where it gives none (every report before M5c), the simulator's where it
---   records what was opened as @sim@ or a @ws://@ URL, or, where it records
---   nothing opened, where its role is @tper@ ('simulatorOpened'); an entry
+--   where it gives none (every report before M5c), the simulator's where its
+--   role is @tper@ and what it records opened, if anything, is @sim@ or a
+--   @ws://@ URL ('simulatorOpened'); an entry
 --   is the simulator's only where the report names its end so.
 simulatorEnds :: A.Value -> [Text]
 simulatorEnds = either (const []) id . A.parseEither (A.withObject "report" $ \o -> do

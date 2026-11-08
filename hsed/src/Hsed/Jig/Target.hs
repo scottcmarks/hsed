@@ -60,8 +60,8 @@ import           Hsed.Sim.View         (setupDifferences, setupOf)
 import           Hsed.Transport.Drive  (RawDrive (..))
 import           Hsed.Transport.InProc (InProcOpts (..), newInProc)
 import           Hsed.Transport.MacKext (KextOpts (..), openKext)
-import           Hsed.Transport.Mhtx.Client (clientApp, clientControl, clientNotices, clientOpts, clientTransport, clientView, closeMhtx,
-                                             openMhtx)
+import           Hsed.Transport.Mhtx.Client (clientApp, clientControl, clientNotices, clientOpts, clientSettled, clientTransport,
+                                             clientView, closeMhtx, openMhtx)
 import           Hsed.Transport.Mhtx.Frame (Allow (..), SedApp (..))
 import           Hsed.Transport.Replay (openReplay)
 import           Hsed.Wire             (Cap (..), Transport, closeTransport)
@@ -115,7 +115,7 @@ openTarget opts admits t = open (roTarget opts)
                        { simOpened      = OverWs u
                        , simView        = clientView c
                        , simControl     = clientControl c
-                       , simNotices     = clientNotices c
+                       , simNotices     = clientSettled c >> clientNotices c
                        }))
           refusals -> Left (T.intercalate "; " refusals) <$ closeMhtx c
     bsdName dev = fromMaybe dev (T.stripPrefix "/dev/" dev)

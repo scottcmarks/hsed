@@ -80,7 +80,8 @@ Since M5c the simulator's state is read through its view alone
 the simulator, nothing on a drive; on a @ws://@ end whose view does not
 answer (a hub that refused the peek), a script that reads the state stops,
 saying "the simulator's state:" and why, and a case's prerequisite that
-reads it is unmet, the case skipped (the run's @establish@); what the
+reads it is not established, the case failed, its state never read (the
+run's @establish@; skipped as unmet before the M5c review); what the
 simulator says happened to it is noted and the run's session forgotten
 ('heedNotices').
 -}
@@ -671,7 +672,7 @@ spec = do
       (a, reached, es) <- scripted True (peekSim Msid)
       (b, _, _) <- scripted False (peekSim Msid)
       (a, reached, es, b) `shouldBe` (Just (spMsid defaultSimParams), 0, [], Nothing)
-    it "on a ws:// end whose view does not answer, stops a script that reads the state, saying so, and leaves a case's prerequisite that reads it unmet, the case skipped" $ do
+    it "on a ws:// end whose view does not answer, stops a script that reads the state, saying so, and leaves a case's prerequisite that reads it not established, the case failed" $ do
       let refused = "the hub refused peek: it was started without --allow-remote-control"
           overWs control = (inProcess control) { simOpened = OverWs (WsUrl 41234 "/ws"), simView = SimView (\_ -> pure (Left refused)) }
       (v1, _, _) <- scriptedOn (overWs (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))) True (attempt (Pass <$ peekSim ComIds))
@@ -688,8 +689,8 @@ spec = do
         json <- listDirectory reports >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
           [f] -> readFileBinary (reports </> f) >>= either throwString pure . A.eitherDecodeStrict'
           _   -> throwString ("not one report in " <> reports)
-        [ (at "verdict" c, at "reason" c) | A.Array cs <- maybeToList (at "cases" json), c <- toList cs ]
-          `shouldBe` [(Just "skipped", Just (A.String ("prerequisite unmet: SyncIdle: the simulator's state: " <> refused)))]
+        [ (at "verdict" c, at "reasons" c) | A.Array cs <- maybeToList (at "cases" json), c <- toList cs ]
+          `shouldBe` [(Just "fail", Just (A.toJSON ["prerequisite not established: SyncIdle: the simulator's state could not be read: " <> refused]))]
         [ at "opened" e | A.Array es <- maybeToList (at "targets" json), e <- toList es ] `shouldBe` [Just "ws://127.0.0.1:41234/ws"]
 
   describe "withSession" $ do

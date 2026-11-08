@@ -33,7 +33,10 @@ A hub restarted under a run (hub B started on hub A's port, as
 failure when A stops, the request never sent again, B's backend never seeing it; the request
 issued while no hub listens is refused, naming the restart; the restart is noted before the
 next case, the run's session forgotten as a power cycle forgets it ("Hsed.Jig.Script".
-'Hsed.Jig.Script.heedNotices'); and the later cases pass on B's TPer.
+'Hsed.Jig.Script.heedNotices'); and the later cases pass on B's TPer. Since the M5c review: a
+restart under a case's body skips its extensions, which would observe B's TPer; and a restart
+that loses a prerequisite's view fails that case (the state not read, no claim about it), the
+next case awaiting the reconnect and passing on B.
 -}
 module Hsed.Jig.WsTargetSpec (spec) where
 
@@ -58,7 +61,7 @@ import           Hsed.Sha256               (sha256Hex)
 import           Hsed.Sim.Profile          (loadProfile)
 import           Hsed.Sim.Types            (LifeCycle (..), SimParams (..), defaultSimParams)
 import           Hsed.Sim.View             (setupOf)
-import           Hsed.Transport.InProc     (InProcOpts (..))
+import           Hsed.Transport.InProc     (InProcOpts (..), SimControl (..))
 import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..))
 import           Hsed.Transport.Mhtx.Frame (Allow (..), FromServer (..), Hello (..), SedApp (..), SedEvt (..), fromServer)
 import           Hsed.Transport.Mhtx.Hub   (Backend (..), HubOpts (..), backendOf, defaultHubOpts)
@@ -113,7 +116,7 @@ spec = describe "Hsed.Jig.Target, a ws:// target" $ do
           evts <- within "the probe's sed.evt" (atomically (readTVar events >>= \es -> if null es then retrySTM else pure es))
           [ (evtSeq e, evtEvent e) | e <- evts ] `shouldBe` [(s0 + 1, PowerCycle)])
 
-  describe "a hub restarted under the run (hub B on hub A's port)" $
+  describe "a hub restarted under the run (hub B on hub A's port)" $ do
     it "fails the case in flight with a transport failure, never sending it again; notes the restart and the session it forgets; passes the later cases on hub B's TPer" $ do
       arrived <- newEmptyMVar
       gate <- newEmptyMVar
@@ -134,6 +137,29 @@ spec = describe "Hsed.Jig.Target, a ws:// target" $ do
         [ "the simulator over ws://127.0.0.1:", "/ws: the hub restarted, server_id ", ": a new TPer at its OFS"
         , "the run's session, unread StartSession and host properties forgotten as a power cycle forgets them" ])
       readTVarIO seenByB >>= (`shouldSatisfy` notElem held)
+    it "skips a case's extensions once the hub restarted under its body: they would observe hub B's TPer, not the case's (the M5c review)" $ do
+      arrived <- newEmptyMVar
+      gate <- newEmptyMVar
+      backendA <- holdingInSession arrived gate <$> backendFor manufactured 0
+      backendB <- backendFor manufactured 0
+      (code, json, _) <- restartedUnder backendA backendB (keys "SPF-11") (void (takeMVar arrived)) gate
+      code `shouldBe` ExitFailure 1
+      verdicts json `shouldBe` [(str "SPF-11", str "fail")]
+      let reasons = [ r | c <- elements (at "cases" json), x <- elements (at "extensions" c), Just (A.String r) <- [at "reason" x] ]
+      extensionVerdicts json `shouldBe` [str "skipped", str "skipped"]
+      reasons `shouldSatisfy` all (\r -> "not run: the simulator changed under the case (the hub restarted, server_id " `T.isPrefixOf` r)
+    it "fails the case whose prerequisite's view is lost with hub A, and runs the next on hub B once it is heard: the reconnect awaited, not refused (the M5c review)" $ do
+      arrived <- newEmptyMVar
+      gate <- newEmptyMVar
+      backendA <- holdingPeek arrived gate <$> backendFor manufactured 0
+      backendB <- backendFor manufactured 0
+      (code, json, _) <- restartedUnder backendA backendB (keys "UCT-02,SPF-11") (takeMVar arrived) gate
+      code `shouldBe` ExitFailure 1
+      verdicts json `shouldBe` [(str "UCT-02", str "fail"), (str "SPF-11", str "pass")]
+      [ r | c <- take 1 (elements (at "cases" json)), Just (A.Array rs) <- [at "reasons" c], A.String r <- toList rs ]
+        `shouldSatisfy` any ("prerequisite not established: SyncIdle: the simulator's state could not be read: the connection to " `T.isPrefixOf`)
+      extensionVerdicts json `shouldBe` [str "skipped", str "pass", str "pass"]
+      notes json `shouldSatisfy` any (T.isInfixOf "/ws: the hub restarted, server_id ")
 
   describe "the open's refusals" $ do
     it "refuses a hub without --allow-remote-control: exit 1, naming why, no report" $
@@ -240,6 +266,24 @@ holdingInSession arrived gate b = b { beTransport = (beTransport b) { tExchange 
   when (W.dir r == IfSend && B.any (/= 0) (B.take 4 (B.drop 24 (payload r)))) $
     tryPutMVar arrived r >>= \isFirst -> when isFirst (readMVar gate)
   tExchange (beTransport b) r } }
+
+-- | A backend whose first view of the simulator's state (a peek) is held: its arrival told, its answer only once the
+--   gate opens.
+holdingPeek :: MVar () -> MVar () -> Backend -> Backend
+holdingPeek arrived gate b = b { beControl = (beControl b) { scPeek = do
+  isFirst <- tryPutMVar arrived ()
+  when isFirst (readMVar gate)
+  scPeek (beControl b) } }
+
+-- | A run over hub A, which stops once the run is held where the wait given says, hub B started on its port at once:
+--   the run's exit, its JSON report and what it printed. The gate opens once the run is over, so that hub A's held
+--   thread ends.
+restartedUnder :: Backend -> Backend -> [CaseKey] -> IO () -> MVar () -> IO (ExitCode, A.Value, Text)
+restartedUnder backendA backendB ks held gate = do
+  portOfA <- newEmptyMVar
+  withAsync (readMVar portOfA >>= \port -> jig (onWs port manufactured 0 ks)) $ \run -> do
+    port <- withHub allowing backendA $ \port _ -> putMVar portOfA port >> port <$ within "hub A's held request" held
+    withHubOn port allowing backendB (\_ _ -> withinMicros 20000000 "the run over hub B" (wait run)) `finally` putMVar gate ()
 
 -- | A backend that keeps every request it is given.
 logging :: TVar [Request] -> Backend -> Backend

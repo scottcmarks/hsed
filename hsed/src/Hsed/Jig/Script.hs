@@ -1243,15 +1243,17 @@ powerCycle = theEnd >>= \case
 --   ('powerCycle'; Core 3.3.7.1.5, PDF 76): the TPer behind the notice may
 --   be another, at its Original Factory State, or one reset (design 6.3,
 --   11 M5c). Nothing is issued; on a drive, nothing. What the runner does
---   before each case and before the closing Level 0 ("Hsed.Jig.Run"), so
---   that the next case runs on what the TPer now holds.
-heedNotices :: Script ()
+--   before each case, before each of a case's extensions and before the
+--   closing Level 0 ("Hsed.Jig.Run"), so that the next case runs on what
+--   the TPer now holds, and an extension is not run on a TPer its case did
+--   not run on; the notices heard, in order.
+heedNotices :: Script [Text]
 heedNotices = asks reTarget >>= \case
-  SimTarget _ sim -> liftIO (simNotices sim) >>= traverse_ (\notice -> do
+  SimTarget _ sim -> liftIO (simNotices sim) >>= \notices -> notices <$ for_ notices (\notice -> do
     modifyCtx (\x -> (forgetSessionsOn' x) { rcHostProperties = Nothing })
     note ("the simulator " <> openedAs (simOpened sim) <> ": " <> notice <> ": the run's session, unread StartSession and host properties "
           <> "forgotten as a power cycle forgets them (Core 3.3.7.1.5, PDF 76)"))
-  _               -> pure ()
+  _               -> pure []
   where
     openedAs = \case
       InProcess -> "in process"

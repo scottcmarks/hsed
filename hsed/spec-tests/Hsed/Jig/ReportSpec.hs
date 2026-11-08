@@ -658,6 +658,11 @@ spec = do
         other <- handMade dir "other.json" [target ["role" A..= ("tper" :: Text), "opened" A..= ("/dev/disk4" :: Text)]] [issuedSendOn "tper"]
         silently (verifyTranscript other True False) `shouldReturn` ExitFailure 1
         silently (verifyTranscript other False False) `shouldReturn` ExitSuccess
+    it "never classes a drive's end as the simulator's by what it says was opened (sim, a ws:// URL): its IF-SENDs count as a drive's" $
+      withSystemTempDirectory "hsed-report" $ \dir -> for_ ["sim", "ws://127.0.0.1:1/ws" :: Text] $ \opened -> do
+        forged <- handMade dir "forged.json" [target ["role" A..= ("drive" :: Text), "end" A..= ("drive" :: Text), "opened" A..= opened]]
+                           [issuedSendOn "drive"]
+        silently (verifyTranscript forged True False) `shouldReturn` ExitFailure 1
     it "reads an old report, without opened or end, as before: tper's IF-SEND the simulator's where a target's role is tper, unreadable where none is, a drive's on another end" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         old <- handMade dir "old.json" [target ["role" A..= ("tper" :: Text)], target ["role" A..= ("drive-replay" :: Text)]] [issuedSendOn "tper"]

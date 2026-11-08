@@ -262,7 +262,8 @@ authenticating =
     admin1 = ("Admin1", uSP_Locking, LockingSP.uAuthority_Admin1)
 
 -- | Run the jig: its gates in order (a key the catalogue lacks, @--recover@
---   with cases or a pair, a drive without @--expect-serial@, a Level 0 length
+--   with cases or a pair, a drive without @--expect-serial@, @--expect-serial@
+--   or @--allow-mounted@ on a target with no drive, a Level 0 length
 --   a drive cannot carry, simulator parameters out of range: exit 2; a drive without root: exit 3; a profile
 --   that cannot be read: exit 1; a drive the run may send to with a slice
 --   mounted, unless @--allow-mounted@: exit 3), then the run's transcript
@@ -281,6 +282,7 @@ runJig opts0 = do
           traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs --expect-serial SERIAL: a drive is opened only as "
                                       <> "the one named")) devs
           pure (ExitFailure 2)
+      | Just why <- driveFlagsProblem opts0 -> complain why $> ExitFailure 2
       | Just why <- level0LenProblem opts0 -> complain why $> ExitFailure 2
       | Just why <- simParamsProblem opts0 -> complain why $> ExitFailure 2
       | not root, devs@(_ : _) <- devices (roTarget opts0) -> do
@@ -403,6 +405,19 @@ devices = \case
   TPair a b -> devices a <> devices b
   TWs _     -> []
   _         -> []
+
+-- | Why the flags that name a drive cannot be taken, if they cannot:
+--   @--expect-serial@ and @--allow-mounted@ given to a target with no drive
+--   (no @\/dev@ end: the simulator, a @ws:\/\/@ hub, a replay), where they
+--   would say nothing and a mistyped target would be quietly taken for a
+--   run with no drive (the M5c review). @--capture-level0@ fails at the
+--   open, where a replay's end has no drive to capture.
+driveFlagsProblem :: RunOptions -> Maybe Text
+driveFlagsProblem opts
+  | not (null (devices (roTarget opts))) = Nothing
+  | otherwise = listToMaybe
+      [ "hsed-jig: " <> flag <> " names a drive, and --target " <> renderTarget (roTarget opts) <> " has none (a /dev target)"
+      | (flag, given) <- [("--expect-serial", isJust (roExpectSerial opts)), ("--allow-mounted", roAllowMounted opts)], given ]
 
 -- | Whether a target has a drive's end, its own or a replay.
 hasDriveEnd :: TargetSpec -> Bool
@@ -799,7 +814,7 @@ runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
   Nothing  -> ran `catch` \(Interrupted why) -> pure (notRun (Skipped ("interrupted: " <> why)))
   where
     ran = do
-      heedNotices
+      void heedNotices
       let heading = renderCaseKey (cKey c) <> " on the " <> endName e
       logInfo (display heading)
       note heading
@@ -808,18 +823,30 @@ runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
       case lacking tg c of
         Just why -> pure (notRun (Skipped why))
         Nothing  -> prerequisites c >>= \case
-          Left why -> pure (notRun (Skipped ("prerequisite unmet: " <> why)))
+          Left (Unmet why)  -> pure (notRun (Skipped ("prerequisite unmet: " <> why)))
+          Left (Unread why) -> pure (notRun (Fail ["prerequisite not established: " <> why]))
           Right ws -> do
             v <- attempt (cRun c)
             own <- observed
-            xs <- for (cExtensions c) $ \(name, s) -> case (v, tg) of
-              (Skipped _, _)        -> pure ((name, unrun v), [])
-              (Unobservable _, _)   -> pure ((name, unrun v), [])
-              (_, SimTarget _ _)    -> asks reStop >>= readIORef >>= \case
-                Just why -> pure ((name, Skipped ("not run: the run was interrupted (" <> why <> ")")), [])
-                Nothing  -> extension name s `catch` \(Interrupted why) -> ((name, Skipped ("interrupted: " <> why)), []) <$ observed
-              _                     -> pure ((name, Skipped "the simulator's alone"), [])
+            xs <- extensionsOn v tg Nothing (cExtensions c)
             pure (CaseResult (cKey c) v ws (map fst xs) (own <> concatMap snd xs) [] True)
+    -- the extensions in order, each given what changed under the case, if anything did: on the simulator, what it says
+    -- happened to it is heard before each (heedNotices), and once something is heard (a hub restarted, broadcasts
+    -- missed, another client's reset) this extension and those after it are not run, since they would observe a TPer
+    -- the case did not run on (the M5c review)
+    extensionsOn v tg changed = \case
+      [] -> pure []
+      (name, s) : rest -> case (v, tg) of
+        (Skipped _, _)      -> (((name, unrun v), []) :) <$> extensionsOn v tg changed rest
+        (Unobservable _, _) -> (((name, unrun v), []) :) <$> extensionsOn v tg changed rest
+        (_, SimTarget _ _)  -> asks reStop >>= readIORef >>= \case
+          Just why -> (((name, Skipped ("not run: the run was interrupted (" <> why <> ")")), []) :) <$> extensionsOn v tg changed rest
+          Nothing  -> maybe heedNotices (pure . pure) changed >>= \case
+            notice : _ -> (((name, underCase notice), []) :) <$> extensionsOn v tg (Just notice) rest
+            []         -> (:) <$> (extension name s `catch` \(Interrupted why) -> ((name, Skipped ("interrupted: " <> why)), []) <$ observed)
+                              <*> extensionsOn v tg Nothing rest
+        _                   -> (((name, Skipped "the simulator's alone"), []) :) <$> extensionsOn v tg changed rest
+    underCase notice = Skipped ("not run: the simulator changed under the case (" <> notice <> ")")
     -- an extension run, its verdict and what it observed, under its name
     extension name s = do
       note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name)
@@ -870,10 +897,19 @@ lacking tg c = listToMaybe ([ why | n <- [NeedWrite, NeedSimOnly, NeedErrorPath,
         ["not among the cases a drive runs (design 9.3, its list unchanged since M4c: " <> T.intercalate ", " (map renderCaseKey driveCases) <> ")"]
       _ -> []
 
+-- | Why a prerequisite was not established: unmet, the state it reads read
+--   and not meeting it (the case skipped); or unread, the simulator's state
+--   it reads not read at all (the case failed: its view refused or its
+--   connection lost, a transport's failure as in a case's body, never a
+--   claim about the TPer's state; the M5c review).
+data Unestablished
+  = Unmet !Text
+  | Unread !Text
+
 -- | A case's prerequisites in its section's order, then its own (Test
 --   Cases 3.2.3, PDF 25: in sequential order): each waived, or established
---   or checked on this end; the waivers, or why one is unmet.
-prerequisites :: Case -> Script (Either Text [Waiver])
+--   or checked on this end; the waivers, or why one is not established.
+prerequisites :: Case -> Script (Either Unestablished [Waiver])
 prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
   where
     go [] = pure (Right [])
@@ -887,8 +923,9 @@ prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
 --   unobservable or not needed, or why not. On the simulator, its state
 --   read through its view, in process or over the LAN leg alike
 --   ("Hsed.Sim.View"'s queries; M5c, Option A), a view that does not answer
---   leaving the prerequisite unmet (its name, @the simulator's state:@ and
---   why; never in process): SyncIdle drains every ComID not in Awaiting IF-SEND
+--   leaving the prerequisite unread (its name, @the simulator's state could
+--   not be read:@ and why; never in process), which fails the case rather
+--   than skip it: SyncIdle drains every ComID not in Awaiting IF-SEND
 --   ('ComIds'); NoSessions sends STACK_RESET on every ComID a session holds
 --   ('ComIds', Associated; Core 3.3.4.7.5 item 1, PDF 65: every session on
 --   it aborted, no CloseSession prepared), noted, and reads the ComIDs
@@ -925,13 +962,13 @@ prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
 --   that authenticates no authority, as on the simulator, and unmet for one
 --   that does; ReadWriteSessions is met; LockingManufactured, which every
 --   drive case waives, and LockingManufacturedInactive are not observable.
-establish :: Case -> Prereq -> Script (Either Text (Maybe Waiver))
+establish :: Case -> Prereq -> Script (Either Unestablished (Maybe Waiver))
 establish c p = asks reTarget >>= \case
   SimTarget _ sim -> onSim sim
   DriveTarget _
     | p `elem` [SyncIdle, NoSessions], all (== NeedLevel0) (cNeeds c) -> pure (Right (Just (Waiver p level0OutsideSync)))
-    | otherwise -> settled onDrive
-  PairTarget _ _ -> pure (Left "a pair's ends run a case one at a time")
+    | otherwise -> first Unmet <$> settled onDrive
+  PairTarget _ _ -> pure (Left (Unmet "a pair's ends run a case one at a time"))
   where
     authorities = fromMaybe [] (L.lookup (cKey c) authenticating)
     met = pure (Right Nothing)
@@ -944,7 +981,7 @@ establish c p = asks reTarget >>= \case
         unless (null busy) (note ("SyncIdle: draining " <> T.unwords (map hex busy)))
         attempt (Pass <$ traverse_ drain busy) <&> \case
           Pass -> Right Nothing
-          v    -> Left ("SyncIdle: " <> verdictText v)
+          v    -> Left (Unmet ("SyncIdle: " <> verdictText v))
       NoSessions -> viewing sim ComIds $ \comIds -> case holding comIds of
         []   -> met
         held -> do
@@ -954,14 +991,14 @@ establish c p = asks reTarget >>= \case
           asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing })
           viewing sim ComIds $ \again -> pure $ case holding again of
             []    -> Right Nothing
-            still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
+            still -> Left (Unmet ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET"))
       LockingManufactured -> viewing sim (LifeCycleOf uSP_Locking) $ \life -> if life == Just (lifeCycleValue Manufactured)
         then met
-        else pure (Left ("LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State; "
-                         <> "--locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)"))
+        else pure (Left (Unmet ("LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State; "
+                                <> "--locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)")))
       LockingManufacturedInactive -> viewing sim (LifeCycleOf uSP_Locking) $ \life -> if life == Just (lifeCycleValue ManufacturedInactive)
         then met
-        else pure (Left "LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")
+        else pure (Left (Unmet "LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)"))
       CredentialsKnown
         | null authorities -> Right Nothing <$ note credentialsVacuous
         | otherwise        -> firstUnmet (map (credentialKnown sim) authorities)
@@ -971,16 +1008,16 @@ establish c p = asks reTarget >>= \case
             note ("HostChallengeIsCurrentPin: " <> name <> "'s current PIN is read from the simulator's state; a challenge other than it "
                   <> "is the case's own doing" <> ofSP sp))
       ReadWriteSessions -> Right Nothing <$ note readWrite
-    -- the prerequisite on a query of the simulator's state through its view ("Hsed.Sim.View"), unmet where the view does
+    -- the prerequisite on a query of the simulator's state through its view ("Hsed.Sim.View"), unread where the view does
     -- not answer (a hub that refused the query, its connection lost; never in process), saying why
-    viewing :: Simulator -> SimQuery a -> (a -> Script (Either Text (Maybe Waiver))) -> Script (Either Text (Maybe Waiver))
-    viewing sim q k = liftIO (peekView (simView sim) q) >>= either (pure . Left . unread) k
-    unread why = tshow p <> ": the simulator's state: " <> why
+    viewing :: Simulator -> SimQuery a -> (a -> Script (Either Unestablished (Maybe Waiver))) -> Script (Either Unestablished (Maybe Waiver))
+    viewing sim q k = liftIO (peekView (simView sim) q) >>= either (pure . Left . Unread . unread) k
+    unread why = tshow p <> ": the simulator's state could not be read: " <> why
     -- an authority's credential read from the simulator's state, a secret of the run, noted; or why not: the SP named, the
     -- Admin SP's notes as at M5a, another SP's saying whose C_PIN (since M5b, the Locking SP's Admin1); the view's failure
     credentialKnown sim (name, sp, u) = liftIO (peekView (simView sim) (CredentialOf sp u)) >>= \case
-      Left why        -> pure (Just (unread why))
-      Right Nothing   -> pure (Just ("CredentialsKnown: the simulator's " <> spName sp <> " holds no credential for " <> name))
+      Left why        -> pure (Just (Unread (unread why)))
+      Right Nothing   -> pure (Just (Unmet ("CredentialsKnown: the simulator's " <> spName sp <> " holds no credential for " <> name)))
       Right (Just cr) -> do
         asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
         Nothing <$ note ("CredentialsKnown: " <> name <> "'s PIN read from the simulator's state, " <> tshow (B.length (crPIN cr))

@@ -46,7 +46,8 @@ data Simulator = Simulator
   { simOpened  :: !Opened
   , simView    :: !SimView
   , simControl :: !Control
-  , simNotices :: IO [Text]  -- ^ what happened to the simulator since last asked, each once
+  , simNotices :: IO [Text]  -- ^ what happened to the simulator since last asked, each once (over the LAN leg, once a
+                             --   reconnect under way is taken, or the client's wait for it has passed)
   }
 
 -- | The in-process simulator, over its control: its view and its control

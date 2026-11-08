@@ -131,7 +131,7 @@ import           Hsed.Jig.Case          (Case (..))
 import           Hsed.Jig.Catalogue     (CaseKey, CatalogueEntry (..), catalogue, parseCaseKeys, renderCaseKey)
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Guard         (Allowed (..), Policy (..), driveClose, guardDrive, readOnlyMethods)
-import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
+import           Hsed.Jig.Options       (TargetSpec (..), WsUrl (..), defaultRunOptions)
 import           Hsed.Jig.Prereq        (level0OutsideSync, sessionsUnobservable)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
@@ -146,6 +146,7 @@ import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.State         (lifeOf)
 import           Hsed.Sim.Types         (ComIdLife (Associated), LifeCycle (..), SimParams (..), TPerState (..), defaultSimParams,
                                          maxComPacketSizeName)
+import           Hsed.Sim.View          (SimView (..))
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..))
 import           Hsed.Transport.Opened  (openedInProc)
@@ -437,6 +438,11 @@ spec = do
     it "a drive without --expect-serial, alone or paired, root or not: exit 2" $ do
       silently (runJig defaultRunOptions { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 2
+    it "--expect-serial or --allow-mounted on a target with no drive (the simulator, a ws:// hub, a replay, their pair): exit 2" $ do
+      silently (runJig defaultRunOptions { roExpectSerial = Just "S0000000000000" }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roAllowMounted = True, roTarget = TWs (WsUrl 1 "/ws") }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roExpectSerial = Just "S0000000000000", roTarget = TReplay "nowhere.bin" }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roAllowMounted = True, roTarget = TPair TSim (TReplay "nowhere.bin") }) `shouldReturn` ExitFailure 2
     it "a Level 0 length a drive or a replay cannot carry (255 blocks of 512), alone or paired: exit 2; one it can, opened" $ do
       silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 1048576 }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 130561 }) `shouldReturn` ExitFailure 2
@@ -663,7 +669,7 @@ spec = do
         stop <- newIORef Nothing
         runRIO (RunEnv (SimTarget sim ((inProcess control) { simNotices = once })) t0 channel ctx defaultRunOptions stop
                        (mkLogFunc (\_ _ _ _ -> pure ())))
-               (heedNotices >> heedNotices)
+               (traverse (const heedNotices) [1 :: Int, 2]) `shouldReturn` [[notice], []]
         forgotten <- readIORef ctx
         (rcSession forgotten, rcSessionUnread forgotten, rcHostProperties forgotten) `shouldBe` (Nothing, Nothing, Nothing)
         entries t0 `shouldReturn` [Note 1 heard]
@@ -677,6 +683,36 @@ spec = do
         let ns = notes json
         filter (== heard) ns `shouldBe` [heard]
         (elem "UCT-01 on the tper" (takeWhile (/= heard) ns), take 1 (drop 1 (dropWhile (/= heard) ns))) `shouldBe` (True, ["SPF-02:1 on the tper"])
+
+  describe "the restart hook before each extension, and a view that does not answer (the M5c review)" $ do
+    it "does not run an extension once the simulator says something happened to it under the case: skipped, naming the notice, which is noted" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let notice = "the hub restarted, server_id 0a1b2c3d4e5f -> 5f4e3d2c1b0a: a new TPer at its OFS"
+            asked hears = newIORef hears <&> \ref -> atomicModifyIORef' ref (\ns -> (drop 1 ns, fromMaybe [] (listToMaybe ns)))
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
+        -- nothing before the case, the notice before its extension
+        underCase <- asked [[], [notice]]
+        t <- newTranscript
+        _ <- silently (runOpened defaultRunOptions { roTests = keys "SPF-02:1", roReportDir = dir </> "report" } t
+                                 (SimTarget sim ((inProcess control) { simNotices = underCase })))
+        json <- reportIn dir
+        verdicts json `shouldBe` [(str "SPF-02:1", str "pass")]
+        [ (at "verdict" x, at "reason" x) | c <- elements (at "cases" json), x <- elements (at "extensions" c) ]
+          `shouldBe` [(str "skipped", str ("not run: the simulator changed under the case (" <> notice <> ")"))]
+        notes json `shouldSatisfy` any (T.isInfixOf notice)
+    it "fails a case whose prerequisite's view does not answer, naming the state unread, rather than skip it as unmet" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
+        let lost = "the connection to ws://127.0.0.1:1/ws was lost"
+            unanswered = (inProcess control) { simView = SimView (\_ -> pure (Left lost)) }
+        t <- newTranscript
+        code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-02", roReportDir = dir </> "report" } t (SimTarget sim unanswered))
+        code `shouldBe` ExitFailure 1
+        json <- reportIn dir
+        verdicts json `shouldBe` [(str "UCT-02", str "fail")]
+        [ rs | c <- elements (at "cases" json), Just rs <- [at "reasons" c] ]
+          `shouldBe` [A.toJSON ["prerequisite not established: SyncIdle: the simulator's state could not be read: " <> lost]]
+        map (at "prerequisites") (elements (at "cases" json)) `shouldBe` [str "not reached"]
 
   describe "a case that stops with a session open" $
     it "leaves the next case runnable: its NoSessions is established by STACK_RESET on the ComID, noted in the transcript" $

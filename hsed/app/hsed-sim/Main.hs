@@ -100,11 +100,10 @@ serve (SimOptions port opts params inProc profile tokenFile) = do
         pure (params { spProfile = p }, t)
     settings token = T.intercalate ", " $
       [ "heartbeat " <> tshow (hoIntervalMs opts) <> " ms, timeout " <> tshow (hoTimeoutMs opts) <> " ms"
-      , "allows " <> case [ "peek and release" | hoAllowControl opts ] <> [ "reset" | hoAllowReset opts ] of
-                       []      -> "commands and describe alone"
-                       allowed -> "commands, describe, " <> T.intercalate " and " allowed ]
+      , "allows " <> T.intercalate ", " (["commands", "describe"] <> [ op | (op, allowed) <- ops, allowed ]) ]
       <> [ "the conformance hooks /emit and /clients" | hoHooks opts ]
       <> [ "a token asked of every client" | isJust token ]
+    ops = [("peek", hoAllowControl opts), ("release", hoAllowControl opts), ("reset", hoAllowReset opts)]
 
 -- | Lines to stderr, each named hsed-sim's.
 complain :: [Text] -> IO ()

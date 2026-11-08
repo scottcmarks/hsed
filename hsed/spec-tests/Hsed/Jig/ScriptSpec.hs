@@ -74,10 +74,22 @@ recorded; STACK_RESET answering 0 forgets the session on its ComID; a
 session the TPer aborted is forgotten, noted; a cell of the simulator's
 state is read by name; an authority's StartSession carries its PIN, a
 secret; and TPerInfo's object is the state's row.
+
+Since M5c the simulator's state is read through its view alone
+("Hsed.Sim.View"'s queries, 'peekSim'; Option A): a query is answered on
+the simulator, nothing on a drive; on a @ws://@ end whose view does not
+answer (a hub that refused the peek), a script that reads the state stops,
+saying "the simulator's state:" and why, and a case's prerequisite that
+reads it is unmet, the case skipped (the run's @establish@); what the
+simulator says happened to it is noted and the run's session forgotten
+('heedNotices').
 -}
 module Hsed.Jig.ScriptSpec (spec) where
 
+import qualified Data.Aeson                as A
 import qualified RIO.ByteString            as B
+import           RIO.Directory             (listDirectory)
+import           RIO.FilePath              (takeExtension, (</>))
 import qualified RIO.List                  as L
 import qualified RIO.Map                   as Map
 import           RIO
@@ -116,10 +128,13 @@ import           Hsed.Jig.Cases.ETC02      (etc02)
 import           Hsed.Jig.Cases.ETC08      (etc08Payload)
 import           Hsed.Jig.Cases.ETC15      (etc15)
 import           Hsed.Jig.Cases.UCT02      (hostProperties, tperExpected, uct02)
+import           Hsed.Jig.Catalogue        (parseCaseKeys)
 import           Hsed.Jig.Guard            (Allowed (..), guardDrive, readOnlyMethods)
-import           Hsed.Jig.Options          (RunOptions (..), TargetSpec (..), defaultRunOptions)
+import           Hsed.Jig.Options          (RunOptions (..), TargetSpec (..), WsUrl (..), defaultRunOptions)
+import           Hsed.Jig.Run              (runOpened)
 import           Hsed.Jig.Script
-import           Hsed.Jig.Simulator        (inProcess)
+import           Hsed.Jig.Simulator        (Opened (..), Simulator (..), inProcess)
+import           Hsed.Jig.Support          (at, silently)
 import           Hsed.Jig.Target           (Target (..))
 import           Hsed.Jig.Transcript       (TEntry (..), entries, newTranscript, recording)
 import           Hsed.Level0               (splitLevel0)
@@ -128,8 +143,10 @@ import           Hsed.Sim.Level0           (level0Response)
 import           Hsed.Sim.SessionManager   (closeSessionCall)
 import           Hsed.Sim.Sync             (T45Row (..))
 import           Hsed.Sim.Types            (SPState (..), Session (..), SimParams (..), TPerState (..), defaultSimParams, initialState)
+import           Hsed.Sim.View             (SimQuery (..), SimView (..))
 import           Hsed.Transport.Drive      (RawDrive (..))
-import           Hsed.Transport.InProc     (SimControl (..))
+import           Hsed.Transport.InProc     (InProcOpts (..), SimControl (..))
+import           Hsed.Transport.Opened     (openedInProc)
 import           Hsed.Wire                 (ExchangeError (..), ExchangeOpts (..), defaultExchangeOpts, newChannel, tperResetComId)
 import           Hsed.Wire.Internal        (Describe (..), Dir (..), Event (..), IfStatus (..), Request (..), Response (..), Transport (..),
                                             Unit (..))
@@ -149,14 +166,19 @@ counted n = MkTransport
 --   (the drive's behind the Guard, binding nothing): what it came to, how
 --   many commands reached the transport, the transcript.
 scripted :: Bool -> Script a -> IO (a, Int, [TEntry])
-scripted sim s = do
+scripted = scriptedOn (inProcess (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
+
+-- | 'scripted' with the simulator's end given: its state, its view, its
+--   notices.
+scriptedOn :: Simulator -> Bool -> Script a -> IO (a, Int, [TEntry])
+scriptedOn simulator sim s = do
   n <- newIORef 0
   t <- newTranscript
   channel <- newChannel
   ctx <- newIORef emptyRunCtx
   stop <- newIORef Nothing
   target <- if sim
-    then pure (SimTarget (counted n) (inProcess (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))))
+    then pure (SimTarget (counted n) simulator)
     else DriveTarget <$> guardDrive t [] Nothing (RawDrive (counted n) (\_ -> pure (Left "a test drive binds nothing")))
   a <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef n <*> entries t
@@ -636,14 +658,39 @@ spec = do
       let l0 = either (error . show) id (splitLevel0 (level0Response (initialState defaultSimParams) 2048))
       fmap level0DiscoveryOpalSSCV2FeatureBaseComID (opalV2Of l0) `shouldBe` Just 0x1004
       fmap level0DiscoveryOpalSSCV2FeatureInitialC_PIN_SIDPINIndicator (opalV2Of l0) `shouldBe` Just 0
-    it "simCredential reads SID's: the MSID's PIN by default, the parameters' when given, with TryLimit and Tries; none for Anybody" $ do
-      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
-      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
-      simCredential uSP_Admin uAuthority_Anybody (initialState defaultSimParams) `shouldBe` Nothing
-    it "peekSim gives the state on the simulator alone" $ do
-      (a, _, _) <- scripted True peekSim
-      (b, _, _) <- scripted False peekSim
-      (isJust a, isJust b) `shouldBe` (True, False)
+    it "peekSim's CredentialOf reads SID's through the simulator's view: the MSID's PIN by default, the parameters' when given, with TryLimit and Tries; none for Anybody; nothing on a drive" $ do
+      let ofParams params = inProcess (SimControl (\_ -> pure ()) (pure (initialState params)))
+          sid = CredentialOf uSP_Admin uAuthority_SID
+      (byDefault, _, _) <- scriptedOn (ofParams defaultSimParams) True (peekSim sid)
+      (given, _, _) <- scriptedOn (ofParams defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) True (peekSim sid)
+      (anybody, _, _) <- scripted True (peekSim (CredentialOf uSP_Admin uAuthority_Anybody))
+      (onDrive, reached, es) <- scripted False (peekSim sid)
+      (byDefault, given, anybody) `shouldBe` (Just (Just (Credential (spMsid defaultSimParams) 0 0)), Just (Just (Credential "SID!" 3 0)), Just Nothing)
+      (onDrive, reached, es) `shouldBe` (Nothing, 0, [])
+    it "peekSim answers a query on the simulator alone, nothing issued" $ do
+      (a, reached, es) <- scripted True (peekSim Msid)
+      (b, _, _) <- scripted False (peekSim Msid)
+      (a, reached, es, b) `shouldBe` (Just (spMsid defaultSimParams), 0, [], Nothing)
+    it "on a ws:// end whose view does not answer, stops a script that reads the state, saying so, and leaves a case's prerequisite that reads it unmet, the case skipped" $ do
+      let refused = "the hub refused peek: it was started without --allow-remote-control"
+          overWs control = (inProcess control) { simOpened = OverWs (WsUrl 41234 "/ws"), simView = SimView (\_ -> pure (Left refused)) }
+      (v1, _, _) <- scriptedOn (overWs (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))) True (attempt (Pass <$ peekSim ComIds))
+      (v2, _, _) <- scriptedOn (overWs (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))) True
+                               (attempt (Pass <$ asAuthority "Admin1" uSP_Locking LockingSP.uAuthority_Admin1))
+      (v1, v2) `shouldBe` (Fail ["the simulator's state: " <> refused], Fail ["the simulator's state: " <> refused])
+      withSystemTempDirectory "hsed-jig" $ \tmp -> do
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
+        t <- newTranscript
+        let reports = tmp </> "report"
+        code <- silently (runOpened defaultRunOptions { roTests = either (error . T.unpack) id (parseCaseKeys "UCT-01"), roReportDir = reports }
+                                     t (SimTarget sim (overWs control)))
+        code `shouldBe` ExitFailure 1
+        json <- listDirectory reports >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
+          [f] -> readFileBinary (reports </> f) >>= either throwString pure . A.eitherDecodeStrict'
+          _   -> throwString ("not one report in " <> reports)
+        [ (at "verdict" c, at "reason" c) | A.Array cs <- maybeToList (at "cases" json), c <- toList cs ]
+          `shouldBe` [(Just "skipped", Just (A.String ("prerequisite unmet: SyncIdle: the simulator's state: " <> refused)))]
+        [ at "opened" e | A.Array es <- maybeToList (at "targets" json), e <- toList es ] `shouldBe` [Just "ws://127.0.0.1:41234/ws"]
 
   describe "withSession" $ do
     it "opens the session, runs the step, ends the session: two IF-SENDs and a pass" $ do

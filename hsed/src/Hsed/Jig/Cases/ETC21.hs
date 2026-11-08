@@ -26,13 +26,13 @@ the password type's 32 bytes (Core Table 122, PDF 118) is varied within
 them; the Admin SP variant keeps M4a's PIN plus a byte, which a strict TPer
 could refuse as too long (noted for M6's drive runs; design 13.34). The
 simulator alone runs either: a drive's policy admits neither authority
-(design 9.3), and the PIN comes from the simulator's state
-("Hsed.Jig.Script".@simCredential@; the run's CredentialsKnown reads the
-same and keeps it among the secrets). The case's own prerequisite is the
-C_PIN's TryLimit 0 or Tries below it (prerequisite 1, PDF 92), read from
-the state, the case skipped where it does not hold; the jig's extension is
-the Tries rule (Core 5.3.4.1.1.2, PDF 210: a failure counts while TryLimit
-is not 0, never past it).
+(design 9.3), and the PIN comes from the simulator's state, read through
+its view ("Hsed.Jig.Script".@peekSim@ of "Hsed.Sim.View"'s @CredentialOf@;
+the run's CredentialsKnown reads the same and keeps it among the secrets).
+The case's own prerequisite is the C_PIN's TryLimit 0 or Tries below it
+(prerequisite 1, PDF 92), read from the state, the case skipped where it
+does not hold; the jig's extension is the Tries rule (Core 5.3.4.1.1.2,
+PDF 210: a failure counts while TryLimit is not 0, never past it).
 -}
 module Hsed.Jig.Cases.ETC21
   ( etc21
@@ -42,7 +42,6 @@ module Hsed.Jig.Cases.ETC21
 
 import           Data.Bits          (xor)
 import qualified RIO.ByteString     as B
-import qualified RIO.Map            as Map
 import           RIO
 
 import           Hsed.Core.UID      (UID)
@@ -54,8 +53,8 @@ import           Hsed.Jig.Case      (Case (..), Need (..))
 import           Hsed.Jig.Catalogue (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq    (Section (..), lockingSPUntouched)
 import           Hsed.Jig.Script    (Credential (..), Script, StartArgs (..), Verdict (..), exchanged, expectSyncStatus, observe,
-                                     peekSim, simCredential, startSession, unmet)
-import           Hsed.Sim.Types     (TPerState (..))
+                                     peekSim, startSession, unmet)
+import           Hsed.Sim.View      (SimQuery (..))
 
 
 -- $setup
@@ -136,10 +135,10 @@ lastByteChanged pin = maybe "!" (\(front, b) -> B.snoc front (b `xor` 0x01)) (B.
 --   SP as the authority with a wrong challenge, NOT_AUTHORIZED (an abort
 --   accepted), and no session left open.
 run :: Authenticating -> Script Verdict
-run a = peekSim >>= \case
+run a = credentialHeld a >>= \case
   Nothing -> pure (Skipped ("the simulator's alone: " <> aName a <> "'s PIN is read from its state (design 9.3)"))
-  Just st -> do
-    cr <- credential a st
+  Just held -> do
+    cr <- credential a held
     case locked a cr of
       Just why -> pure (Skipped ("prerequisite unmet: " <> why))
       Nothing  -> do
@@ -147,16 +146,23 @@ run a = peekSim >>= \case
                                 <> " (Test Cases ETC-21 prerequisite 1, PDF 92)")
         answer <- startSession (wrongChallenge a cr) >>= exchanged step1
         expectSyncStatus step1 NOT_AUTHORIZED answer
-        after <- peekSim
-        for_ after $ \s -> unless (Map.null (tsSessions s)) $
-          unmet (tshow (Map.size (tsSessions s)) <> " session(s) open after the failed StartSession, where none should be (Core 5.3.4.1.5, PDF 215)")
+        after <- peekSim Sessions
+        for_ after $ \sessions -> unless (null sessions) $
+          unmet (tshow (length sessions) <> " session(s) open after the failed StartSession, where none should be (Core 5.3.4.1.5, PDF 215)")
         pure Pass
   where step1 = "step 1: StartSession to the " <> aSPName a <> " as " <> aName a <> " with " <> aWrongSaid a
 
--- | The authority's credential in the simulator's SP.
-credential :: Authenticating -> TPerState -> Script Credential
+-- | The authority's credential as the simulator's SP holds it, read
+--   through the simulator's view ("Hsed.Sim.View"'s 'CredentialOf'):
+--   'Nothing' on a drive; on the simulator, the credential, or none for an
+--   authority the SP lacks or one with none.
+credentialHeld :: Authenticating -> Script (Maybe (Maybe Credential))
+credentialHeld a = peekSim (CredentialOf (aSP a) (aAuthority a))
+
+-- | The authority's credential in the simulator's SP, the script stopped
+--   where the SP holds none.
+credential :: Authenticating -> Maybe Credential -> Script Credential
 credential a = maybe (unmet ("the simulator's " <> aSPName a <> " holds no credential for " <> aName a <> " (" <> aCited a <> ")")) pure
-             . simCredential (aSP a) (aAuthority a)
 
 -- | Why the case's own prerequisite does not hold, if it does not: a
 --   TryLimit other than 0 that Tries has reached (Test Cases PDF 92; Core
@@ -176,7 +182,7 @@ wrongChallenge a cr = StartArgs (aSP a) (Just (aAuthority a)) (Just (aWrong a (c
 --   5.3.4.1.1.2, PDF 210): unchanged while TryLimit is 0, one more
 --   otherwise, never past TryLimit.
 tries :: Authenticating -> Script Verdict
-tries a = peekSim >>= \case
+tries a = credentialHeld a >>= \case
   Nothing -> pure (Skipped "the simulator's alone")
   Just before -> do
     cr0 <- credential a before
@@ -185,7 +191,7 @@ tries a = peekSim >>= \case
       Nothing  -> do
         answer <- startSession (wrongChallenge a cr0) >>= exchanged name
         expectSyncStatus name NOT_AUTHORIZED answer
-        cr1 <- peekSim >>= maybe (unmet "no simulator state to read Tries from") (credential a)
+        cr1 <- credentialHeld a >>= maybe (unmet "no simulator state to read Tries from") (credential a)
         let expected
               | crTryLimit cr0 == 0 = crTries cr0
               | otherwise           = min (crTryLimit cr0) (crTries cr0 + 1)

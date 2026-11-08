@@ -55,7 +55,8 @@ import           Hsed.Jig.Script        (MethodOutcome (..), RunCtx (..), RunEnv
                                          endSession, exchanged, expectMethodStatus, getCells, maskAnswersSince, namedColumn, note,
                                          observe, opalV2Of, opened, peekSim, properties, startSession, statusName,
                                          transcriptMark, unmet, withSession)
-import           Hsed.Sim.Types         (SimParams (..), TPerState (..), maxSessionsName)
+import           Hsed.Sim.Types         (maxSessionsName)
+import           Hsed.Sim.View          (SimQuery (..))
 import           Hsed.Wire              (hex)
 
 
@@ -192,9 +193,9 @@ secondSession = withSession adminSPAsAnybody $ \_ -> do
 -- | The extension: the MSID read is the simulator's parameter, compared
 --   and never printed.
 msidIsParameter :: Script Verdict
-msidIsParameter = peekSim >>= \case
-  Nothing -> pure (Skipped "the simulator's alone")
-  Just st -> withSession adminSPAsAnybody $ \h -> do
+msidIsParameter = peekSim Msid >>= \case
+  Nothing      -> pure (Skipped "the simulator's alone")
+  Just simMsid -> withSession adminSPAsAnybody $ \h -> do
     msid <- msidRead "Get C_PIN_MSID's PIN" h
-    unless (msid == spMsid (tsParams st)) (unmet "the MSID read differs from the simulator's spMsid")
+    unless (msid == simMsid) (unmet "the MSID read differs from the simulator's spMsid")
     pure Pass

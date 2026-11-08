@@ -79,8 +79,11 @@ commands the Guard refused, why the run was stopped, a drive's pre-flight
 notes, each end's Properties exchange with the host's properties and, for
 a pair, the two compared ("Hsed.Jig.PairProperties"). A pair's ends run each
 case in turn, the simulator first, each case's verdicts joined, each with
-its end's name, its transport's role (@tper@, @drive@, @drive-replay@: the
-one name the transcript's entries carry, "Hsed.Jig.Transcript"); then the
+its end's name, its transport's role (@tper@, @drive@, @drive-replay@) made
+unique by position since M5c (a pair of two simulators' second, @tper-2@;
+design 13.33 (28)): the one name the transcript's entries carry
+("Hsed.Jig.Transcript"), the reports recording beside it what was opened
+for a @ws://@ end ("Hsed.Jig.Report"); then the
 two Level 0 responses are compared
 ("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not. A drive
 is never asked for Level 0 again once it was asked (a failed kext command
@@ -112,7 +115,14 @@ noted in the transcript), takes the credentials known (vacuous for a case
 that authenticates no authority; for one that does, the authority's PIN read
 from the simulator's state, which the case may then send or vary), each
 HostChallenge the current PIN likewise, and every session read-write (every
-StartSession the jig sends has Write True, Test Cases 4.1 e, PDF 26). On a
+StartSession the jig sends has Write True, Test Cases 4.1 e, PDF 26). The
+simulator's state is read through its view alone, in process as over the
+LAN leg ("Hsed.Sim.View"'s queries; M5c, Option A), a view that does not
+answer leaving the prerequisite that reads it unmet; and before each case,
+and before the closing Level 0, the run hears what the simulator says
+happened to it (a @ws://@ hub that restarted, broadcasts missed, another
+client's reset), each noted and the run's session forgotten as a power
+cycle forgets it ("Hsed.Jig.Script".'Hsed.Jig.Script.heedNotices'). On a
 drive, for a case that needs Level 0 alone, SyncIdle and NoSessions are
 waived as not needed, Level 0 being outside the synchronous protocol (Core
 3.3.10.3 b, PDF 84) and answered whatever the sessions (3.3.6.2, PDF 67);
@@ -163,7 +173,6 @@ module Hsed.Jig.Run
 
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
-import qualified RIO.Map                as Map
 import           RIO
 import qualified RIO.Text               as T
 import           RIO.Time               (UTCTime, getCurrentTime)
@@ -194,25 +203,25 @@ import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), cata
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, Policy, decide, driveAllowed, driveInfo, driveIssued, drivePolicy,
                                          driveTransport, readOnlyMethods, recoverMethods)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName)
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName, renderWsUrl)
 import           Hsed.Jig.Pair          (pairFails, pairLevel0)
 import           Hsed.Jig.PairProperties (pairProperties, propertiesFail)
 import           Hsed.Jig.Preflight     (preflightDrive)
 import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common, level0OutsideSync, listAt, sessionsUnobservable)
 import           Hsed.Jig.Recover       (recoverScript)
-import           Hsed.Jig.Report        (CaseResult (..), RunResult (..), renderTarget, summary, writeReports)
+import           Hsed.Jig.Report        (CaseResult (..), EndRecord (..), RunResult (..), renderTarget, summary, writeReports)
 import           Hsed.Jig.Script        (Credential (..), Interrupted (..), RunCtx (..), RunEnv (..), Script, SessionHandle (..),
                                          Verdict (..), admitsStackReset, attempt, baseComId, describeStatus, discover, drain,
-                                         emptyRunCtx, ifRecvOn, maskAnswersSince, simCredential, spName, stackReset, t45Of, t45On,
+                                         emptyRunCtx, heedNotices, ifRecvOn, maskAnswersSince, spName, stackReset, t45Of, t45On,
                                          transcriptMark, verdictText)
-import           Hsed.Jig.Simulator     (Simulator (..))
+import           Hsed.Jig.Simulator     (Opened (..), Simulator (..))
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
-import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
+import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recordingAs)
 import           Hsed.Level0            (Level0)
 import           Hsed.Sim.Profile       (loadProfile)
-import           Hsed.Sim.State         (lifeOf, spLifeCycle)
-import           Hsed.Sim.Types         (ComIdLife (Associated), ComIdState (..), LifeCycle (..), SimParams (..),
-                                         SyncState (..), TPerState (..), lifeCycleValue, simParamsProblems)
+import           Hsed.Sim.Types         (ComIdLife (Associated), LifeCycle (..), SimParams (..), SyncState (..), lifeCycleValue,
+                                         simParamsProblems)
+import           Hsed.Sim.View          (ComIdView (..), SimQuery (..), SimView (..))
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.Kext    (diskName)
@@ -551,42 +560,67 @@ runExit outside stopped failed
 
 -- * The ends of a run
 
--- | One end of a run: its name (its transport's role, the name the
---   transcript's entries carry: @tper@, @drive@, @drive-replay@), its
---   environment, and for a drive the drive behind the Guard, which holds
---   the transcript of what was issued to it and what the IORegistry says
---   of it.
+-- | One end of a run: its name (its transport's role, @tper@, @drive@,
+--   @drive-replay@, made unique by position, 'endNames': the name the
+--   transcript's entries carry), what was opened for it where that says
+--   more than the role (a @ws://@ simulator's URL), its environment, and
+--   for a drive the drive behind the Guard, which holds the transcript of
+--   what was issued to it and what the IORegistry says of it.
 data End = End
-  { endName  :: !Text
-  , endEnv   :: !RunEnv
-  , endDrive :: !(Maybe GuardedDrive)
+  { endName   :: !Text
+  , endOpened :: !(Maybe Text)
+  , endEnv    :: !RunEnv
+  , endDrive  :: !(Maybe GuardedDrive)
   }
 
--- | A target's ends: the simulator's transport recording into the run's
---   transcript; a drive as the target opened it, behind the Guard and
---   recording into the run's transcript and its own already.
+-- | A target's ends, in order, each named by its role made unique by
+--   position ('endNames'; design 13.33 (28)): the simulator's transport
+--   recording into the run's transcript under the end's name, whether the
+--   simulator was opened in process or over the LAN leg (its URL kept for
+--   the reports); a drive as the target opened it, behind the Guard and
+--   recording into the run's transcript and its own already, under its
+--   role.
 endsOf :: RunOptions -> Transcript -> LogFunc -> IORef (Maybe Text) -> Target -> IO [End]
-endsOf opts t lf stop = \case
-  SimTarget tr sim     -> pure <$> end (roleOf tr) (SimTarget (recording t tr) sim) Nothing
-  DriveTarget g        -> pure <$> end (roleOf (driveTransport g)) (DriveTarget g) (Just g)
-  PairTarget a b       -> (<>) <$> endsOf opts t lf stop a <*> endsOf opts t lf stop b
+endsOf opts t lf stop tg = traverse end (zip (endNames (map fst leaves)) (map snd leaves))
   where
+    leaves = leavesOf tg
+    leavesOf = \case
+      SimTarget tr sim -> [(roleOf tr, Left (tr, sim))]
+      DriveTarget g    -> [(roleOf (driveTransport g), Right g)]
+      PairTarget a b   -> leavesOf a <> leavesOf b
     roleOf tr = dRole (describeTransport tr)
-    end name tg drive = do
+    end (name, leaf) = do
       channel <- newChannel
       ctx <- newIORef emptyRunCtx
-      pure (End name (RunEnv tg t channel ctx opts stop lf) drive)
+      let env target = RunEnv target t channel ctx opts stop lf
+      pure $ case leaf of
+        Left (tr, sim) -> End name (openedOf sim) (env (SimTarget (recordingAs name t tr) sim)) Nothing
+        Right g        -> End name Nothing (env (DriveTarget g)) (Just g)
+    -- a simulator's URL where it was opened over the LAN leg; nothing more where the role says it all
+    openedOf sim = case simOpened sim of
+      InProcess -> Nothing
+      OverWs u  -> Just (renderWsUrl u)
 
--- | What an end's transport says it is.
-endDescribe :: End -> Maybe Describe
-endDescribe e = case reTarget (endEnv e) of
+-- | Ends' names from their roles, in order, made unique by position
+--   (design 13.33 (28)): an end the first of its role is named by the role;
+--   each one after it by the role and its place among that role's ends,
+--   @tper@, @tper-2@.
+endNames :: [Text] -> [Text]
+endNames roles = [ if k == 1 then r else r <> "-" <> tshow k | (i, r) <- zip [1 ..] roles, let k = length (filter (== r) (take i roles)) ]
+
+-- | An end as the reports record it among the targets: what its transport
+--   says it is, its name, and what was opened for it.
+endRecord :: End -> Maybe EndRecord
+endRecord e = (\d -> EndRecord d (endName e) (endOpened e)) <$> case reTarget (endEnv e) of
   SimTarget tr _ -> Just (describeTransport tr)
   DriveTarget g  -> Just (describeTransport (driveTransport g))
   PairTarget _ _ -> Nothing
 
 -- | Run the cases on the ends (with @--recover@, the recovery on the one
 --   end in their place; the cases the default left out noted first), then,
---   unless the run was stopped, compare and
+--   unless the run was stopped, hear what each end's simulator says
+--   happened to it during the last case ("Hsed.Jig.Script".'heedNotices',
+--   as before each case), compare and
 --   capture Level 0; count the IF-SENDs each drive was issued, gather each
 --   drive's policy, the commands it was issued outside it and those the
 --   Guard refused (a problem of the run), why the run was stopped and any
@@ -606,6 +640,8 @@ runOn opts started chosen leftOut preflightNotes t stop tg = do
       if roRecover opts
         then (,) [] . Just <$> recoverOn ends
         else (\rs -> (rs, Nothing)) <$> for chosen (\c -> joined named c <$> for ends (\e -> (,) (endName e) <$> runCase e c))
+    -- what the simulator says happened to it during the last case, heard before the closing Level 0 as before each case
+    unless (roRecover opts) $ void (whileRunning stop (for_ ends (\e -> runRIO (endEnv e) heedNotices)))
     pairing <- fmap join . whileRunning stop $ case ends of
       a : b : _ | not (roRecover opts) -> Just <$> (liftA2 pairLevel0 <$> endLevel0 a <*> endLevel0 b)
       _                                -> pure Nothing
@@ -644,7 +680,7 @@ runOn opts started chosen leftOut preflightNotes t stop tg = do
           { rrOptions        = opts
           , rrVersion        = hsedVersion
           , rrStarted        = started
-          , rrTargets        = mapMaybe endDescribe ends
+          , rrTargets        = mapMaybe endRecord ends
           , rrCases          = results
           , rrTranscript     = transcript
           , rrLevel0         = level0s
@@ -737,7 +773,13 @@ joined named c rs
 
 -- * A case on an end
 
--- | A case on one end: skipped if the end lacks what it needs or a
+-- | A case on one end, what the end's simulator says happened to it since
+--   it was last asked heard first (a hub that restarted, broadcasts
+--   missed, another client's reset: each noted, the run's session, an
+--   unread StartSession and the host's properties forgotten as a power
+--   cycle forgets them, "Hsed.Jig.Script".'heedNotices'; the restart hook,
+--   M5c), so that the case runs on what the TPer now holds: skipped if the
+--   end lacks what it needs or a
 --   prerequisite is unmet, its extensions skipped with that reason and its
 --   prerequisites not reached; else run to its verdict, then its extensions
 --   on the simulator alone, unless the verdict is Skipped or Unobservable,
@@ -757,6 +799,7 @@ runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
   Nothing  -> ran `catch` \(Interrupted why) -> pure (notRun (Skipped ("interrupted: " <> why)))
   where
     ran = do
+      heedNotices
       let heading = renderCaseKey (cKey c) <> " on the " <> endName e
       logInfo (display heading)
       note heading
@@ -841,18 +884,21 @@ prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
         Right mw -> fmap (maybe id (:) mw) <$> go rest
 
 -- | A prerequisite on this end: met (established if need be), waived as
---   unobservable or not needed, or why not. On the simulator: SyncIdle
---   drains every ComID not in Awaiting IF-SEND; NoSessions sends STACK_RESET
---   on every ComID a session holds (Core 3.3.4.7.5 item 1, PDF 65: every
---   session on it aborted, no CloseSession prepared), noted, and reads the
---   state again; LockingManufactured reads the Locking SP's life cycle, its
---   row of the Admin SP's SP table ("Hsed.Sim.State".'spLifeCycle'), which
---   its Original Factory State seeds, and LockingManufacturedInactive, a
---   case's own (since M5b, ETC-20's), the same, met where it is
---   Manufactured-Inactive; CredentialsKnown is vacuous for a case that
---   authenticates no authority ('authenticating'), and for one that does
---   reads each authority's PIN from the state, in order
---   ("Hsed.Jig.Script".'simCredential'), a secret of the run;
+--   unobservable or not needed, or why not. On the simulator, its state
+--   read through its view, in process or over the LAN leg alike
+--   ("Hsed.Sim.View"'s queries; M5c, Option A), a view that does not answer
+--   leaving the prerequisite unmet (its name, @the simulator's state:@ and
+--   why; never in process): SyncIdle drains every ComID not in Awaiting IF-SEND
+--   ('ComIds'); NoSessions sends STACK_RESET on every ComID a session holds
+--   ('ComIds', Associated; Core 3.3.4.7.5 item 1, PDF 65: every session on
+--   it aborted, no CloseSession prepared), noted, and reads the ComIDs
+--   again; LockingManufactured reads the Locking SP's life cycle, its row
+--   of the Admin SP's SP table ('LifeCycleOf'), which its Original Factory
+--   State seeds, and LockingManufacturedInactive, a case's own (since M5b,
+--   ETC-20's), the same, met where it is Manufactured-Inactive;
+--   CredentialsKnown is vacuous for a case that authenticates no authority
+--   ('authenticating'), and for one that does reads each authority's PIN
+--   from the state, in order ('CredentialOf'), a secret of the run;
 --   HostChallengeIsCurrentPin likewise (a case's challenge is that PIN, or a
 --   variation it makes on purpose); ReadWriteSessions is met, every session
 --   the jig opens being read-write (Test Cases 4.1 e, PDF 26).
@@ -881,9 +927,7 @@ prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
 --   drive case waives, and LockingManufacturedInactive are not observable.
 establish :: Case -> Prereq -> Script (Either Text (Maybe Waiver))
 establish c p = asks reTarget >>= \case
-  SimTarget _ sim -> case simStateInProc sim of
-    Just peek -> liftIO peek >>= onSim peek
-    Nothing   -> pure (Left "not yet written: group G4 (Hsed.Jig.Run.establish: a prerequisite read through the simulator's view)")
+  SimTarget _ sim -> onSim sim
   DriveTarget _
     | p `elem` [SyncIdle, NoSessions], all (== NeedLevel0) (cNeeds c) -> pure (Right (Just (Waiver p level0OutsideSync)))
     | otherwise -> settled onDrive
@@ -894,44 +938,50 @@ establish c p = asks reTarget >>= \case
     credentialsVacuous = "CredentialsKnown: vacuous, the case authenticates no authority (a session as Anybody needs no credential, Core 5.3.4.1.2.1, PDF 211)"
     challengeVacuous   = "HostChallengeIsCurrentPin: vacuous, the case sends no HostChallenge"
     readWrite          = "ReadWriteSessions: every session the jig opens is read-write (StartSession's Write True, Test Cases 4.1 e, PDF 26)"
-    onSim peek st = case p of
-      SyncIdle -> do
-        let busy = [ comid | (comid, s) <- Map.toList (tsComIds st), cSync s /= S1 ]
+    onSim sim = case p of
+      SyncIdle -> viewing sim ComIds $ \comIds -> do
+        let busy = [ cvComId v | v <- comIds, cvSync v /= S1 ]
         unless (null busy) (note ("SyncIdle: draining " <> T.unwords (map hex busy)))
         attempt (Pass <$ traverse_ drain busy) <&> \case
           Pass -> Right Nothing
           v    -> Left ("SyncIdle: " <> verdictText v)
-      NoSessions -> case holding st of
+      NoSessions -> viewing sim ComIds $ \comIds -> case holding comIds of
         []   -> met
         held -> do
           note ("NoSessions: sessions hold ComIDs " <> T.unwords (map hex held) <> ": STACK_RESET on each (Core 3.3.4.7.5, PDF 65)")
           for_ held $ \comid -> stackReset comid >>= \outcome ->
             note ("NoSessions: STACK_RESET on " <> hex comid <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
           asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing })
-          liftIO peek <&> holding <&> \case
+          viewing sim ComIds $ \again -> pure $ case holding again of
             []    -> Right Nothing
             still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
-      LockingManufactured
-        | spLifeCycle uSP_Locking st == Just (lifeCycleValue Manufactured) -> met
-        | otherwise -> pure (Left ("LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State; "
-                                   <> "--locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)"))
-      LockingManufacturedInactive
-        | spLifeCycle uSP_Locking st == Just (lifeCycleValue ManufacturedInactive) -> met
-        | otherwise -> pure (Left "LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")
+      LockingManufactured -> viewing sim (LifeCycleOf uSP_Locking) $ \life -> if life == Just (lifeCycleValue Manufactured)
+        then met
+        else pure (Left ("LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State; "
+                         <> "--locking-ofs manufactured folds it Manufactured (design 8.3, 9.1; M6's Activate)"))
+      LockingManufacturedInactive -> viewing sim (LifeCycleOf uSP_Locking) $ \life -> if life == Just (lifeCycleValue ManufacturedInactive)
+        then met
+        else pure (Left "LockingManufacturedInactive: the simulator's Locking SP is Manufactured (--locking-ofs manufactured)")
       CredentialsKnown
         | null authorities -> Right Nothing <$ note credentialsVacuous
-        | otherwise        -> firstUnmet (map (credentialKnown st) authorities)
+        | otherwise        -> firstUnmet (map (credentialKnown sim) authorities)
       HostChallengeIsCurrentPin
         | null authorities -> Right Nothing <$ note challengeVacuous
         | otherwise        -> Right Nothing <$ for_ authorities (\(name, sp, _) ->
             note ("HostChallengeIsCurrentPin: " <> name <> "'s current PIN is read from the simulator's state; a challenge other than it "
                   <> "is the case's own doing" <> ofSP sp))
       ReadWriteSessions -> Right Nothing <$ note readWrite
+    -- the prerequisite on a query of the simulator's state through its view ("Hsed.Sim.View"), unmet where the view does
+    -- not answer (a hub that refused the query, its connection lost; never in process), saying why
+    viewing :: Simulator -> SimQuery a -> (a -> Script (Either Text (Maybe Waiver))) -> Script (Either Text (Maybe Waiver))
+    viewing sim q k = liftIO (peekView (simView sim) q) >>= either (pure . Left . unread) k
+    unread why = tshow p <> ": the simulator's state: " <> why
     -- an authority's credential read from the simulator's state, a secret of the run, noted; or why not: the SP named, the
-    -- Admin SP's notes as at M5a, another SP's saying whose C_PIN (since M5b, the Locking SP's Admin1)
-    credentialKnown st (name, sp, u) = case simCredential sp u st of
-      Nothing -> pure (Just ("CredentialsKnown: the simulator's " <> spName sp <> " holds no credential for " <> name))
-      Just cr -> do
+    -- Admin SP's notes as at M5a, another SP's saying whose C_PIN (since M5b, the Locking SP's Admin1); the view's failure
+    credentialKnown sim (name, sp, u) = liftIO (peekView (simView sim) (CredentialOf sp u)) >>= \case
+      Left why        -> pure (Just (unread why))
+      Right Nothing   -> pure (Just ("CredentialsKnown: the simulator's " <> spName sp <> " holds no credential for " <> name))
+      Right (Just cr) -> do
         asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
         Nothing <$ note ("CredentialsKnown: " <> name <> "'s PIN read from the simulator's state, " <> tshow (B.length (crPIN cr))
                          <> " bytes, TryLimit " <> tshow (crTryLimit cr) <> ", Tries " <> tshow (crTries cr) <> " (masked in the reports unless --show-msid)"
@@ -941,7 +991,7 @@ establish c p = asks reTarget >>= \case
     -- each in order, the first unmet ending them
     firstUnmet = foldr (\s rest -> s >>= maybe rest (pure . Left)) met
     -- the ComIDs sessions hold
-    holding s = [ comid | comid <- Map.keys (tsComIds s), lifeOf comid s == Just Associated ]
+    holding comIds = [ cvComId v | v <- comIds, cvLife v == Just Associated ]
     -- a drive's prerequisite under 'attempt': a script stopped short is unmet, saying why; Interrupted goes on
     settled s = do
       out <- newIORef (Left (tshow p <> ": no outcome"))

@@ -41,7 +41,6 @@ module Hsed.Jig.Cases.ETC14
 import qualified Data.IntMap.Strict as IM
 import qualified RIO.ByteString     as B
 import qualified RIO.List           as L
-import qualified RIO.Map            as Map
 import           RIO
 
 import           Hsed.Core.Method   (invocation)
@@ -58,8 +57,8 @@ import           Hsed.Jig.Script    (Script, SessionHandle (..), StartArgs, Verd
                                      dataStoreTable, exchangeOn, exchanged, expectNoResponseOrCloseSession, observe, opened,
                                      peekSim, properties, sessionGone, sessionSubpackets, startSession, unmet,
                                      withSession)
-import           Hsed.Sim.Types     (ByteTable (..), SPState (..), TPerState (..), maxComPacketSizeName, maxPacketSizeName,
-                                     maxSubpacketsName)
+import           Hsed.Sim.Types     (ByteTable (..), maxComPacketSizeName, maxPacketSizeName, maxSubpacketsName)
+import           Hsed.Sim.View      (SimQuery (..))
 import           Hsed.Wire          (comPacketHeaderSize)
 
 
@@ -164,11 +163,10 @@ step3 h n count = do
 --   none of step 3's Sets having run (Core 5.2.2.4.1.1, PDF 145; 3.3.7.2,
 --   PDF 77).
 dataStoreUnchanged :: Script Verdict
-dataStoreUnchanged = peekSim >>= \case
+dataStoreUnchanged = peekSim (ByteTableOf uSP_Locking dataStoreTable) >>= \case
   Nothing -> pure (Skipped "the simulator's alone")
-  Just st -> do
-    table <- maybe (unmet "the simulator's Locking SP holds no DataStore byte table (Opal 2.30 Table 36, PDF 54)") pure
-                   (Map.lookup uSP_Locking (tsSPs st) >>= Map.lookup dataStoreTable . spsBytes)
+  Just held -> do
+    table <- maybe (unmet "the simulator's Locking SP holds no DataStore byte table (Opal 2.30 Table 36, PDF 54)") pure held
     unless (IM.null (btWritten table)) $
       unmet ("the DataStore holds " <> tshow (IM.size (btWritten table)) <> " written extent(s) where none was expected: no Set of step 3's packet "
              <> "ran (Core 5.2.2.4.1.1, PDF 145; 3.3.7.2, PDF 77)")

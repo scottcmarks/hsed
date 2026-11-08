@@ -15,8 +15,12 @@ command a step of "Hsed.Sim", the unit the run chooses, and the release of a
 ComID's prepared response ('Hsed.Sim.Types.Tick') after every IF-SEND,
 unless the run holds it for a number of IF-RECVs (@--hold-processing@), so
 that the host's loop sees the TPer still processing (Core Table 45 row 1,
-PDF 83). A @'ReadWrite@ transport, with a 'SimControl' the jig's simulator
-extensions use: release a ComID now, look at the state.
+PDF 83). A @'ReadWrite@ transport, with a 'SimControl': release a ComID's
+prepared response now, and look at the state. The jig does neither
+directly (M5c, Option A): it reads the state through the simulator's view,
+each query answered from it ('inProcView', "Hsed.Sim.View"), and releases
+nothing; release is the hub's control op, beside its peek, behind
+hsed-sim's @--allow-remote-control@ (design 7 item 5; "Hsed.Transport.Mhtx.Hub").
 
 Like every transport it carries at most "Hsed.Wire".'mostCarried' bytes in
 one command (255 blocks, or 1 MiB in bytes): a longer transfer, either way,
@@ -54,8 +58,11 @@ data InProcOpts = InProcOpts
   }
   deriving (Eq, Show)
 
--- | What the jig may do to the simulator besides commands: release a ComID's
---   prepared response (S2 to S3), and read the state.
+-- | What may be done to the simulator besides commands: release a ComID's
+--   prepared response (S2 to S3), the hub's @release@ control op (the jig
+--   releases nothing), and read the state, from which the in-process view
+--   and the hub's @peek@ control op answer each query ('inProcView'; the
+--   jig reads no state but through a view, M5c, Option A).
 data SimControl = SimControl
   { scRelease :: Word16 -> IO ()
   , scPeek    :: IO TPerState

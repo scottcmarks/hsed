@@ -56,7 +56,6 @@ import           RIO
 import qualified RIO.Text            as T
 
 import           Hsed.Core.CellBlock (columnRange)
-import           Hsed.Core.Table     (Cell (..))
 import           Hsed.Core.Token     (Token (..))
 import           Hsed.Core.Types     (enumValue)
 import           Hsed.Core.UID       (UID)
@@ -75,7 +74,7 @@ import           Hsed.Jig.Script     (MethodOutcome (..), Script, SessionHandle 
                                       describeStatus, exchanged, expectMethodStatus, getCells, namedColumn, observe, opened,
                                       peekSim, powerCycle, sessionGone, setCells, stackReset, startSession, tperInfoObject,
                                       tperReset, unmet, withSession)
-import           Hsed.Sim.State      (cellOf, lockingRows)
+import           Hsed.Sim.View       (SimQuery (..))
 import           Hsed.Wire           (IfStatus (..), hex)
 
 
@@ -311,9 +310,9 @@ locksAndReset name h range rc = do
 --   after it (Opal 2.30 Table 45, PDF 86), read behind the script's seam
 --   ('peekSim'; design 9.3: the simulator's alone, as the case is).
 lockingRanges :: Script [(Text, UID)]
-lockingRanges = peekSim >>= \case
-  Nothing -> unmet "the Locking table's ranges: read from the simulator's state, the simulator's alone (design 9.3)"
-  Just st -> pure (zip names [ u | r <- lockingRows st, Just (UIDCell u) <- [cellOf 0 r] ])
+lockingRanges = peekSim LockingRanges >>= \case
+  Nothing     -> unmet "the Locking table's ranges: read from the simulator's state, the simulator's alone (design 9.3)"
+  Just ranges -> pure (zip names ranges)
   where names = "Locking_GlobalRange" : [ "Locking_Range" <> tshow n | n <- [1 :: Int ..] ]
 
 -- | Get one column of an object in a session, the step named: SUCCESS, and

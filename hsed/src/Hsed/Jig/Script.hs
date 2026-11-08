@@ -171,6 +171,7 @@ module Hsed.Jig.Script
   , simCell
   , tperReset
   , powerCycle
+  , heedNotices
     -- * What the verbs build on
   , baseComId
   , recvLength
@@ -203,7 +204,6 @@ module Hsed.Jig.Script
   , namedColumn
   , peekSim
   , Credential (..)
-  , simCredential
   , t45Of
   , t45On
   , t45RowOf
@@ -249,16 +249,15 @@ import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
                                          driveLatched, driveRecv, driveSend, driveTransport, uintegerOf)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
-import           Hsed.Jig.Simulator     (Simulator (..))
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions, renderWsUrl)
+import           Hsed.Jig.Simulator     (Opened (..), Simulator (..))
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
 import           Hsed.Sim.Sync          (T45Row (..), t45Rows)
-import           Hsed.Sim.Types         (TPerState (..), maxComPacketSizeName)
-import           Hsed.Sim.View          (Credential (..), SimQuery (..))
-import qualified Hsed.Sim.View          as View (answer)
+import           Hsed.Sim.Types         (maxComPacketSizeName)
+import           Hsed.Sim.View          (Credential (..), SimQuery (..), SimView (..))
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Wire              (Cap (..), Channel, Describe (..), Dir (..), Event (..), ExchangeError (..), ExchangeOpts (..),
@@ -1047,15 +1046,15 @@ closingStep name h v = do
 
 -- | StartSession's arguments for an authority of an SP, named, read-write,
 --   its HostChallenge the authority's current PIN, read from the
---   simulator's state ('simCredential'; Test Cases 5.2 item 4 and 6.2 item
---   4, PDF 29 and 49) and kept among the run's secrets (design 9.3 item
---   5); the simulator's alone, a drive's PIN being unknown (design 9.3):
---   on a drive, and where the SP holds no credential for the authority, the
---   script stops.
+--   simulator's state ('peekSim' of "Hsed.Sim.View"'s 'CredentialOf'; Test
+--   Cases 5.2 item 4 and 6.2 item 4, PDF 29 and 49) and kept among the
+--   run's secrets (design 9.3 item 5); the simulator's alone, a drive's PIN
+--   being unknown (design 9.3): on a drive, and where the SP holds no
+--   credential for the authority, the script stops.
 asAuthority :: Text -> UID -> UID -> Script StartArgs
-asAuthority name sp authority = peekSim >>= \case
+asAuthority name sp authority = peekSim (CredentialOf sp authority) >>= \case
   Nothing -> unmet ("StartSession as " <> name <> ": the simulator's alone, its PIN read from the simulator's state (design 9.3)")
-  Just st -> case simCredential sp authority st of
+  Just held -> case held of
     Nothing -> unmet ("StartSession as " <> name <> ": the simulator's " <> spName sp <> " holds no credential for " <> name)
     Just cr -> do
       modifyCtx (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
@@ -1183,9 +1182,9 @@ cleared h = stackReset (shComId h) >>= \case
 --   row's UIDs and the column's name, found in the description the SP holds
 --   ("Hsed.Sim.State".'Hsed.Sim.State.cellNamedIn'); 'Nothing' on a drive,
 --   or where the state holds no such SP, row or cell: "Hsed.Sim.View"'s
---   'CellOf' query, where M5c moved the reader.
+--   'CellOf' query ('peekSim'), where M5c moved the reader.
 simCell :: UID -> UID -> UID -> Text -> Script (Maybe Cell)
-simCell sp table row name = peekSim <&> (>>= View.answer (CellOf sp table row name))
+simCell sp table row name = join <$> peekSim (CellOf sp table row name)
 
 -- | TPER_RESET (Opal 2.30 3.2.3 and Table 13, PDF 28-29): an IF-SEND of
 --   protocol 0x02 to ComID 0x0004 of one unit of zeros ('tperResetBytes': a
@@ -1235,6 +1234,28 @@ powerCycle = theEnd >>= \case
       note ("power cycle: " <> ifStatusName s <> ": every session aborted and the host properties back to their initial assumptions "
             <> "(Core 3.3.7.1.5, PDF 76; 5.2.2.4.4, PDF 148); the run's session and host properties forgotten")
     pure (Right s)
+
+-- | What the simulator says happened to it since it was last asked
+--   ("Hsed.Jig.Simulator".'simNotices': over the LAN leg, a hub that
+--   restarted, broadcasts missed, a reset by another client; in process,
+--   nothing), each noted, and for each the run's session, a StartSession
+--   unread and the host's properties forgotten as a power cycle forgets them
+--   ('powerCycle'; Core 3.3.7.1.5, PDF 76): the TPer behind the notice may
+--   be another, at its Original Factory State, or one reset (design 6.3,
+--   11 M5c). Nothing is issued; on a drive, nothing. What the runner does
+--   before each case and before the closing Level 0 ("Hsed.Jig.Run"), so
+--   that the next case runs on what the TPer now holds.
+heedNotices :: Script ()
+heedNotices = asks reTarget >>= \case
+  SimTarget _ sim -> liftIO (simNotices sim) >>= traverse_ (\notice -> do
+    modifyCtx (\x -> (forgetSessionsOn' x) { rcHostProperties = Nothing })
+    note ("the simulator " <> openedAs (simOpened sim) <> ": " <> notice <> ": the run's session, unread StartSession and host properties "
+          <> "forgotten as a power cycle forgets them (Core 3.3.7.1.5, PDF 76)"))
+  _               -> pure ()
+  where
+    openedAs = \case
+      InProcess -> "in process"
+      OverWs u  -> "over " <> renderWsUrl u
 
 -- | The run's context without the session it holds on a ComID and the
 --   StartSession unread there, once a STACK_RESET on that ComID answered
@@ -1465,26 +1486,18 @@ namedColumn desc name =
   maybe (unmet ("the generated " <> tdName desc <> " table description has no column " <> name)) (pure . fromIntegral . colNumber)
         (columnNamed name desc)
 
--- | The simulator's state, on the simulator in process ("Hsed.Jig.Simulator"'s
---   transitional 'simStateInProc'); 'Nothing' on a drive.
-peekSim :: Script (Maybe TPerState)
-peekSim = asks reTarget >>= \case
-  SimTarget _ sim -> case simStateInProc sim of
-    Just peek -> Just <$> liftIO peek
-    Nothing   -> unmet "not yet written: group G4 (Hsed.Jig.Script.peekSim: the simulator's state read through its view)"
+-- | A query of the simulator's state, answered through its view
+--   ("Hsed.Jig.Simulator".'simView'; "Hsed.Sim.View"'s 'SimQuery', each
+--   answered by the reader the jig had at M5b, an authority's credential
+--   among them, 'CredentialOf', with 'Credential' re-exported here): on the
+--   simulator its answer, in process or over the LAN leg alike (design 9.2,
+--   11 M5c, Option A); 'Nothing' on a drive. A view that does not answer
+--   (a hub that refused the query, its connection lost; never in process)
+--   stops the script: "the simulator's state: " and why.
+peekSim :: SimQuery a -> Script (Maybe a)
+peekSim q = asks reTarget >>= \case
+  SimTarget _ sim -> liftIO (peekView (simView sim) q) >>= either (unmet . ("the simulator's state: " <>)) (pure . Just)
   _               -> pure Nothing
-
--- | An authority's credential read from the simulator's state, by the SP's
---   UID and the authority's: the SP's Authority row of the UID, its
---   Credential a reference to a C_PIN object of the SP (the Admin SP's, Opal
---   2.30 Table 24, PDF 48; the Locking SP's since M5b, Table 40, PDF 82-83),
---   that object's PIN, TryLimit and Tries (Tables 25 and 41, PDF 48-49 and
---   84; a limit the row does not give is 0), the columns found by name in
---   the generated descriptions; 'Nothing' for an authority the SP lacks or
---   one with no credential: "Hsed.Sim.View"'s 'CredentialOf' query, where
---   M5c moved the reader and 'Credential' (re-exported here).
-simCredential :: UID -> UID -> TPerState -> Maybe Credential
-simCredential sp authority = View.answer (CredentialOf sp authority)
 
 -- | A list of names with numbers, as Properties carries the host's and the
 --   TPer's properties (Core 5.2.2.1, PDF 140).

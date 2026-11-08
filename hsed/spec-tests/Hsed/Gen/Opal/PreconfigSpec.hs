@@ -98,12 +98,12 @@ import           Hsed.Gen.Core.UIDs              (uAuthority_Admins, uAuthority_
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1,
                                                   uC_PIN_Admin1, uC_PIN_MSID, uSP_Locking)
 import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
-import           Hsed.Jig.Script                 (Credential (..), simCredential)
 import           Hsed.Sim.Access                 (accessControlList, aceGrant, authenticated)
 import           Hsed.Sim.Preconfig              (instances, vendorCell)
 import           Hsed.Sim.State                  (programmaticResetEnabled, spLifeCycle)
 import           Hsed.Sim.Types                  (Geometry (..), LifeCycle (..), LockingKeys (..), SPState (..), SimParams (..),
                                                   TPerState (..), defaultSimParams, initialState, lifeCycleValue)
+import           Hsed.Sim.View                   (Credential (..), SimQuery (CredentialOf), answer)
 import           Hsed.Wire                       (tperResetComId)
 
 
@@ -518,10 +518,10 @@ spec = describe "the generated Admin and Locking SPs and the simulator's" $ do
       aceGrant sps0 (authenticated sps0 [uAuthority_Admin1]) uACE_C_PIN_SID_Get_NOPIN `shouldBe` Just [0, 4, 5, 6, 7]
 
   describe "what the jig and Level 0 read of it" $ do
-    it "SID's credential (Script.simCredential): the MSID, or the parameters' PIN, with the parameters' TryLimit and no tries (Opal 2.30 4.2.1.8, PDF 49)" $ do
-      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
-      simCredential uSP_Admin uAuthority_SID (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
-      simCredential uSP_Admin uAuthority_Anybody (initialState defaultSimParams) `shouldBe` Nothing
+    it "SID's credential (Hsed.Sim.View's CredentialOf, the jig's query since M5c): the MSID, or the parameters' PIN, with the parameters' TryLimit and no tries (Opal 2.30 4.2.1.8, PDF 49)" $ do
+      answer (CredentialOf uSP_Admin uAuthority_SID) (initialState defaultSimParams) `shouldBe` Just (Credential (spMsid defaultSimParams) 0 0)
+      answer (CredentialOf uSP_Admin uAuthority_SID) (initialState defaultSimParams { spSidPin = Just "SID!", spSidTryLimit = 3 }) `shouldBe` Just (Credential "SID!" 3 0)
+      answer (CredentialOf uSP_Admin uAuthority_Anybody) (initialState defaultSimParams) `shouldBe` Nothing
     it "the SPs' life cycles, which Level 0's Locking descriptor reads: the Admin SP Manufactured, the Locking SP Manufactured-Inactive or the parameters' (Table 29, PDF 50)" $ do
       map (`spLifeCycle` initialState defaultSimParams) [uSP_Admin, uSP_Locking]
         `shouldBe` map (Just . lifeCycleValue) [Manufactured, ManufacturedInactive]

@@ -26,7 +26,6 @@ module Hsed.Jig.Cases.ETC20
   ( etc20
   ) where
 
-import qualified RIO.Map            as Map
 import           RIO
 
 import           Hsed.Gen.Core.Codes (pattern INVALID_PARAMETER)
@@ -36,7 +35,7 @@ import           Hsed.Jig.Catalogue (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq    (Prereq (..), Section (..), Waiver (..))
 import           Hsed.Jig.Script    (Script, StartArgs (..), Verdict (..), exchanged, expectSyncStatus, observe, peekSim, startSession,
                                      statusName, unmet)
-import           Hsed.Sim.Types     (TPerState (..))
+import           Hsed.Sim.View      (SimQuery (..))
 
 
 -- | The case.
@@ -55,14 +54,15 @@ etc20 = Case
 -- | Step 1: StartSession to the Locking SP, as Anybody (the Test Cases name
 --   no authority, PDF 91), read-write: SyncSession INVALID_PARAMETER (PDF
 --   92), an abort accepted (7.1, PDF 76), and no session left open on the
---   simulator.
+--   simulator (its sessions read through its view, "Hsed.Sim.View"'s
+--   'Sessions').
 run :: Script Verdict
 run = do
   answer <- startSession (StartArgs uSP_Locking Nothing Nothing True) >>= exchanged step1
   expectSyncStatus step1 INVALID_PARAMETER answer
-  after <- peekSim
-  for_ after $ \s -> unless (Map.null (tsSessions s)) $
-    unmet (tshow (Map.size (tsSessions s)) <> " session(s) open after the refused StartSession, where none should be (Core 5.3.4.1.5, PDF 215)")
+  after <- peekSim Sessions
+  for_ after $ \sessions -> unless (null sessions) $
+    unmet (tshow (length sessions) <> " session(s) open after the refused StartSession, where none should be (Core 5.3.4.1.5, PDF 215)")
   observe "step 1" ("StartSession to the Locking SP, Manufactured-Inactive: SyncSession " <> statusName INVALID_PARAMETER
                     <> ", no session open (Test Cases ETC-20, PDF 92; Opal 2.30 5.2.2.3.1, PDF 97)")
   pure Pass

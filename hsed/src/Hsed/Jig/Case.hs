@@ -52,7 +52,10 @@ data Need
   | NeedErrorPath   -- ^ IF-SEND off the allow list, an error path: the simulator's, no drive run opting in at M4c (design
                     --   9.3 item 6, 13.8)
   | NeedSimOnly     -- ^ the simulator alone: SID authenticated, or anything no drive policy admits
-  | NeedSimControl  -- ^ the simulator's control (hold, release, state)
+  | NeedSimControl  -- ^ the simulator's control ("Hsed.Sim.View".'Hsed.Sim.View.Control': a ComID's prepared response released),
+                    --   which no case declares (M5c): the jig releases nothing, release being the hub's control op behind
+                    --   hsed-sim's @--allow-remote-control@, and it reads the simulator's state through its view alone
+                    --   ("Hsed.Jig.Script".@peekSim@)
   | NeedWrite       -- ^ a write to the TPer's state (since M5b): drives stay read-only until M6 (design 9.3; 13.34 (8))
   deriving (Eq, Ord, Show, Enum, Bounded)
 

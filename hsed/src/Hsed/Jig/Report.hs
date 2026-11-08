@@ -54,11 +54,22 @@ for a policy bound to another base than its Level 0 names) and @diff@ (two
 reports' Level 0 decodes compared as the Pair runner compares them, and,
 where both carry them, their Properties exchanges as the Pair's Properties
 are). Both read each transcript entry one way ('rereadEntry'), an entry
-the report gives to the simulator's end (@tper@) a simulator's only where
-one of the report's targets is the simulator.
+the simulator's only where the report's targets class an end of its name
+as the simulator's.
+
+Since M5c each end is named by its role made unique by position (@tper@,
+@tper-2@: a pair of two simulators), and a report records what was opened
+beside the role where it says more (design 13.33 (28)): a target gives
+@opened@ for a @ws://@ end (its URL) and @end@ where its name is not its
+role, neither otherwise, so that a report of a run before M5c reads as it
+did. A reader classes an end as the simulator's by what was opened, @sim@
+or a @ws://@ URL, or, where the report records nothing opened, by its role
+@tper@ ('simulatorOpened'); entries are matched to ends by name, and
+@diff@ takes each report's last end by position.
 
 The target's part of a report's name is @sim@, @dev-disk22@,
-@replay-<file>@, or the two ends' joined by @+@ (@sim+dev-disk22@); the stamp
+@replay-<file>@, @ws-127.0.0.1-<port>-<path>@ (a @ws://@ end's, M5c), or the
+two ends' joined by @+@ (@sim+dev-disk22@); the stamp
 is the run's start, @yyyymmddThhmmssZ@. Each transcript entry is printed
 with a decode: a Level 0 response's length and codes for ComID 1, otherwise
 the ComPacket, its packets and subpackets, and each subpacket's tokens read
@@ -97,6 +108,8 @@ by name.
 module Hsed.Jig.Report
   ( CaseResult (..)
   , RunResult (..)
+  , EndRecord (..)
+  , endByRole
   , printable
   , writeReports
   , verifyTranscript
@@ -166,22 +179,53 @@ data CaseResult = CaseResult
   , crExtensions   :: ![(Text, Verdict)]
   , crObservations :: ![(Text, Text)]
   , crEnds         :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name, its transport's role (@tper@, @drive@,
-                                          --   @drive-replay@, as the transcript's entries name it); none for a run of one end
+                                          --   @drive-replay@) made unique by position (@tper-2@), as the transcript's
+                                          --   entries name it; none for a run of one end
   , crEstablished  :: !Bool               -- ^ whether the prerequisites not waived were established or checked on the
                                           --   end (false where the target lacked what the case needs or one was unmet,
                                           --   so that none after it was reached)
   }
   deriving (Eq, Show)
 
+-- | One end of a run as the reports record it among the targets (design
+--   13.33 (28), M5c): what its transport said it is; its name, its role
+--   made unique by position (@tper@, @tper-2@: "Hsed.Jig.Run"), the name the
+--   transcript's entries, the verdicts, the Level 0 responses and the
+--   Properties exchanges carry; and what the jig opened for it, where that
+--   says more than the role does (a @ws://@ simulator's URL; none in process,
+--   for a drive or for a replay).
+data EndRecord = EndRecord
+  { erDescribe :: !Describe
+  , erName     :: !Text
+  , erOpened   :: !(Maybe Text)
+  }
+  deriving (Eq, Show)
+
+-- | An end named by its role, opened as its role says: what every end of a
+--   run of one end, or of a pair of the simulator and a drive, is.
+endByRole :: Describe -> EndRecord
+endByRole d = EndRecord d (dRole d) Nothing
+
+-- | Whether an end is the simulator's (design 13.33 (28)): by what was
+--   opened for it where the report records that, the simulator in process
+--   (@sim@) or over the LAN leg (@ws://@); otherwise by its role, @tper@, as
+--   every report before M5c has it.
+--
+-- >>> map (uncurry simulatorOpened) [(Nothing, "tper"), (Nothing, "drive"), (Just "ws://127.0.0.1:41234/ws", "tper"), (Just "sim", "tper"), (Just "/dev/disk4", "tper")]
+-- [True,False,True,True,False]
+simulatorOpened :: Maybe Text -> Text -> Bool
+simulatorOpened opened role = maybe (role == "tper") (\o -> o == "sim" || "ws://" `T.isPrefixOf` o) opened
+
 -- | What a run came to.
 data RunResult = RunResult
   { rrOptions        :: !RunOptions
   , rrVersion        :: !Text               -- ^ "Hsed.Version"'s
   , rrStarted        :: !UTCTime
-  , rrTargets        :: ![Describe]         -- ^ what each transport said it is (two for a pair)
+  , rrTargets        :: ![EndRecord]        -- ^ each end: what its transport said it is, its name, what was opened (two
+                                            --   for a pair)
   , rrCases          :: ![CaseResult]
   , rrTranscript     :: ![TEntry]           -- ^ as the wire had it; printed masked ('rrSecrets') unless @--show-msid@
-  , rrLevel0         :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name (its transport's role)
+  , rrLevel0         :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name
   , rrPair           :: !(Maybe PairReport)
   , rrIfSends        :: !Int                -- ^ the IF-SENDs the Guard passed to a drive's transport, each within its
                                             --   policy but those 'rrOutsidePolicy' names (M4c; none at M3): the drive's
@@ -369,7 +413,7 @@ instance A.ToJSON RunResult where
     [ "hsed"            A..= rrVersion rr
     , "started"         A..= rrStarted rr
     , "options"         A..= optionsJSON (rrOptions rr)
-    , "targets"         A..= rrTargets rr
+    , "targets"         A..= map targetJSON (rrTargets rr)
     , "cases"           A..= rrCases rr
     , "transcript"      A..= map entryJSON (rrTranscript rr)
     , "level0"          A..= [ A.object ["end" A..= end, "response" A..= l0, "decoded" A..= map decodedJSON (l0Descriptors l0)]
@@ -400,6 +444,18 @@ instance A.ToJSON RunResult where
       objectOf v = case v of
         A.Object o -> o
         _          -> mempty
+
+-- | An end among a report's targets: what its transport said it is
+--   ("Hsed.Wire".'Describe''s JSON), with @opened@ where the end records what
+--   was opened (a @ws://@ end's URL) and @end@ where its name is not its
+--   role (the second simulator of a pair, @tper-2@), neither otherwise, so
+--   that every report of a run before M5c reads as it did (design 13.33
+--   (28)).
+targetJSON :: EndRecord -> A.Value
+targetJSON er = case A.toJSON (erDescribe er) of
+  A.Object o -> A.Object (o <> KM.fromList ([ "opened" A..= u | Just u <- [erOpened er] ] <> [ "end" A..= erName er | named ]))
+  v          -> v
+  where named = erName er /= dRole (erDescribe er)
 
 -- | The options a run was given, the expected serial masked and the
 --   simulator's SID PIN given by its length and digest alone.
@@ -572,7 +628,7 @@ markdown rr = T.unlines $
   ]
   <> [ row [ dRole d, dImpl d, unitName (dUnits d), fromMaybe "" (dSsc d), maybe "" hex (dBaseComId d)
            , maybe "" tshow (dNComIds d), fromMaybe "" (dDevice d) ]
-     | d <- rrTargets rr ]
+     | d <- map erDescribe (rrTargets rr) ]
   <> [""]
   <> mdSection "Recover: STACK_RESET on the base ComID (design 9.3)" (either (\why -> ["- not recovered: " <> why]) (\t -> ["- recovered: " <> t])
                                                                             =<< maybeToList (rrRecover rr))
@@ -648,14 +704,20 @@ secretLines rr
                 <> [ "- secret " <> tshow i <> ": " <> secretLine s | (i, s) <- zip [1 :: Int ..] (rrSecrets rr) ]
                 <> [""]
 
--- | Whether a run had the simulator for an end: a target that says it is a
---   TPer ("Hsed.Transport.InProc").
+-- | Whether a run had the simulator for an end, in process or over the LAN
+--   leg ('simulatorOpened': by what was opened for an end where it says, by
+--   a role of @tper@ otherwise, "Hsed.Transport.InProc").
 hasSimulator :: RunResult -> Bool
-hasSimulator rr = any ((== "tper") . dRole) (rrTargets rr)
+hasSimulator rr = any isSimulator (rrTargets rr)
 
--- | Whether a run had a drive for an end, its own or a replay.
+-- | Whether a run had a drive for an end, its own or a replay: an end not
+--   the simulator's.
 hasDrive :: RunResult -> Bool
-hasDrive rr = any ((/= "tper") . dRole) (rrTargets rr)
+hasDrive rr = any (not . isSimulator) (rrTargets rr)
+
+-- | Whether an end is the simulator's ('simulatorOpened').
+isSimulator :: EndRecord -> Bool
+isSimulator er = simulatorOpened (erOpened er) (dRole (erDescribe er))
 
 -- | A case: its verdict and why, each item of its section's list, its
 --   extensions, its observations.
@@ -922,7 +984,7 @@ attr = T.concatMap $ \case
 --   a short one warned of); the reports written; the exit code.
 summary :: RunResult -> [FilePath] -> [Text]
 summary rr0 paths =
-  [ "hsed-jig " <> renderTarget (roTarget (rrOptions rr)) <> ": " <> T.intercalate "; " (map targetText (rrTargets rr)) ]
+  [ "hsed-jig " <> renderTarget (roTarget (rrOptions rr)) <> ": " <> T.intercalate "; " (map (targetText . erDescribe) (rrTargets rr)) ]
   <> [ "interrupted: " <> why | Just why <- [rrInterrupted rr] ]
   <> [ "pre-flight: " <> n | n <- rrPreflight rr ]
   <> [ "recover: " <> either ("not recovered: " <>) id outcome | Just outcome <- [rrRecover rr] ]
@@ -953,11 +1015,13 @@ summary rr0 paths =
 
 -- | @verify-transcript REPORT.json [--no-if-send] [--level0-only]@: print
 --   the commands a report's transcript issued, each with the end it went to
---   (its transport's role); with @--no-if-send@, fail if a drive's end was
---   issued an IF-SEND; with @--level0-only@, fail if a drive's end was
---   issued anything but Level 0 Discovery's IF-RECV (protocol 0x01, ComID
---   0x0001). A drive's end is any but the simulator's (@tper@, where one of
---   the report's targets is the simulator): a pair's simulator IF-SENDs
+--   (its name: its transport's role, made unique by position since M5c);
+--   with @--no-if-send@, fail if a drive's end was issued an IF-SEND; with
+--   @--level0-only@, fail if a drive's end was issued anything but Level 0
+--   Discovery's IF-RECV (protocol 0x01, ComID 0x0001). A drive's end is any
+--   but the simulator's (an end the report's targets class as the
+--   simulator's, by what was opened or by its role @tper@,
+--   'simulatorEnds'): a pair's simulator IF-SENDs, and a @ws://@ end's,
 --   count for neither, and an entry that names no end (a report from before
 --   ends were recorded) counts as a drive's. An entry that does not read as
 --   a report prints one ('rereadEntry': no kind it has, an issued command
@@ -1035,19 +1099,29 @@ data Reread
   | ReIssued !Int !(Maybe Text) !Request    -- ^ a command issued on a drive's end: its number, its end (none named), its request
   | ReUnread !Int                           -- ^ an entry that does not read, by its number (0 where it has none)
 
--- | The ends a report's targets name the simulator (@tper@): an entry given
---   to @tper@ is the simulator's only where the report has one.
+-- | The names of the ends a report's targets class as the simulator's
+--   (design 13.33 (28)): each target named by its @end@, or by its @role@
+--   where it gives none (every report before M5c), the simulator's where it
+--   records what was opened as @sim@ or a @ws://@ URL, or, where it records
+--   nothing opened, where its role is @tper@ ('simulatorOpened'); an entry
+--   is the simulator's only where the report names its end so.
 simulatorEnds :: A.Value -> [Text]
 simulatorEnds = either (const []) id . A.parseEither (A.withObject "report" $ \o -> do
   targets <- fromMaybe [] <$> o A..:? "targets"
-  filter (== "tper") <$> traverse (A.withObject "target" (A..: "role")) targets)
+  catMaybes <$> traverse (A.withObject "target" $ \t -> do
+    role   <- t A..: "role"
+    name   <- fromMaybe role <$> t A..:? "end"
+    opened <- t A..:? "opened"
+    pure (name <$ guard (simulatorOpened opened role))) targets)
 
--- | A transcript entry as a report prints it, read again, given the ends
---   the report's targets name the simulator: a note; a command blocked; one
---   issued on the simulator's end; one issued on a drive's (any other end,
---   or none named), its request rebuilt ('requestParser'); or one that does
---   not read: no kind a report prints, a request that cannot be rebuilt,
---   or a command given to a simulator the report's targets do not name.
+-- | A transcript entry as a report prints it, read again, given the names
+--   of the ends the report's targets class as the simulator's
+--   ('simulatorEnds'): a note; a command blocked; one issued on the
+--   simulator's end, matched by its end's name; one issued on a drive's (any
+--   other end, or none named), its request rebuilt ('requestParser'); or
+--   one that does not read: no kind a report prints, a request that cannot
+--   be rebuilt, or a command given to the simulator's @tper@ where the
+--   report's targets class no end of that name as the simulator's.
 rereadEntry :: [Text] -> A.Value -> Reread
 rereadEntry simEnds v = either (const (ReUnread numbered)) id $ flip A.parseEither v $ A.withObject "entry" $ \o -> do
   n    <- fromMaybe 0 <$> o A..:? "n"
@@ -1057,7 +1131,7 @@ rereadEntry simEnds v = either (const (ReUnread numbered)) id $ flip A.parseEith
     "note"    -> pure ReNote
     "blocked" -> pure ReBlocked
     "issued"
-      | end == Just "tper", "tper" `elem` simEnds -> pure ReSimulator
+      | maybe False (`elem` simEnds) end -> pure ReSimulator
       | end == Just "tper" -> A.parseFail "a command the simulator's end was issued, in a report whose targets name no simulator"
       | otherwise          -> ReIssued n end <$> (o A..: "request" >>= requestParser)
     _         -> A.parseFail "an entry of no kind a report prints"
@@ -1188,8 +1262,10 @@ reportProperties = first T.pack . A.parseEither (A.withObject "report" $ \o -> o
 --   each report's last end (a pair's drive); and where both reports carry
 --   Properties exchanges (M4c's), each report's last end's compared as the
 --   Pair's Properties are ("Hsed.Jig.PairProperties", Opal 2.30 Table 17),
---   an end that ran none not compared; a failure where either comparison
---   fails.
+--   the last end found by its last target's name (since M5c, a pair of two
+--   simulators' @tper-2@, not the first end of its role, design 13.33
+--   (28)), an end that ran none not compared; a failure where either
+--   comparison fails.
 diffReports :: FilePath -> FilePath -> IO ExitCode
 diffReports a b = do
   ra <- readReport a
@@ -1218,10 +1294,11 @@ diffReports a b = do
     -- the last end's Properties exchange, if the report carries them: that end's, if it ran one
     lastProperties v = reportProperties v <&> fmap (\exchanges ->
       listToMaybe [ (sent, answer) | Just end <- [lastEndOf v], (end', sent, answer) <- exchanges, end' == end ])
-    -- the report's last end: its last target's role
+    -- the report's last end: its last target's name, its end where it gives one (a pair of two simulators' second,
+    -- tper-2), else its role (design 13.33 (28))
     lastEndOf = either (const Nothing) id . A.parseEither (A.withObject "report" $ \o -> do
       targets <- fromMaybe [] <$> o A..:? "targets"
-      traverse (A.withObject "target" (A..: "role")) (L.lastMaybe targets))
+      traverse (A.withObject "target" (\t -> t A..:? "end" >>= maybe (t A..: "role") pure)) (L.lastMaybe targets))
 
 -- | A report read as JSON, or why not.
 readReport :: FilePath -> IO (Either Text A.Value)

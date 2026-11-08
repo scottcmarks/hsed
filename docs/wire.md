@@ -8,8 +8,9 @@ mh_transport's (its `SPEC.md`, v1, unchanged) with hsed's application layer over
 Every rule names its source. **S** is `~/mh_transport/SPEC.md` (v1, 129 lines), cited by line; the `.dart` files
 are `~/mh_transport/packages/mh_transport/lib/src/`'s; **design** is `docs/spec-as-source.md`, cited by section
 and line; the Haskell modules are hsed's (`Frame` is `Hsed.Transport.Mhtx.Frame`, `Conn` is
-`Hsed.Transport.Mhtx.Conn`). Where design §6.3 is silent, M5c decides, and says so ("M5c"); the hub's and the
-client's rules are written from M5c's plan (its protocol rules), ahead of their code.
+`Hsed.Transport.Mhtx.Conn`, `Hub` and `Client` likewise). Where design §6.3 is silent, M5c decides, and says so
+("M5c"); the hub's and the client's rules, first written from M5c's plan (its protocol rules), are held here to
+`Hub`, `Client` and `hsed-sim` as built.
 
 ## Connecting
 
@@ -61,10 +62,10 @@ client's rules are written from M5c's plan (its protocol rules), ahead of their 
 
   ```json
   {"type":"hello","v":1,"server_id":"q7d2m0s8x1kz","seq":0,"heartbeat":{"interval_ms":20000,"timeout_ms":60000},
-   "app":{"sed":{"allows":["peek","release","reset"],"base_comid":4100,"errata":"scott","impl":"hsed-sim 0.1.0.1",
-   "n_comids":1,"role":"tper","setup":{"hold_ifrecvs":0,"inactive_comid_discard":false,"locking_ofs":"manufactured",
-   "msid":"32 bytes, sha256 a6c4ca3911e4","params":"<64 hex digits>","units":"bytes"},"ssc":"opal-2.30",
-   "units":"bytes","v":1}}}
+   "app":{"sed":{"allows":["peek","release","reset"],"base_comid":4100,"errata":"scott",
+   "impl":"hsed-sim Version 0.1.0.1 [claude/m5c 612411b]","n_comids":1,"role":"tper","setup":{"hold_ifrecvs":0,
+   "inactive_comid_discard":false,"locking_ofs":"manufactured","msid":"32 bytes, sha256 a6c4ca3911e4",
+   "params":"<64 hex digits>","units":"bytes"},"ssc":"opal-2.30","units":"bytes","v":1}}}
   ```
 
 - **`app.sed`** (design §6.3 :503; `Frame.SedApp`, `Frame.sedAppOf`, `Frame.sedAppValue`), what TPer answers:
@@ -73,7 +74,7 @@ client's rules are written from M5c's plan (its protocol rules), ahead of their 
   |---|---|
   | `v` | 1, the layer's version; another is refused |
   | `role` | `tper` (the in-process simulator's `Describe`) |
-  | `impl` | what answers: `hsed-sim` and its version |
+  | `impl` | what answers: `hsed-sim` and its version, as `hsed-sim --version` prints it (`Version 0.1.0.1 [<branch> <commit>]`) |
   | `units` | `bytes` or `blocks512`: what IF-SEND's and IF-RECV's lengths are rounded to in the TPer (design §6.2); `len` itself is always bytes |
   | `ssc`, `errata` | `opal-2.30`, `scott` |
   | `base_comid`, `n_comids` | the static ComIDs: the base and how many |
@@ -89,6 +90,12 @@ client's rules are written from M5c's plan (its protocol rules), ahead of their 
 - **The hub closes a silent connection**: one that has sent nothing for `timeout_ms` is closed with code 4000 and
   reason `heartbeat timeout` (S L58-60; `protocol.dart:26`). The hub sweeps every `interval_ms`, as `hub.dart:149-168`
   does, so a silent connection is closed between `timeout_ms` and `timeout_ms + interval_ms` after its last message.
+- **The HTTP server's own timeout never comes first**: `hsed-sim` sets warp's connection timeout to
+  max 30 (ceil((`timeout_ms` + `interval_ms`) / 1000) + 1) seconds (`Hub.warpTimeout`, `Hub.hs:448`), 81 s at the
+  default heartbeat, 30 s at 200/600 ms. warp tickles its timeout at every byte a websocket sends or receives, which
+  undoes the pause it offers (`Warp.pauseTimeout`), and kills a connection idle through two of its periods: at its
+  own 30 s it would cut a client silent for 30 to 60 s, which the default heartbeat keeps until 60 s, with no
+  close code, before the hub's 4000 (`SoakSpec` shows it).
 - **The client's proof of life**: any inbound frame; a client that hears nothing for `interval_ms` plus a grace
   (10 s) drops the connection and reconnects (S L60-62; `client.dart:420-429`, which counts decoded frames alone;
   hsed's client counts any message).
@@ -113,7 +120,7 @@ client's rules are written from M5c's plan (its protocol rules), ahead of their 
 | `reset` | `event`: `power_cycle`, `hardware_reset` or `hot_plug` | a reset (Opal 2.30 Table 16's types 0-2, PDF 31; the words of `Hsed.Wire.Internal`'s events); TPER_RESET is an IF-SEND |
 | `describe` | none | the TPer described |
 | `peek` | `query` (below) | a query of the simulator's state |
-| `release` | `comid` | the ComID's prepared response released now (S2 to S3) |
+| `release` | `comid` | the ComID's prepared response released now (S2 to S3); answered `good`, `len` 0 |
 
 ```json
 {"type":"sed.req","id":2,"op":"if_send","proto":1,"comid":4100,"len":2048,"payload":"AAAAABAEAAAAAAAAAAAAAIQ..."}
@@ -143,8 +150,8 @@ carries one). `id` is the request's; one of four forms follows it (design §6.3 
 ```json
 {"type":"sed.rsp","id":2,"status":"good","len":0}
 {"type":"sed.rsp","id":3,"status":"good","len":2048,"payload":"AAAAABAE..."}
-{"type":"sed.rsp","id":4,"status":"unsupported","detail":"reset: hsed-sim runs without --allow-remote-reset","len":0}
-{"type":"sed.rsp","id":7,"describe":{"impl":"hsed-sim 0.1.0","role":"tper","units":"bytes","v":1}}
+{"type":"sed.rsp","id":4,"status":"unsupported","detail":"the reset op is not allowed: hsed-sim allows it with --allow-remote-reset","len":0}
+{"type":"sed.rsp","id":7,"describe":{"allows":["peek","release","reset"],"base_comid":4100,...,"v":1}}
 {"type":"sed.rsp","id":6,"view":{"cell":"enum","label":"FALSE","value":0}}
 {"type":"sed.rsp","id":null,"status":"protocol_error","detail":"id: an integer from 1 to 9007199254740991, not \"7\""}
 ```
@@ -180,8 +187,9 @@ carries one). `id` is the request's; one of four forms follows it (design §6.3 
 ```
 
 A broadcast, stamped with the next `seq` like any other (design §6.3 :509 and :514): for each reset a client's
-`reset` op causes (there is no operator's reset at M5c; it is M6's), sent to every connection, the requester's
-included, before the requester's `sed.rsp`. `comids_reset` is every ComID; `sessions_aborted` the
+`reset` op causes and the TPer answers `good` (there is no operator's reset at M5c; it is M6's), sent to every
+connection, the requester's included, before the requester's `sed.rsp`, the event and its broadcast one step
+under the hub's lock. `comids_reset` is every ComID; `sessions_aborted` the
 `[comid, tsn]` pairs of the sessions open before the reset (`Frame.SedEvt`, `Frame.evtText`). A client takes another
 client's `sed.evt` as a reset it did not ask for.
 
@@ -220,19 +228,24 @@ design §6.3 :513's "IF-RECV may be retried").
 - **Always**: IF-SEND, IF-RECV and `describe`.
 - **The control ops**, `peek` and `release`, only with `--allow-remote-control`, and **`reset`** only with
   `--allow-remote-reset`; otherwise each is answered `status` `unsupported` with a `detail` naming the flag, the
-  socket kept (design §7 item 5 :522, §11 M5c, Option A). `app.sed.allows` says which are on. A `peek` answers
+  socket kept (design §7 item 5 :524, §11 M5c, Option A): the detail reads `the peek op is not allowed: hsed-sim
+  allows it with --allow-remote-control`, and likewise for `release` and, with `--allow-remote-reset`, `reset`
+  (`Hub.opReply`). `app.sed.allows` says which are on. A `peek` answers
   C_PIN values and the MSID in clear base64 over the loopback socket: inherent to Option A, the jig authenticating
   with PINs read so; any local user can reach a loopback port, which `--token-file` narrows.
 - **The hooks**, only with `--conformance-hooks`, on the same listener as `/ws` (the Dart suite's `--emit` and
   `--count`, `bin/conformance.dart:57-70`):
   - `POST /emit`: the body, a JSON object, broadcast to every connection with the next `seq`, which replaces any
     `seq` the body carried; answered 200 `{"seq":n}`. The counter advances even with no connection (S L77). A
-    body that is not a JSON object is answered 400 (the lead's L3: neither SPEC.md nor the Python fixture gives a
-    status, `conformance_fixture.py:34-36` broadcasting whatever it decodes), and so is a `type` that is the
-    transport's (`hello`, `ping`, `pong`) or hsed's (`sed.*`), so that the hook can forge no `sed.evt` or `sed.rsp`;
-    nothing is broadcast and no `seq` is spent.
+    body that is not JSON, or not a JSON object, is answered 400 (the lead's L3: neither SPEC.md nor the Python
+    fixture gives a status, `conformance_fixture.py:34-36` broadcasting whatever it decodes, its own failure an
+    exception's 500), and so are an object with no string `type` (S L18-19) and a `type` that is the transport's
+    (`hello`, `ping`, `pong`) or hsed's (`sed.*`), so that the hook can forge no `sed.evt` or `sed.rsp`; a body
+    past 2 MiB, the frames' own limit (`Conn.messageLimit`), is answered 413. Each refusal's body is
+    `{"error":<why>}`; nothing is broadcast and no `seq` is spent.
   - `GET /clients`: 200 `{"count":n}`, the connections registered, `n` a JSON integer.
-  - Any other path 404; `/ws` without a WebSocket upgrade 426.
+  - A hook asked by another method, a hook without `--conformance-hooks`, and any other path: 404. `/ws` without
+    a WebSocket upgrade: 426.
 - **A token**, only with `--token-file`: the `token` query parameter, compared in constant time; missing or wrong,
   the connection is accepted and closed with 4001 before hello (S L92-95), the token never logged. The file is read
   as bytes, one trailing LF or CRLF stripped (the lead's L3; the Python hub reads no token, its caller checking it,
@@ -243,9 +256,9 @@ design §6.3 :513's "IF-RECV may be retried").
 | code | reason | sent by |
 |---|---|---|
 | 1000 | normal closure (RFC 6455 §7.4.1) | a client closing (hsed's on close) |
-| 1001 | going away (RFC 6455 §7.4.1) | the hub shutting down: `hsed-sim` on SIGINT or SIGTERM, the hub closing its peers |
+| 1001 | going away (RFC 6455 §7.4.1) | the hub closing its peers (`hubClose`): `hsed-sim` on SIGINT or SIGTERM, then exiting 0 |
 | 1002 | protocol error (RFC 6455 §7.4.1) | either end, `Conn`: a frame the websockets library cannot read |
-| 1008 | policy violation (RFC 6455 §7.4.1) | the hub, naming the policy in its reason |
+| 1008 | policy violation (RFC 6455 §7.4.1) | the hub, naming the policy in its reason: `send queue full` or `too many requests waiting`, a connection's queues bounded (1024 frames each, `HubOpts.hoQueue`); hsed's client, refusing a hello that does not come within its wait or does not read, or an `app.sed` changed across a reconnect, after which it is latched, every request failing |
 | 1009 | message too big (RFC 6455 §7.4.1) | either end, `Conn`: a message or frame over 2 MiB |
 | 4000 | `heartbeat timeout` | the hub: a connection silent for `timeout_ms` (S L58-60; `protocol.dart:26`) |
 | 4001 | a wrong token | the hub, before hello (S L92-93) |
@@ -274,8 +287,10 @@ hsed's client (`Hsed.Transport.Mhtx.Client`, design §7 item 4) keeps these, and
 - **Requests**: ids from 1, increasing, registered before they are sent, never reused; replies correlated by id, a
   reply to an id not pending ignored, a `sed.rsp` carrying `seq` ignored; each request timed out (hsed's client:
   15 s, past the host's own 10 s per command, `Hsed.Wire.defaultExchangeOpts`, so that a slow hub is cut by the
-  host as the in-process simulator would be); nothing re-sent, see [Nothing sent is sent
-  again](#nothing-sent-is-sent-again).
+  host as the in-process simulator would be); a request issued while disconnected waiting for the reconnect
+  (hsed's client: 3 s, then `transport_failure`, "not connected to ... within 3 s"); nothing re-sent, see
+  [Nothing sent is sent again](#nothing-sent-is-sent-again). hsed's client's waits are `Client.clientOpts`':
+  connect 5 s, hello 3 s, a request 15 s, the heartbeat's grace 10 s, a reconnect 3 s, and `defaultBackoff`.
 - **Reconnect** after any drop: 1 s doubling to a 30 s cap, equal jitter (half the delay fixed, half uniform), the
   counter reset after each successful connection; the newest attempt wins, older ones discarding their result
   (S L108-111; `backoff.dart:5-35`). A refused handshake, or a close before hello (4001 among them), is a failed
@@ -291,8 +306,10 @@ hsed's client (`Hsed.Transport.Mhtx.Client`, design §7 item 4) keeps these, and
 
 mh_transport's eight checks (S L113-129; `conformance.dart:112-275`) are re-expressed in Haskell, with a
 binary-frame check, at a heartbeat of 200 ms and a timeout of 600 ms, against hubs on 127.0.0.1 and ephemeral ports
-(`hsed-lan-test`'s ConformanceSpec, which CI runs on both runners, Scott's answer Q3). The Dart suite itself is
-Scott's step, against `hsed-sim --conformance-hooks --listen 127.0.0.1:0 --heartbeat-interval-ms 200
+(`hsed-lan-test`'s ConformanceSpec, which CI runs on both runners, Scott's answer Q3): checks 1-7 with
+`conformance.dart`'s waits, and check 8 with hsed's own client, whose reconnects the hub forces on one
+`server_id` (`hubClose`), a broadcast made while it is away (unknown at the first hello, then some, then none).
+The Dart suite itself is Scott's step, against `hsed-sim --conformance-hooks --listen 127.0.0.1:0 --heartbeat-interval-ms 200
 --dead-timeout-ms 600`, run from a throwaway copy of `~/mh_transport` as `tools/mhtx-conformance.sh` prints it; its
 printed last line, `CONFORMANT: 8 passed, 0 failed, 0 skipped`, is read, not its exit status, which is 0 with skips
 too (Scott's answer Q2; `bin/conformance.dart:85`).

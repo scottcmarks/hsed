@@ -6,12 +6,15 @@ stage reads and writes and which command runs it. The design of record is
 [spec-as-source.md](spec-as-source.md): this guide points into it rather than restating it. To add a rule
 to the compiler, see [adding-a-rule.md](adding-a-rule.md); for the IR's format, see [ir-v1.md](ir-v1.md).
 
-State as of 2026-11-06 (M5b): the chain runs end to end for Core 2.01 and for all of Opal 2.30, every
+State as of 2026-11-08 (M5c): the chain runs end to end for Core 2.01 and for all of Opal 2.30, every
 Opal table and signature block bound: its Admin SP and Locking SP, Properties, feature descriptors, and
 Tables 14-16 over Core's. The simulator holds both SPs, the Locking SP Manufactured-Inactive or
 Manufactured, with Get on its byte tables, a minimal object Set and one level of transactions. The jig
 runs eighteen cases, the Locking SP's eight on the simulator alone, selecting per Original Factory
-State. mh_transport over a LAN is M5c's. Writes to a real drive, the Linux leg and a Haskell-native PDF
+State. Since M5c the simulator is also served over mh_transport frames by `hsed-sim`, on 127.0.0.1
+alone, and the jig runs against it with `--target ws://127.0.0.1:PORT/ws` exactly as in process,
+reading the simulator's state through typed queries alone ([wire.md](wire.md) is the client
+contract). A run across two machines, writes to a real drive, the Linux leg and a Haskell-native PDF
 reader are M6's (design §11).
 
 ## The chain at a glance
@@ -32,7 +35,8 @@ docs/LEDGER.md, docs/LEDGER-opal.md           what binds each table
    |
    v  stack build hsed
 the simulator (Hsed.Sim.*) and the jig (Hsed.Jig.*, exe hsed-jig), talking only through
-serialized command and response bytes (Hsed.Wire) over a transport
+serialized command and response bytes (Hsed.Wire) over a transport: in process, a drive's kext,
+a replay, or since M5c mh_transport frames to the simulator served by exe hsed-sim
 ```
 
 `make check` runs the whole chain and holds every committed output to what the chain produces today.
@@ -163,7 +167,14 @@ The runtime oracle (design §5.5) compares the generated Core types with the 201
   - `Replay` answers from a captured file.
   - `MacKext` reaches a real SED through Bright Plaza's kext. It is built only with
     `--flag hsed:kext`, and its CDBs come from `hsed/cbits/hsed_cdb.c`.
-  - mh_transport over a LAN is M5c's.
+  - `Hsed.Transport.Mhtx.*` (since M5c) carries the wire over mh_transport's frames (its `SPEC.md` v1, with
+    hsed's `sed.req`, `sed.rsp` and `sed.evt` over them): `Frame` the JSON frames, `Conn` the websocket
+    connections (the one socket bound, on 127.0.0.1 alone, and the one dialled), `Hub` the simulator's
+    side, which `hsed-sim` serves, and `Client` the jig's side, behind `--target ws://`. Nothing sent is
+    ever sent again: a lost connection fails the requests in flight. [wire.md](wire.md) states every
+    rule with its source.
+  - A target of two ends, `sim+replay:FILE` or `sim+/dev/diskN`, is the Pair: each case runs on the
+    simulator, then on the other end, and the two are compared (design §9.2).
 
 ## 8. The simulator (`Hsed.Sim.*`)
 
@@ -186,7 +197,30 @@ AccessControl rows, and leaves out the key table the TPer does not hold. It list
 SP starts Manufactured-Inactive, its Original Factory State, or Manufactured with
 `--locking-ofs manufactured`; every reset applies its LockOnReset and MBRDoneOnReset columns (design
 §8.3, §8.4). Simulator options, such as units, held responses, the Locking SP's state and a SID PIN past
-the factory state, are `hsed-jig` flags.
+the factory state, are `hsed-jig` flags, and the same flags of `hsed-sim` (`Hsed.Sim.Flags` reads both).
+
+**Seen from outside** (`Hsed.Sim.View`, since M5c): eight typed queries of the simulator's state
+(the ComIDs, the sessions, an SP's life cycle, a credential, a cell, a byte table, the MSID, the
+locking ranges) and its control (a ComID's prepared response released). The jig reads the simulator
+through them alone, in process as over the wire, where they are the `peek` and `release` ops.
+
+**`hsed-sim`** (design §7 item 5) serves the simulator over the LAN leg:
+
+```
+stack exec hsed-sim -- --locking-ofs manufactured --allow-remote-control --allow-remote-reset
+PORT=54293
+```
+
+- It listens on 127.0.0.1 alone, an ephemeral port by default (`--listen 127.0.0.1:PORT` names one; any
+  other host exits 2), and writes one line to stdout, `PORT=<n>`, once it listens; it logs to stderr.
+- The simulator's flags: `--units`, `--errata scott`, `--locking-ofs`, `--sim-sid-pin`,
+  `--hold-ifrecvs`, `--inactive-comid-discard`, `--profile`.
+- What it allows beyond commands and `describe`: `--allow-remote-control` (the `peek` and `release`
+  ops, which the jig needs), `--allow-remote-reset` (the `reset` op, a power cycle, hardware reset or
+  hot plug, broadcast), `--conformance-hooks` (`POST /emit` and `GET /clients`, for mh_transport's
+  conformance suite); `--token-file FILE` makes a client give the token.
+- The heartbeat: `--heartbeat-interval-ms` and `--dead-timeout-ms`, 20000 and 60000 by default.
+- It refuses root. SIGINT or SIGTERM closes every client with 1001, and it exits 0.
 
 ## 9. The host jig (`Hsed.Jig.*`, exe `hsed-jig`)
 
@@ -199,6 +233,7 @@ stack exec hsed-jig -- --target sim --locking-ofs manufactured  # the Locking SP
 stack exec hsed-jig -- --target sim --tests UCT-02,UCT-03:1a-1c
 stack exec hsed-jig -- --target replay:spec/fixtures/disk6-level0.bin
 stack exec hsed-jig -- --target sim+replay:spec/fixtures/disk6-level0.bin   # the Pair: compare the two
+stack exec hsed-jig -- --target ws://127.0.0.1:54293/ws --locking-ofs manufactured   # hsed-sim's, above
 stack exec hsed-jig -- verify-transcript build/report/<report>.json --allow-list
 stack exec hsed-jig -- level0 decode spec/fixtures/disk6-level0.bin --against spec/fixtures/disk6-query.txt
 ```
@@ -218,6 +253,14 @@ default everything but the seven that need it Manufactured; with `--locking-ofs 
 everything but ETC-20), and notes the cases it left out and why before the first case. `--tests` runs
 exactly what it names; a whole-test key (`ETC-21`) selects every case of that test.
 
+**A `ws://` target** (since M5c, design §9.2) is `ws://127.0.0.1:PORT/PATH` alone: another host, a query
+or `wss` exits 2. The jig requires the hub to allow `peek`, and holds its own simulator flags to the
+setup the hub publishes in its hello, refusing a hub that differs (exit 1, each difference named by
+its flag): on a `ws://` target those flags say what the hub must be, not what it becomes. If the hub
+restarts or another client resets the TPer, the run notes it before the next case and forgets its
+session and host properties, as a power cycle would. The report names the ends `tper` (and `tper-2`
+for a second simulator), with what was opened beside a `ws://` end.
+
 **A real drive** (`--target /dev/diskN`, root, a kext-enabled build) is covered in design §9.3.
 - The Guard admits only Level 0 until the drive's own Level 0 gives its base ComID; after that, only a
   method-level read-only list.
@@ -229,12 +272,15 @@ exactly what it names; a whole-test key (`ETC-21`) selects every case of that te
 
 | Command | What it does |
 |---|---|
-| `make check` | extract-test, compare-test, regen-diff, annotate, pdf-checks, gen-diff, then every test suite (hsed-core, hsed-spec with its bindings, hsed and the doctests) |
+| `make check` | extract-test, compare-test, regen-diff, annotate, pdf-checks, gen-diff, then every test suite (hsed-core, hsed-spec with its bindings, hsed's hsed-test, hsed-lan-test and the doctests) |
+| `stack test hsed` | hsed's three suites: hsed-test (in process, no socket, under 15 s), hsed-doc-test, and hsed-lan-test, the LAN leg on 127.0.0.1 and ephemeral ports (the eight mh_transport conformance checks re-expressed at 200/600 ms, the `ws://` target against in-process runs, a hub restarted under a run); CI runs it on both runners |
+| `HSED_LAN_SOAK=1` hsed-lan-test | adds `SoakSpec`, about 80 s: a client kept past warp's 30 s timeout at the default heartbeat, a silent one closed by the hub |
 | `make compare-test` | the unit tests of `tools/compare_reports.py` over hand-made reports, no jig run (in `make check` and in CI) |
 | `make werror` | CI's `-Werror` build and tests, in their own work dir |
 | `make werror-cold` | the same from nothing |
-| `tools/jig-runs.sh [-t KEYS] [-r RUNS] OUTDIR` | the fifteen standard jig runs (nine on the simulator and a replay of a Level 0 response synthesized from `spec/fixtures/disk6-query.txt`, six at `--locking-ofs manufactured`), or the subset `-r RUNS` names, into OUTDIR, their exits and transcript entries in `runs.tsv`, the jig's version and the replay's SHA-256 in `runs.info`; simulator and replay targets alone, never a drive (design §9.2) |
-| `.venv/bin/python -I tools/compare_reports.py A B` | two runs' reports, or two sets `jig-runs.sh` wrote run by run, compared after the version, the start and the report directory are normalised, with allowances for what a change means to differ (design §9.2) |
+| `tools/jig-runs.sh [-w] [-t KEYS] [-r RUNS] OUTDIR` | the fifteen standard jig runs (nine on the simulator and a replay of a Level 0 response synthesized from `spec/fixtures/disk6-query.txt`, six at `--locking-ofs manufactured`), or the subset `-r RUNS` names, into OUTDIR, their exits and transcript entries in `runs.tsv`, the jig's version and the replay's SHA-256 in `runs.info`; simulator and replay targets alone, never a drive. With `-w`, runs 1-6 and 1m-6m, each against an `hsed-sim` hub of its own on 127.0.0.1, each hub's exit in `runs.tsv` (`hub_exit`) and its version in `runs.info` (`hub_version`) (design §9.2) |
+| `.venv/bin/python -I tools/compare_reports.py A B` | two runs' reports, or two sets `jig-runs.sh` wrote run by run, compared after the version, the start and the report directory are normalised, with allowances for what a change means to differ; `--allow-target` allows what the target alone makes differ, so that a `-w` set compares with the in-process runs (design §9.2) |
+| `tools/mhtx-conformance.sh` | prints, and runs none of, Scott's run of mh_transport's Dart conformance suite against `hsed-sim --conformance-hooks` at 200/600 ms, from a throwaway copy of `~/mh_transport`; its last line, `CONFORMANT: 8 passed, 0 failed, 0 skipped`, is read, not its exit status (design §5.4 h) |
 | `tools/land.sh` | pushes `feature/types` to GitHub, then bumps and pushes the home repo's pointer to hsed on wapex (design §10.4) |
 
 A rung's regression is the fifteen runs with `--tests` of the cases the base ran, made at the base and

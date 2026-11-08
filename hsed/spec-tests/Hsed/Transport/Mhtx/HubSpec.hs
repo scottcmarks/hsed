@@ -205,13 +205,22 @@ spec = describe "Hsed.Transport.Mhtx.Hub" $ do
         withPeer hub Nothing $ \silent -> withPeer hub Nothing $ \lively -> do
           _ <- helloOn silent
           _ <- helloOn lively
-          let sent t send = setClock clock t >> readsOf clock >>= \n -> send >> readPast clock n
-          sent 0.5 (connSendBinary lively "\x00")
+          -- a message read by the hub at a time; then a ping read at 0, which stamps nothing later (a stamp never goes
+          -- back), its pong the proof that the message before it was read and stamped
+          let sentAt :: Double -> IO () -> IO ()
+              sentAt t send = do
+                setClock clock t
+                n <- readsOf clock
+                send
+                readPast clock n
+                setClock clock 0
+                pingPong lively
+          sentAt 0.5 (connSendBinary lively "\x00")
           setClock clock 1.0 >> hubSweep hub
           hubClientCount hub `shouldReturn` 1
           next silent `shouldReturn` InClosed (Just (4000, "heartbeat timeout"))
           for_ (zip [1.2, 1.9, 2.5, 3.2] junk) $ \(t, frame) -> do
-            sent t (connSendText lively frame)
+            sentAt t (connSendText lively frame)
             setClock clock (t + 0.99) >> hubSweep hub
             hubClientCount hub `shouldReturn` 1
           setClock clock 4.5 >> hubSweep hub
@@ -505,9 +514,10 @@ badRequests =
 properties :: ByteString
 properties = either (error . show) id (controlComPacket 0x1004 propertiesCall)
 
--- | StartSession on 0x1004 to the Admin SP, as no one, read-only.
+-- | StartSession on 0x1004 to the Admin SP as Anybody, Write True, which
+--   the simulator requires (Core 5.2.3.1.3; "Hsed.Sim.SessionManager").
 startSession :: ByteString
-startSession = either (error . show) id (controlComPacket 0x1004 (generate (startSessionCall (StartArgs uSP_Admin Nothing Nothing False))))
+startSession = either (error . show) id (controlComPacket 0x1004 (generate (startSessionCall (StartArgs uSP_Admin Nothing Nothing True))))
 
 -- | A request as an op of the hub's.
 opOf :: Request -> Op

@@ -27,15 +27,20 @@ without @--allow-remote-reset@ answers the power cycle unsupported, which fails 
 extension. What a hub's @app.sed@ is held to ("Hsed.Jig.Target".'hubRefusals') is checked
 here first, with no hub.
 
-The runs need group G1's frames and connections, group G2's hub and group G4's seam (the jig
-reading the simulator through its view alone, the opened key): until G3 rebases onto them
-(M5c's merge order G1, G4, G2, G3) each is pending, naming the groups ('awaiting').
+A hub restarted under a run (hub B started on hub A's port, as
+"Hsed.Transport.Mhtx.RestartSpec" restarts one under the client alone): the case in flight
+(ETC-04, its call in the session it opened held by hub A's backend) fails with a transport
+failure when A stops, the request never sent again, B's backend never seeing it; the request
+issued while no hub listens is refused, naming the restart; the restart is noted before the
+next case, the run's session forgotten as a power cycle forgets it ("Hsed.Jig.Script".
+'Hsed.Jig.Script.heedNotices'); and the later cases pass on B's TPer.
 -}
 module Hsed.Jig.WsTargetSpec (spec) where
 
 import qualified Data.Aeson                as A
 import qualified Data.Aeson.Key            as K
 import qualified Data.Aeson.KeyMap         as KM
+import qualified RIO.ByteString            as B
 import           GHC.IO.Handle             (hDuplicate, hDuplicateTo)
 import           RIO
 import           RIO.Directory             (listDirectory)
@@ -48,7 +53,7 @@ import           Hsed.CaseKey              (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Options          (RunOptions (..), TargetSpec (..), WsUrl (..), defaultRunOptions)
 import           Hsed.Jig.Run              (runJig)
 import           Hsed.Jig.Target           (hubRefusals)
-import           Hsed.Lan.Support          (probe, withHub)
+import           Hsed.Lan.Support          (probe, withHub, withHubOn)
 import           Hsed.Sha256               (sha256Hex)
 import           Hsed.Sim.Profile          (loadProfile)
 import           Hsed.Sim.Types            (LifeCycle (..), SimParams (..), defaultSimParams)
@@ -56,8 +61,10 @@ import           Hsed.Sim.View             (setupOf)
 import           Hsed.Transport.InProc     (InProcOpts (..))
 import           Hsed.Transport.Mhtx.Conn  (Conn (..), Incoming (..))
 import           Hsed.Transport.Mhtx.Frame (Allow (..), FromServer (..), Hello (..), SedApp (..), SedEvt (..), fromServer)
-import           Hsed.Transport.Mhtx.Hub   (HubOpts (..), backendOf, defaultHubOpts)
+import           Hsed.Transport.Mhtx.Hub   (Backend (..), HubOpts (..), backendOf, defaultHubOpts)
 import           Hsed.Wire                 (Event (..), ExchangeOpts (..), Unit (..), defaultExchangeOpts)
+import           Hsed.Wire.Internal        (Dir (..), Request (payload), Transport (..))
+import qualified Hsed.Wire.Internal        as W
 
 
 spec :: Spec
@@ -83,17 +90,17 @@ spec = describe "Hsed.Jig.Target, a ws:// target" $ do
 
   describe "a run over ws://127.0.0.1:<port>/ws against the same run in process (roExchange's 1 ms polls)" $ do
     it "at configuration 1 (M4a's ten and ETC-20): whole transcripts equal, the reports equal but for the start, the target, the report directory and opened" $
-      awaiting "G1, G2 and G4" >> sameOverWs defaultSimParams 0 (oldAnd "ETC-20")
+      sameOverWs defaultSimParams 0 (oldAnd "ETC-20")
     it "at configuration 2 (--hold-processing): the same" $
-      awaiting "G1, G2 and G4" >> sameOverWs defaultSimParams 1 (oldAnd "ETC-20")
+      sameOverWs defaultSimParams 1 (oldAnd "ETC-20")
     it "at configuration 1m (--locking-ofs manufactured, M4a's ten and M5b's seven): the same" $
-      awaiting "G1, G2 and G4" >> sameOverWs manufactured 0 (oldAnd seven)
+      sameOverWs manufactured 0 (oldAnd seven)
     it "at configuration 2m (--locking-ofs manufactured, --hold-processing): the same" $
-      awaiting "G1, G2 and G4" >> sameOverWs manufactured 1 (oldAnd seven)
+      sameOverWs manufactured 1 (oldAnd seven)
 
   describe "the reset clause over the hub's reset op" $
     it "at manufactured SPF-12:1/no-media passes, its power cycle over the reset op leaving ReadLocked and WriteLocked TRUE; a probe receives one sed.evt, power_cycle, its seq the probe's hello's plus 1" $
-      awaiting "G1, G2 and G4" >> withHubOf allowing manufactured 0 (\port -> do
+      withHubOf allowing manufactured 0 (\port -> do
         events <- newTVarIO []
         helloSeq' <- newEmptyTMVarIO
         withAsync (probe port (collect helloSeq' events)) $ \_ -> do
@@ -106,14 +113,36 @@ spec = describe "Hsed.Jig.Target, a ws:// target" $ do
           evts <- within "the probe's sed.evt" (atomically (readTVar events >>= \es -> if null es then retrySTM else pure es))
           [ (evtSeq e, evtEvent e) | e <- evts ] `shouldBe` [(s0 + 1, PowerCycle)])
 
+  describe "a hub restarted under the run (hub B on hub A's port)" $
+    it "fails the case in flight with a transport failure, never sending it again; notes the restart and the session it forgets; passes the later cases on hub B's TPer" $ do
+      arrived <- newEmptyMVar
+      gate <- newEmptyMVar
+      seenByB <- newTVarIO []
+      backendA <- holdingInSession arrived gate <$> backendFor defaultSimParams 0
+      backendB <- logging seenByB <$> backendFor defaultSimParams 0
+      portOfA <- newEmptyMVar
+      (held, (code, json, _)) <- withAsync (readMVar portOfA >>= \port -> jig (onWs port defaultSimParams 0 restartCases)) $ \run -> do
+        (port, held) <- withHub allowing backendA $ \port _ ->
+          putMVar portOfA port >> (,) port <$> within "hub A's IF-SEND in ETC-04's session" (takeMVar arrived)
+        -- hub A stopped (its peers closed with 1001, its socket closed); hub B on its port, a new server_id
+        ran <- withHubOn port allowing backendB (\_ _ -> withinMicros 20000000 "the run over hub B" (wait run)) `finally` putMVar gate ()
+        pure (held, ran)
+      code `shouldBe` ExitFailure 1
+      [ (k, v) | (Just (A.String k), Just (A.String v)) <- verdicts json ] `shouldBe` restartVerdicts
+      transcriptText json `shouldSatisfy` T.isInfixOf "the request was sent, and is never sent again"
+      notes json `shouldSatisfy` any (\n -> all (`T.isInfixOf` n)
+        [ "the simulator over ws://127.0.0.1:", "/ws: the hub restarted, server_id ", ": a new TPer at its OFS"
+        , "the run's session, unread StartSession and host properties forgotten as a power cycle forgets them" ])
+      readTVarIO seenByB >>= (`shouldSatisfy` notElem held)
+
   describe "the open's refusals" $ do
     it "refuses a hub without --allow-remote-control: exit 1, naming why, no report" $
-      awaiting "G1, G2 and G4" >> withHubOf defaultHubOpts { hoAllowReset = True } defaultSimParams 0 (\port -> do
+      withHubOf defaultHubOpts { hoAllowReset = True } defaultSimParams 0 (\port -> do
         (code, said) <- refused (onWs port defaultSimParams 0 (keys "UCT-01"))
         code `shouldBe` ExitFailure 1
         said `shouldSatisfy` T.isInfixOf "the hub allows no peek: hsed-sim --allow-remote-control")
     it "refuses a hub whose units, hold, OFS, discard, SID PIN or profile are not the run's: exit 1, each named by its flag" $
-      awaiting "G1, G2 and G4" >> do
+      do
         profile <- loadProfile ("../spec/fixtures" </> "disk6-level0.bin") >>= either (throwString . T.unpack) pure
         for_ [ (defaultSimParams { spUnits = UnitBlocks512 }, 0, "--units: bytes asked, blocks512 on the hub")
              , (defaultSimParams, 1, "--hold-ifrecvs: 0 asked, 1 on the hub")
@@ -127,16 +156,11 @@ spec = describe "Hsed.Jig.Target, a ws:// target" $ do
             code `shouldBe` ExitFailure 1
             said `shouldSatisfy` T.isInfixOf ("the hub's setup differs: " <> reason)
     it "with a hub without --allow-remote-reset, fails SPF-12's extension: event PowerCycle unsupported" $
-      awaiting "G1, G2 and G4" >> withHubOf defaultHubOpts { hoAllowControl = True } manufactured 0 (\port -> do
+      withHubOf defaultHubOpts { hoAllowControl = True } manufactured 0 (\port -> do
         (code, json, _) <- jig (onWs port manufactured 0 (keys "SPF-12:1/no-media"))
         code `shouldBe` ExitFailure 1
         extensionVerdicts json `shouldSatisfy` notElem (str "pass")
         notes json `shouldSatisfy` any ("event PowerCycle: unsupported" `T.isPrefixOf`))
-
--- | Pending until the groups named merge (M5c's merge order G1, G4, G2, G3): the example is written against their
---   signatures and runs once G3 rebases onto them.
-awaiting :: String -> Expectation
-awaiting groups = pendingWith ("awaiting group " <> groups <> "'s merge (M5c): written against their signatures, run once G3 rebases onto them")
 
 keys :: Text -> [CaseKey]
 keys = either (error . T.unpack) id . parseCaseKeys
@@ -193,6 +217,35 @@ withHubOf :: HubOpts -> SimParams -> Int -> (Word16 -> IO a) -> IO a
 withHubOf opts params hold act = do
   backend <- backendOf opts params (InProcOpts (spUnits params) hold) >>= either (throwString . T.unpack) pure
   withHub opts backend (\port _ -> act port)
+
+-- | The default simulator's backend for a hub that allows everything.
+backendFor :: SimParams -> Int -> IO Backend
+backendFor params hold = backendOf allowing params (InProcOpts (spUnits params) hold) >>= either (throwString . T.unpack) pure
+
+-- | The cases of the restart: M4a's first six and ETC-08, ETC-15 and ETC-21/adminsp, ETC-04 the one that opens a
+--   session (as Anybody, on the Admin SP) and calls in it.
+restartCases :: [CaseKey]
+restartCases = keys "UCT-01,UCT-02,ETC-02,ETC-03,ETC-04,ETC-08,ETC-15,ETC-21/adminsp"
+
+-- | Their verdicts when hub A stops while ETC-04's call in its session is held.
+restartVerdicts :: [(Text, Text)]
+restartVerdicts =
+  [ ("UCT-01", "pass"), ("UCT-02", "pass"), ("ETC-02", "pass"), ("ETC-03", "pass"), ("ETC-04", "fail"), ("ETC-08", "pass")
+  , ("ETC-15", "pass"), ("ETC-21/adminsp", "pass") ]
+
+-- | A backend whose first IF-SEND in a session (its first packet's HSN not 0: Core Table 18, PDF 41, the Session
+--   field TSN then HSN, bytes 24-27 of the ComPacket after Table 17's 20, PDF 40) is held: its request given, its answer only once the gate opens.
+holdingInSession :: MVar Request -> MVar () -> Backend -> Backend
+holdingInSession arrived gate b = b { beTransport = (beTransport b) { tExchange = \r -> do
+  when (W.dir r == IfSend && B.any (/= 0) (B.take 4 (B.drop 24 (payload r)))) $
+    tryPutMVar arrived r >>= \isFirst -> when isFirst (readMVar gate)
+  tExchange (beTransport b) r } }
+
+-- | A backend that keeps every request it is given.
+logging :: TVar [Request] -> Backend -> Backend
+logging seen b = b { beTransport = (beTransport b) { tExchange = \r -> do
+  atomically (modifyTVar' seen (<> [r]))
+  tExchange (beTransport b) r } }
 
 -- | A run's options over ws://127.0.0.1:<port>/ws, the host's polls shortened as the in-process tests shorten them.
 onWs :: Word16 -> SimParams -> Int -> [CaseKey] -> RunOptions
@@ -280,7 +333,11 @@ collect helloSeq' events conn = connReceive conn >>= \case
 
 -- | What a probe waits for, within 5 s: a hub that never sends it fails the example, not the suite.
 within :: String -> IO a -> IO a
-within what act = timeout 5000000 act >>= maybe (throwString (what <> ": not within 5 s")) pure
+within = withinMicros 5000000
+
+-- | 'within' the microseconds given.
+withinMicros :: Int -> String -> IO a -> IO a
+withinMicros micros what act = timeout micros act >>= maybe (throwString (what <> ": not in time")) pure
 
 -- | A field of a JSON object.
 at :: Text -> A.Value -> Maybe A.Value
@@ -303,6 +360,10 @@ verdicts json = [ (at "key" c, at "verdict" c) | c <- elements (at "cases" json)
 -- | Each extension's verdict.
 extensionVerdicts :: A.Value -> [Maybe A.Value]
 extensionVerdicts json = [ at "verdict" x | c <- elements (at "cases" json), x <- elements (at "extensions" c) ]
+
+-- | The transcript as JSON's text.
+transcriptText :: A.Value -> Text
+transcriptText = maybe "" (decodeUtf8Lenient . toStrictBytes . A.encode) . at "transcript"
 
 -- | The transcript's notes.
 notes :: A.Value -> [Text]

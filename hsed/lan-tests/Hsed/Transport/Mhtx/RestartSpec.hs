@@ -16,10 +16,8 @@ bytes only once a gate opens) fails with a transport failure when A stops, and h
 on A's port (ReuseAddr), never sees it; the client reconnects to B with a new server_id, which
 it notices and judges unknown; a request issued while no hub listens fails naming the
 restart; one issued after it is answered. Nothing sent is ever sent again: an IF-RECV in S3
-delivers its packets once ("Hsed.Sim.Sync").
-
-It needs group G1's frames and connections and group G2's hub: until G3 rebases onto them
-(M5c's merge order G1, G4, G2, G3) it is pending, naming the groups ('awaiting').
+delivers its packets once ("Hsed.Sim.Sync"). A run of the jig whose hub restarts under it
+is "Hsed.Jig.WsTargetSpec"'s.
 -}
 module Hsed.Transport.Mhtx.RestartSpec (spec) where
 
@@ -39,7 +37,7 @@ import           Hsed.Wire.Internal         (Transport (..))
 spec :: Spec
 spec = describe "Hsed.Transport.Mhtx.Client, its hub restarted" $
   it "fails what hub A held when A stops, hub B on A's port never seeing it; reconnects to B, the restart noticed; fails a request issued in the outage naming the restart, answers one after" $
-    awaiting "G1 and G2" >> within 20000000 (do
+    within 20000000 (do
       gate <- newEmptyMVar
       arrived <- newEmptyMVar
       seenByB <- newTVarIO []
@@ -64,11 +62,6 @@ spec = describe "Hsed.Transport.Mhtx.Client, its hub restarted" $
         readTVarIO seenByB >>= (`shouldSatisfy` notElem heldLength . map lenBytes)
         closeMhtx c
       putMVar gate ())
-
--- | Pending until the groups named merge (M5c's merge order G1, G4, G2, G3): the example is written against their
---   signatures and runs once G3 rebases onto them.
-awaiting :: String -> Expectation
-awaiting groups = pendingWith ("awaiting group " <> groups <> "'s merge (M5c): written against their signatures, run once G3 rebases onto them")
 
 -- | The hubs' options: the control ops and the reset op allowed, a heartbeat the example never reaches.
 hubOpts :: HubOpts

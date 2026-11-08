@@ -87,6 +87,12 @@ after it not run; a SIGHUP set up as base sets up SIGINT, its action reset
 once delivered, put back so after a run, which one SIGHUP delivered then
 shows by the default action it leaves (sigaction read through
 spec-tests/cbits/hsed_test_signals.c).
+
+Since M5c (the restart hook): what the simulator says happened to it (a
+hub that restarted, broadcasts missed, another client's reset) is heard
+before each case: noted before the next case, the run's session, an unread
+StartSession and the host's properties forgotten as a power cycle forgets
+them, and that case runs and passes.
 -}
 module Hsed.Jig.RunSpec (spec) where
 
@@ -129,11 +135,11 @@ import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Prereq        (level0OutsideSync, sessionsUnobservable)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
-import           Hsed.Jig.Script        (controlComPacket)
-import           Hsed.Jig.Simulator     (inProcess)
+import           Hsed.Jig.Script        (RunCtx (..), RunEnv (..), SessionHandle (..), controlComPacket, emptyRunCtx, heedNotices)
+import           Hsed.Jig.Simulator     (Simulator (..), inProcess)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, fakeDrive, onFakeDrive, silently)
 import           Hsed.Jig.Target        (Target (..))
-import           Hsed.Jig.Transcript    (TEntry (..), newTranscript)
+import           Hsed.Jig.Transcript    (TEntry (..), entries, newTranscript)
 import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
@@ -639,6 +645,38 @@ spec = do
           [ (at "verdict" x, at "reason" x) | c <- elements (at "cases" json), x <- elements (at "extensions" c) ]
             `shouldBe` [(str "skipped", str "not run, the case skipped: prerequisite unmet: C_PIN_SID's Tries 1 is not below its TryLimit 1")]
           map (at "prerequisites") (elements (at "cases" json)) `shouldBe` [str "established"]
+
+  describe "the restart hook (design 6.3, 11 M5c): what the simulator says happened to it, heard before each case and before the closing Level 0" $
+    it "notes a notice before the next case, the run's session, an unread StartSession and the host's properties forgotten as a power cycle forgets them, and that case passes" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let notice = "the hub restarted, server_id 0a1b2c3d4e5f -> 5f4e3d2c1b0a: a new TPer at its OFS"
+            heard  = "the simulator in process: " <> notice <> ": the run's session, unread StartSession and host properties forgotten as a "
+                     <> "power cycle forgets them (Core 3.3.7.1.5, PDF 76)"
+            -- what each ask of the notices hears, in turn, then nothing
+            asked hears = newIORef hears <&> \ref -> atomicModifyIORef' ref (\ns -> (drop 1 ns, fromMaybe [] (listToMaybe ns)))
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
+        once <- asked [[notice]]
+        t0 <- newTranscript
+        channel <- newChannel
+        ctx <- newIORef emptyRunCtx { rcSession = Just (SessionHandle 0x1004 4096 1), rcSessionUnread = Just (0x1004, "no SyncSession read")
+                                    , rcHostProperties = Just [("MaxComPacketSize", 4096)] }
+        stop <- newIORef Nothing
+        runRIO (RunEnv (SimTarget sim ((inProcess control) { simNotices = once })) t0 channel ctx defaultRunOptions stop
+                       (mkLogFunc (\_ _ _ _ -> pure ())))
+               (heedNotices >> heedNotices)
+        forgotten <- readIORef ctx
+        (rcSession forgotten, rcSessionUnread forgotten, rcHostProperties forgotten) `shouldBe` (Nothing, Nothing, Nothing)
+        entries t0 `shouldReturn` [Note 1 heard]
+        beforeSecond <- asked [[], [notice]]
+        t <- newTranscript
+        code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-01,SPF-02:1", roReportDir = dir </> "report" } t
+                                    (SimTarget sim ((inProcess control) { simNotices = beforeSecond })))
+        code `shouldBe` ExitSuccess
+        json <- reportIn dir
+        verdicts json `shouldBe` [(str "UCT-01", str "pass"), (str "SPF-02:1", str "pass")]
+        let ns = notes json
+        filter (== heard) ns `shouldBe` [heard]
+        (elem "UCT-01 on the tper" (takeWhile (/= heard) ns), take 1 (drop 1 (dropWhile (/= heard) ns))) `shouldBe` (True, ["SPF-02:1 on the tper"])
 
   describe "a case that stops with a session open" $
     it "leaves the next case runnable: its NoSessions is established by STACK_RESET on the ComID, noted in the transcript" $

@@ -118,7 +118,11 @@ HostChallenge the current PIN likewise, and every session read-write (every
 StartSession the jig sends has Write True, Test Cases 4.1 e, PDF 26). The
 simulator's state is read through its view alone, in process as over the
 LAN leg ("Hsed.Sim.View"'s queries; M5c, Option A), a view that does not
-answer leaving the prerequisite that reads it unmet. On a
+answer leaving the prerequisite that reads it unmet; and before each case,
+and before the closing Level 0, the run hears what the simulator says
+happened to it (a @ws://@ hub that restarted, broadcasts missed, another
+client's reset), each noted and the run's session forgotten as a power
+cycle forgets it ("Hsed.Jig.Script".'Hsed.Jig.Script.heedNotices'). On a
 drive, for a case that needs Level 0 alone, SyncIdle and NoSessions are
 waived as not needed, Level 0 being outside the synchronous protocol (Core
 3.3.10.3 b, PDF 84) and answered whatever the sessions (3.3.6.2, PDF 67);
@@ -208,7 +212,7 @@ import           Hsed.Jig.Recover       (recoverScript)
 import           Hsed.Jig.Report        (CaseResult (..), EndRecord (..), RunResult (..), renderTarget, summary, writeReports)
 import           Hsed.Jig.Script        (Credential (..), Interrupted (..), RunCtx (..), RunEnv (..), Script, SessionHandle (..),
                                          Verdict (..), admitsStackReset, attempt, baseComId, describeStatus, discover, drain,
-                                         emptyRunCtx, ifRecvOn, maskAnswersSince, spName, stackReset, t45Of, t45On,
+                                         emptyRunCtx, heedNotices, ifRecvOn, maskAnswersSince, spName, stackReset, t45Of, t45On,
                                          transcriptMark, verdictText)
 import           Hsed.Jig.Simulator     (Opened (..), Simulator (..))
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
@@ -614,7 +618,9 @@ endRecord e = (\d -> EndRecord d (endName e) (endOpened e)) <$> case reTarget (e
 
 -- | Run the cases on the ends (with @--recover@, the recovery on the one
 --   end in their place; the cases the default left out noted first), then,
---   unless the run was stopped, compare and
+--   unless the run was stopped, hear what each end's simulator says
+--   happened to it during the last case ("Hsed.Jig.Script".'heedNotices',
+--   as before each case), compare and
 --   capture Level 0; count the IF-SENDs each drive was issued, gather each
 --   drive's policy, the commands it was issued outside it and those the
 --   Guard refused (a problem of the run), why the run was stopped and any
@@ -634,6 +640,8 @@ runOn opts started chosen leftOut preflightNotes t stop tg = do
       if roRecover opts
         then (,) [] . Just <$> recoverOn ends
         else (\rs -> (rs, Nothing)) <$> for chosen (\c -> joined named c <$> for ends (\e -> (,) (endName e) <$> runCase e c))
+    -- what the simulator says happened to it during the last case, heard before the closing Level 0 as before each case
+    unless (roRecover opts) $ void (whileRunning stop (for_ ends (\e -> runRIO (endEnv e) heedNotices)))
     pairing <- fmap join . whileRunning stop $ case ends of
       a : b : _ | not (roRecover opts) -> Just <$> (liftA2 pairLevel0 <$> endLevel0 a <*> endLevel0 b)
       _                                -> pure Nothing
@@ -765,7 +773,13 @@ joined named c rs
 
 -- * A case on an end
 
--- | A case on one end: skipped if the end lacks what it needs or a
+-- | A case on one end, what the end's simulator says happened to it since
+--   it was last asked heard first (a hub that restarted, broadcasts
+--   missed, another client's reset: each noted, the run's session, an
+--   unread StartSession and the host's properties forgotten as a power
+--   cycle forgets them, "Hsed.Jig.Script".'heedNotices'; the restart hook,
+--   M5c), so that the case runs on what the TPer now holds: skipped if the
+--   end lacks what it needs or a
 --   prerequisite is unmet, its extensions skipped with that reason and its
 --   prerequisites not reached; else run to its verdict, then its extensions
 --   on the simulator alone, unless the verdict is Skipped or Unobservable,
@@ -785,6 +799,7 @@ runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
   Nothing  -> ran `catch` \(Interrupted why) -> pure (notRun (Skipped ("interrupted: " <> why)))
   where
     ran = do
+      heedNotices
       let heading = renderCaseKey (cKey c) <> " on the " <> endName e
       logInfo (display heading)
       note heading

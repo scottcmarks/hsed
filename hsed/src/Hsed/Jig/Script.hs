@@ -171,6 +171,7 @@ module Hsed.Jig.Script
   , simCell
   , tperReset
   , powerCycle
+  , heedNotices
     -- * What the verbs build on
   , baseComId
   , recvLength
@@ -248,8 +249,8 @@ import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
                                          driveLatched, driveRecv, driveSend, driveTransport, uintegerOf)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
-import           Hsed.Jig.Simulator     (Simulator (..))
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions, renderWsUrl)
+import           Hsed.Jig.Simulator     (Opened (..), Simulator (..))
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
@@ -1233,6 +1234,28 @@ powerCycle = theEnd >>= \case
       note ("power cycle: " <> ifStatusName s <> ": every session aborted and the host properties back to their initial assumptions "
             <> "(Core 3.3.7.1.5, PDF 76; 5.2.2.4.4, PDF 148); the run's session and host properties forgotten")
     pure (Right s)
+
+-- | What the simulator says happened to it since it was last asked
+--   ("Hsed.Jig.Simulator".'simNotices': over the LAN leg, a hub that
+--   restarted, broadcasts missed, a reset by another client; in process,
+--   nothing), each noted, and for each the run's session, a StartSession
+--   unread and the host's properties forgotten as a power cycle forgets them
+--   ('powerCycle'; Core 3.3.7.1.5, PDF 76): the TPer behind the notice may
+--   be another, at its Original Factory State, or one reset (design 6.3,
+--   11 M5c). Nothing is issued; on a drive, nothing. What the runner does
+--   before each case and before the closing Level 0 ("Hsed.Jig.Run"), so
+--   that the next case runs on what the TPer now holds.
+heedNotices :: Script ()
+heedNotices = asks reTarget >>= \case
+  SimTarget _ sim -> liftIO (simNotices sim) >>= traverse_ (\notice -> do
+    modifyCtx (\x -> (forgetSessionsOn' x) { rcHostProperties = Nothing })
+    note ("the simulator " <> openedAs (simOpened sim) <> ": " <> notice <> ": the run's session, unread StartSession and host properties "
+          <> "forgotten as a power cycle forgets them (Core 3.3.7.1.5, PDF 76)"))
+  _               -> pure ()
+  where
+    openedAs = \case
+      InProcess -> "in process"
+      OverWs u  -> "over " <> renderWsUrl u
 
 -- | The run's context without the session it holds on a ComID and the
 --   StartSession unread there, once a STACK_RESET on that ComID answered

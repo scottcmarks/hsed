@@ -80,7 +80,9 @@ Since M5c the simulator's state is read through its view alone
 the simulator, nothing on a drive; on a @ws://@ end whose view does not
 answer (a hub that refused the peek), a script that reads the state stops,
 saying "the simulator's state:" and why, and a case's prerequisite that
-reads it is unmet, the case skipped (the run's @establish@).
+reads it is unmet, the case skipped (the run's @establish@); what the
+simulator says happened to it is noted and the run's session forgotten
+('heedNotices').
 -}
 module Hsed.Jig.ScriptSpec (spec) where
 

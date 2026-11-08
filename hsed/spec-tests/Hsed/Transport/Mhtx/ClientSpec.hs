@@ -20,16 +20,16 @@ carries @seq@ and a @sed.evt@ never taken for an answer; a timeout a transport f
 entry gone however the wait ends (an asynchronous exception inside @mask_@ among them), a late
 answer ignored; a dropped socket fails what it carried, none re-sent; a request issued while
 disconnected sent after a reconnect judged none, refused naming a restart or broadcasts missed
-otherwise, each noticed; a changed @app.sed@ latches the client; pings every interval, any
-message proof of life, silence past the interval and the grace a reconnect; 'backoffDelay' and
+otherwise, each noticed; a changed @app.sed@ latches the client; 'backoffDelay' and
 'judgeMissed' as mh_transport's Dart (backoff.dart:27-35, client.dart:397-406, SPEC.md
 L81-85); the transport as the in-process one (a length past what the unit carries refused with
 nothing sent, a protocol error a transport failure, the reset op's answer, unsupported
 included, its description and unit from @app.sed@); the view and the control as the hub's
-peek and release. Every wait is the test's (the options' microseconds), none over about 10 ms
-in an example that passes, so that hsed-test keeps its budget (design 13.34). No socket is
-opened: memory alone. The client against a hub on 127.0.0.1, restarted under it, is
-"Hsed.Transport.Mhtx.RestartSpec"'s (hsed-lan-test).
+peek and release. Every wait is the test's (the options' microseconds), none over 5 ms in an
+example that passes, so that hsed-test keeps its budget (design 13.34, L1). No socket is
+opened: memory alone. The heartbeat, which takes real time, is
+"Hsed.Transport.Mhtx.ClientHeartbeatSpec"'s, and the client against a hub on 127.0.0.1,
+restarted under it, "Hsed.Transport.Mhtx.RestartSpec"'s (both hsed-lan-test).
 -}
 module Hsed.Transport.Mhtx.ClientSpec (spec) where
 
@@ -47,7 +47,7 @@ import           Hsed.Sim.Types             (defaultSimParams)
 import           Hsed.Sim.View              (ComIdView (..), Control (..), SimQuery (..), SimView (..), SomeQuery (..), setupOf)
 import           Hsed.Transport.InProc      (InProcOpts (..), inProcView)
 import           Hsed.Transport.Mhtx.Client
-import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeBadToken, codeGoingAway, codeHeartbeat, memoryPair)
+import           Hsed.Transport.Mhtx.Conn   (Conn (..), Incoming (..), codeBadToken, codeGoingAway, memoryPair)
 import           Hsed.Transport.Mhtx.Frame  (Allow (..), FromClient (..), Hello (..), Op (..), Reply (..), SedApp (..), SedEvt (..),
                                              SedReq (..), SedRsp (..), answerValue, evtText, fromClient, helloText, rspText,
                                              sedAppValue)
@@ -171,18 +171,6 @@ spec = describe "Hsed.Transport.Mhtx.Client" $ do
         threadDelay 5000
         isNothing <$> atomically (tryReadTQueue hubs) `shouldReturn` True)
 
-  describe "the heartbeat (SPEC.md L57-62)" $ do
-    it "pings every interval after hello" $ within (
-      withHello (helloOf "server-a" 0 tperApp) { helloIntervalMs = 2 } id $ \_ _ hub ->
-        replicateM_ 3 (pinged hub))
-    it "takes any message, a binary one among them, for proof of life, and drops and redials after the interval and the grace in silence" $ within (
-      withHello (helloOf "server-a" 0 tperApp) { helloIntervalMs = 2 } (\o -> o { coGraceMicros = 10000 }) $ \hubs _ hub -> do
-        -- 18 ms of messages every 3 ms, half as long again as the 12 ms of silence that would drop it
-        replicateM_ 6 (connSendBinary hub "\0" >> threadDelay 3000)
-        isNothing <$> atomically (tryReadTQueue hubs) `shouldReturn` True
-        untilClosed hub >>= (`shouldBe` Just (codeHeartbeat, "heartbeat timeout"))
-        void (atomically (readTQueue hubs)))
-
   describe "the transport (as the in-process one, Hsed.Transport.InProc)" $ do
     it "refuses a length past what its unit carries Other Invalid Command Parameter, nothing sent" $ within (
       withClient $ \_ c hub -> do
@@ -270,8 +258,8 @@ tperApp = SedApp
   , saSetup     = Just (setupOf defaultSimParams 0)
   }
 
--- | The double's hello: its server id, its seq, an app.sed; a heartbeat of 10 s, which no example that does not set
---   its own reaches.
+-- | The double's hello: its server id, its seq, an app.sed; a heartbeat of 10 s, which no example reaches (the
+--   heartbeat's are "Hsed.Transport.Mhtx.ClientHeartbeatSpec"'s, in hsed-lan-test).
 helloOf :: Text -> Integer -> SedApp -> Hello
 helloOf serverId s app = Hello 1 serverId s 10000 60000 (KM.fromList [("sed", sedAppValue app)])
 
@@ -371,16 +359,6 @@ answeredAtOnce hub command = do
   answer hub (reqId req) (Answered Good (B.replicate 16 0))
   wait r `shouldReturn` Response Good (B.replicate 16 0)
   pure (reqId req)
-
--- | The next message, which must be a ping.
-pinged :: Conn -> IO ()
-pinged hub = connReceive hub >>= \incoming -> fromClient incoming `shouldBe` ClientPing
-
--- | The connection's close, what came before it passed over: its code and reason.
-untilClosed :: Conn -> IO (Maybe (Word16, Text))
-untilClosed hub = connReceive hub >>= \case
-  InClosed c -> pure c
-  _          -> untilClosed hub
 
 -- | Whether a message is the close of a code.
 closedWith :: Word16 -> Incoming -> Bool

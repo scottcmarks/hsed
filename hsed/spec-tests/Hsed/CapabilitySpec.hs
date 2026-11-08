@@ -51,12 +51,26 @@ module lists it, brings it into scope unqualified (an open import, or a
 hiding list that leaves it), or writes it qualified by the import's alias or
 module; and the wildcard address 0.0.0.0 is written in none of them.
 
-And one of group G4's (M5c): the jig reads the simulator's state through
+And two of group G4's (M5c). The jig reads the simulator's state through
 its view alone ("Hsed.Sim.View"'s queries, "Hsed.Jig.Script".@peekSim@;
 Option A), in process as over the LAN leg: no module under @src/Hsed/Jig@
 names the state's type (@TPerState@), the in-process control's reader of
 it (@scPeek@), or the scaffold's transitional accessor
-(@simStateInProc@), comments included.
+(@simStateInProc@), comments included. And hsed-test opens no socket, a
+rule rather than a discipline (the lead's L4; the socket suites are
+hsed-lan-test's): no module of its sources (@spec-tests@, @fixture@)
+names, by the import rule above, a function of 'listeners' nor one that
+dials or serves a socket bound (network's connect, websockets' clients,
+warp's runSettingsSocket), nor one of the LAN suite's support
+(Hsed.Lan.Support's withHub, withHubOn, probe, rawHttp); nor writes in its
+code (its comments and literals left out, so that prose and these
+examples' own names are not code) one of hsed's own that listens, dials
+or serves: Hsed.Transport.Mhtx.Conn's bindLoopback and dialLoopback,
+Hsed.Transport.Mhtx.Hub's runHub, the support's withHub, withHubOn and
+rawHttp. A client opened with "Hsed.Transport.Mhtx.Client"'s own dialer
+(@clientOpts@'s @coDial@) dials too; the specs in hsed-test give theirs
+(over "Hsed.Transport.Mhtx.Conn".@memoryPair@), which no rule of names can
+see.
 -}
 module Hsed.CapabilitySpec (spec) where
 
@@ -145,6 +159,17 @@ spec = do
       jig <- modulesUnder ("src" </> "Hsed" </> "Jig")
       jig `shouldSatisfy` any ((== "Hsed.Jig.Script") . fst)
       [ (name, word) | (name, text) <- jig, word <- ["TPerState", "scPeek", "simStateInProc"], word `T.isInfixOf` text, word `standsIn` text ]
+        `shouldBe` []
+
+  describe "hsed-test's sockets (design 11 M5c; the lead's L4: the socket suites are hsed-lan-test's)" $
+    it "are none: no module of spec-tests or fixture names a function that listens, dials or serves a socket, nor writes in its code one of hsed's own (bindLoopback, dialLoopback, runHub, withHub, withHubOn, rawHttp)" $ do
+      sources <- concat <$> traverse modulesUnder ["spec-tests", "fixture"]
+      sources `shouldSatisfy` any ((== "Hsed.CapabilitySpec") . fst)
+      [ (name, why) | (name, text) <- sources, any (`T.isInfixOf` text) ["Network.", "Hsed.Lan."], why <- namesFrom openers text ] `shouldBe` []
+      [ (name, f) | (name, text) <- sources, let code = codeOf text, f <- ownOpeners, f `T.isInfixOf` text, f `standsIn` code ] `shouldBe` []
+      -- the rule sees a use however it is written, and no name that prose or a literal holds
+      [ f | f <- ownOpeners, f `standsIn` codeOf ("x <- Conn." <> f <> " 0 -- a comment naming " <> f) ] `shouldBe` ownOpeners
+      [ f | f <- ownOpeners, f `standsIn` codeOf ("{- " <> f <> " {- nested -} " <> f <> " -}\nx = \"" <> f <> "\\\"\" <> y -- " <> f) ]
         `shouldBe` []
 
 -- | A deferred type error that says a 'ReadOnly transport is no 'ReadWrite one.
@@ -261,6 +286,63 @@ standsIn name text = any (\(front, back) -> not (endsIdent front) && not (starts
 -- | A character of a Haskell name.
 identChar :: Char -> Bool
 identChar c = C.isAlphaNum c || c == '_' || c == '\''
+
+-- | What opens a socket, by the module that exports it: 'listeners', and
+--   network's connect, websockets' clients, warp's server of a socket bound
+--   (runSettingsSocket), and the LAN suite's support, which only
+--   hsed-lan-test's sources hold (lan-tests/Hsed/Lan/Support.hs).
+openers :: [(Text, [Text])]
+openers = listeners <>
+  [ ("Network.Socket", ["connect"])
+  , ("Network.WebSockets", ["runClient", "runClientWith", "runClientWithSocket", "runClientWithStream"])
+  , ("Network.Wai.Handler.Warp", ["runSettingsSocket"])
+  , ("Hsed.Lan.Support", ["withHub", "withHubOn", "probe", "rawHttp"])
+  ]
+
+-- | hsed's own functions that listen on a loopback socket, dial one, or
+--   serve or start a hub that does: Hsed.Transport.Mhtx.Conn's
+--   bindLoopback and dialLoopback, Hsed.Transport.Mhtx.Hub's runHub, the LAN
+--   suite's withHub, withHubOn and rawHttp (its probe is a word other code
+--   uses: the import rule alone holds it, 'openers').
+ownOpeners :: [Text]
+ownOpeners = ["bindLoopback", "dialLoopback", "runHub", "withHub", "withHubOn", "rawHttp"]
+
+-- | A source's code: its comments (line comments, and block comments,
+--   nested, the Haddock and the pragmas among them), its string literals
+--   and its character literals each left out as a space, so that a name
+--   prose or a literal holds is not one the code writes (Haskell 2010 2.3
+--   and 2.6: two dashes or more begin a comment unless a symbol follows
+--   them, @-->@ being an operator; a quote after a name's character is part
+--   of the name).
+codeOf :: Text -> Text
+codeOf = T.pack . code ' ' . T.unpack
+  where
+    code prev s = case s of
+      []                                                      -> []
+      '{' : '-' : rest                                        -> ' ' : block (1 :: Int) rest
+      '-' : '-' : rest | dashes rest                          -> code ' ' (dropWhile (/= '\n') rest)
+      '"' : rest                                              -> ' ' : code ' ' (string rest)
+      '\'' : rest | not (identChar prev), Just beyond <- character rest -> ' ' : code ' ' beyond
+      c : rest                                                -> c : code c rest
+    block depth s = case s of
+      []               -> []
+      '{' : '-' : rest -> block (depth + 1) rest
+      '-' : '}' : rest -> if depth == 1 then ' ' : code ' ' rest else block (depth - 1) rest
+      _ : rest         -> block depth rest
+    dashes rest = case dropWhile (== '-') rest of
+      c : _ -> c `notElem` ("!#$%&*+./<=>?@\\^|~:" :: String)
+      []    -> True
+    string s = case s of
+      []              -> []
+      '\\' : _ : rest -> string rest
+      '"' : rest      -> rest
+      _ : rest        -> string rest
+    character s = case s of
+      '\\' : _ : rest -> case break (== '\'') rest of
+        (_, _ : beyond) -> Just beyond
+        _               -> Nothing
+      c : '\'' : beyond | c /= '\'' -> Just beyond
+      _                               -> Nothing
 
 -- | An import declaration: the module, whether qualified, its alias, whether
 --   its list hides, and the names its list holds (none without a list).

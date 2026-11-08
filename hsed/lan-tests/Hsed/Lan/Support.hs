@@ -14,14 +14,14 @@ threads, each on a socket "Hsed.Transport.Mhtx.Conn".'bindLoopback' binds on
 127.0.0.1 and an ephemeral port (D6), kept from the bind to the close so that
 no other process can take the port between them, and closed whatever the
 spec comes to ('withHub'), or on a port given, a hub started again where one
-stopped ('withHubOn'); dials them as a client would ('probe'); and speaks
-HTTP to their hooks with one raw request, no HTTP client ('rawHttp'). Built
-on the LAN leg's modules, which groups G1 and G2 write: until they do, each
-says so.
+stopped ('withHubOn'); over the default simulator's backend ('lanBackend');
+dials them as a client would ('probe'); and speaks HTTP to their hooks with
+one raw request, no HTTP client ('rawHttp').
 -}
 module Hsed.Lan.Support
   ( withHub
   , withHubOn
+  , lanBackend
   , probe
   , rawHttp
   ) where
@@ -30,9 +30,13 @@ import qualified Network.Socket            as N
 import qualified Network.Socket.ByteString as NB
 import qualified RIO.ByteString            as B
 import           RIO
+import qualified RIO.Text                  as T
 
+import           Hsed.Sim.Types            (defaultSimParams)
+import           Hsed.Transport.InProc     (InProcOpts (..))
 import           Hsed.Transport.Mhtx.Conn  (Conn, bindLoopback, dialLoopback)
-import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, hubClose, newHub, runHub)
+import           Hsed.Transport.Mhtx.Hub   (Backend, Hub, HubOpts, backendOf, hubClose, newHub, runHub)
+import           Hsed.Wire                 (Unit (..))
 
 
 -- | A hub over a backend, served in the suite's own threads on 127.0.0.1
@@ -50,6 +54,12 @@ withHubOn :: Word16 -> HubOpts -> Backend -> (Word16 -> Hub -> IO a) -> IO a
 withHubOn port opts backend act = bracket (bindLoopback port) (N.close . fst) $ \(sock, bound) ->
   bracket (newHub opts backend) hubClose $ \hub ->
     withAsync (runHub hub sock) $ \serving -> link serving >> act bound hub
+
+-- | The backend of the default simulator (bytes, no hold) for these
+--   options, as hsed-sim serves it with no simulator flag; a failure where
+--   there is none.
+lanBackend :: HubOpts -> IO Backend
+lanBackend opts = backendOf opts defaultSimParams (InProcOpts UnitBytes 0) >>= either (throwString . T.unpack) pure
 
 -- | An action over a websocket to the hub's @\/ws@ on 127.0.0.1's port,
 --   connected within 5 s (conformance.dart:88's wait for a frame), or why

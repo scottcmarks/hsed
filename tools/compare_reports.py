@@ -3,7 +3,7 @@ after normalising what any two runs differ in (the hsed version, the start and t
 difference is reported unless an allowance named on the command line allows it.
 
   .venv/bin/python -I tools/compare_reports.py [--allow-keys KEY] [--allow-texts OLD NEW]
-      [--allow-md-sections TITLE] [--show-allowed] [--limit N] A B
+      [--allow-md-sections TITLE] [--allow-target] [--show-allowed] [--limit N] A B
 
 A and B are each one of:
   - a run's JSON report (jig-<target>-<stamp>.json), its Markdown and JUnit reports beside it (.md, .xml), which
@@ -17,7 +17,10 @@ Normalised in each run's three reports before they are compared, each by the val
     the Markdown's header and targets table, the JUnit property), as <hsed>;
   - the start, the JSON's "started", and the forms the Markdown's header, the JUnit timestamp and the reports'
     names give it, as <started>;
-  - the report directory, options.report_dir, and a path under it, as <report_dir>.
+  - the report directory, options.report_dir, and a path under it, as <report_dir>;
+  - a ws:// target's own port, options.target's (ws://127.0.0.1:PORT/PATH, an ephemeral port each run: M5c), where
+    it stands as that port, in the URL (ws://127.0.0.1:PORT) and in the target's slug (ws-127.0.0.1-PORT, the
+    reports' names and the JUnit classnames), as <port>; so that two sets of ws:// runs compare with no allowance.
 
 Compared: the JSON as values, an object's members by key and a list's elements aligned as difflib aligns them, so
 that an element one side alone has is one difference, not a shift of every element after it (the elements of a
@@ -38,6 +41,10 @@ Allowances, each option repeatable:
                              its text its strings and its keys; never something A alone has
   --allow-md-sections TITLE  a Markdown line under a heading that begins with TITLE (its #s left out; a heading
                              heads its own section, and fenced code holds none), on each side that has the line
+  --allow-target             what the target alone makes differ (M5c: a sim run against a ws:// run): the JSON's
+                             options.target and a target's opened (targets.opened), and a Markdown or JUnit line
+                             that is A's with A's target (options.target) and slug read as B's, each side's slug
+                             the one its JSON report's own name gives (jig-<slug>-<stamp>.json), where they stand
 
 Exit status: 0 equal under the allowances; 1 a difference none allows, or a run one set alone has; 2 a usage error,
 or a report missing or not readable.
@@ -76,6 +83,17 @@ class Allowances:
     keys: tuple = ()          # --allow-keys
     texts: tuple = ()         # --allow-texts, (old, new) pairs
     md_sections: tuple = ()   # --allow-md-sections
+    target: bool = False      # --allow-target
+
+
+@dataclass(frozen=True)
+class Targets:
+    """Each side's target as the run's reports name it, normalised: its target (options.target) and its slug (from
+    its JSON report's name)."""
+    a_target: str = ""
+    a_slug: str = ""
+    b_target: str = ""
+    b_slug: str = ""
 
 
 @dataclass(frozen=True)
@@ -132,21 +150,50 @@ def text_field(obj, key):
     return value if isinstance(value, str) else ""
 
 
+WS_TARGET = re.compile(r"ws://127\.0\.0\.1:(\d+)(?:/\S*)?")
+
+
+def ws_port(target):
+    """The port of a ws:// target (ws://127.0.0.1:PORT/PATH), or None for any other target.
+
+    >>> ws_port("ws://127.0.0.1:50123/ws"), ws_port("sim"), ws_port("ws://127.0.0.1:50123/ws extra")
+    ('50123', None, None)
+    """
+    m = WS_TARGET.fullmatch(target)
+    return m.group(1) if m else None
+
+
+def port_normaliser(target):
+    """What normalises a ws:// target's own port, where it stands as that port: in the URL (ws://127.0.0.1:PORT) and
+    in the target's slug (ws-127.0.0.1-PORT), a digit after it no longer the port; nothing for another target.
+
+    >>> port_normaliser("ws://127.0.0.1:5001/ws")("ws://127.0.0.1:5001/ws, ws-127.0.0.1-5001-ws, ws://127.0.0.1:50011, 5001")
+    'ws://127.0.0.1:<port>/ws, ws-127.0.0.1-<port>-ws, ws://127.0.0.1:50011, 5001'
+    """
+    port = ws_port(target)
+    if port is None:
+        return lambda text: text
+    stands = re.compile(r"(ws://127\.0\.0\.1:|ws-127\.0\.0\.1-)" + port + r"(?!\d)")
+    return lambda text: stands.sub(lambda m: m.group(1) + "<port>", text)
+
+
 def normaliser(report):
     """What normalises a run's texts, from its JSON report: its version as <hsed>, its start as <started>, its report
     directory, the whole text or a path under it, as <report_dir> (under it only where it names a directory, a /
-    in it, so that a short word is left alone)."""
+    in it, so that a short word is left alone), and a ws:// target's own port as <port>."""
     swaps = ([(form, "<hsed>") for form in version_forms(text_field(report, "hsed"))]
              + [(form, "<started>") for form in started_forms(text_field(report, "started"))])
-    report_dir = text_field(report.get("options") if isinstance(report, dict) else None, "report_dir")
+    options = report.get("options") if isinstance(report, dict) else None
+    report_dir = text_field(options, "report_dir")
     root = report_dir.rstrip("/")
     under = re.compile(r"(?<![\w.-])" + re.escape(root) + r"(?![\w.-])") if "/" in report_dir and root else None
+    port = port_normaliser(text_field(options, "target"))
 
     def normalise(text):
         swapped = functools.reduce(lambda t, s: t.replace(*s), swaps, text)
         if report_dir and swapped == report_dir:
             return "<report_dir>"
-        return under.sub("<report_dir>", swapped) if under else swapped
+        return port(under.sub("<report_dir>", swapped) if under else swapped)
     return normalise
 
 
@@ -306,12 +353,51 @@ def section_allows(change, title):
     return all(any(h.startswith(title) for h in heads) for heads in sides)
 
 
-def allowance(change, allow):
+TARGET_KEYS = (("options", "target"), ("targets", "opened"))
+
+
+def reads_as(a, b, swaps):
+    """Whether text B is text A with some of the places each swap's OLD stands in A read as its NEW, every other
+    character the same: A's target and slug read as B's (a target and a slug may be one text, as sim's are, each
+    place read either way).
+
+    >>> reads_as("# hsed-jig run: sim", "# hsed-jig run: ws://127.0.0.1:<port>/ws", [("sim", "ws://127.0.0.1:<port>/ws")])
+    True
+    >>> reads_as("hsed-sim sim", "hsed-sim T", [("sim", "T")]), reads_as("sim x", "T y", [("sim", "T")])
+    (True, False)
+    """
+    pairs = [(old, new) for old, new in swaps if old]
+    seen, frontier = set(), [(0, 0)]
+    while frontier:
+        i, j = frontier.pop()
+        if (i, j) in seen:
+            continue
+        seen.add((i, j))
+        if i == len(a) and j == len(b):
+            return True
+        if i < len(a) and j < len(b) and a[i] == b[j]:
+            frontier.append((i + 1, j + 1))
+        frontier.extend((i + len(old), j + len(new)) for old, new in pairs if a.startswith(old, i) and b.startswith(new, j))
+    return False
+
+
+def target_allows(change, targets):
+    """Whether --allow-target allows a change: options.target or a target's opened in the JSON; a Markdown or JUnit
+    line on each side that is A's with A's target and slug read as B's."""
+    if change.kind == "json":
+        return any(change.keys[:len(k)] == k for k in TARGET_KEYS)
+    swaps = [(targets.a_target, targets.b_target), (targets.a_slug, targets.b_slug)]
+    return isinstance(change.a, str) and isinstance(change.b, str) and reads_as(change.a, change.b, swaps)
+
+
+def allowance(change, allow, targets=Targets()):
     """The allowance that allows a change, named as on the command line, or None."""
     by_key = (f"--allow-keys {k}" for k in allow.keys if change.kind == "json" and key_allows(k, change.keys))
     by_section = (f"--allow-md-sections {json.dumps(t, ensure_ascii=False)}"
                   for t in allow.md_sections if change.kind == "md" and section_allows(change, t))
-    return next(itertools.chain(by_key, by_section), None) or text_allows(change.a, change.b, allow.texts, change.member)
+    by_target = ("--allow-target" for _ in [()] if allow.target and target_allows(change, targets))
+    return (next(itertools.chain(by_key, by_section, by_target), None)
+            or text_allows(change.a, change.b, allow.texts, change.member))
 
 
 # * Reading
@@ -333,9 +419,24 @@ def lines_of(text):
     return text.split("\n")
 
 
+REPORT_NAME = re.compile(r"jig-(.+)-\d{8}T\d{6}Z(?:-\d+)?")
+
+
+def slug_of(json_path):
+    """A run's slug, its target as its reports' names have it: jig-<slug>-<stamp>.json, the stamp %Y%m%dT%H%M%SZ and
+    a -N after it where the name was taken; the empty text for a name of another form.
+
+    >>> slug_of(Path("jig-ws-127.0.0.1-50123-ws-20261108T055114Z.json")), slug_of(Path("jig-sim-20261108T055114Z-2.json"))
+    ('ws-127.0.0.1-50123-ws', 'sim')
+    """
+    m = REPORT_NAME.fullmatch(Path(json_path).name[:-len(".json")])
+    return m.group(1) if m else ""
+
+
 def load_run(json_path):
     """A run's three reports, normalised: the JSON as values, the Markdown and the JUnit as lines, each read as its
-    bytes decode, with no newline translation."""
+    bytes decode, with no newline translation; and its target and its slug (from its JSON report's name),
+    normalised alike."""
     paths = report_paths(json_path)
     missing = [str(p) for p in paths.values() if not p.is_file()]
     if missing:
@@ -346,16 +447,19 @@ def load_run(json_path):
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as e:
         raise Unreadable(f"{json_path}: {e}") from e
     normalise = normaliser(report)
+    target = text_field(report.get("options") if isinstance(report, dict) else None, "target")
     return {"json": normalised(report, normalise),
-            **{kind: [normalise(line) for line in lines_of(texts[kind])] for kind in ("md", "xml")}}
+            **{kind: [normalise(line) for line in lines_of(texts[kind])] for kind in ("md", "xml")},
+            "target": normalise(target), "slug": normalise(slug_of(json_path))}
 
 
 def run_changes(a_json, b_json):
-    """Every change between two runs' reports, the JSON's, then the Markdown's, then the JUnit's."""
+    """Every change between two runs' reports, the JSON's, then the Markdown's, then the JUnit's; and each side's
+    target and slug."""
     a, b = load_run(a_json), load_run(b_json)
     return (json_changes(a["json"], b["json"])
             + line_changes("md", a["md"], b["md"], headings(a["md"]), headings(b["md"]))
-            + line_changes("xml", a["xml"], b["xml"]))
+            + line_changes("xml", a["xml"], b["xml"])), Targets(a["target"], a["slug"], b["target"], b["slug"])
 
 
 def run_set(directory):
@@ -455,9 +559,10 @@ def compared(name, a_json, b_json, allow, limit, show_allowed):
         side = "A" if a_json is None else "B"
         return [f"{label}{side} has no report (runs.tsv gives -)"], 2
     try:
-        judged = [(c, allowance(c, allow)) for c in run_changes(a_json, b_json)]
+        changes, targets = run_changes(a_json, b_json)
     except Unreadable as e:
         return [f"{label}{e}"], 2
+    judged = [(c, allowance(c, allow, targets)) for c in changes]
     return outcome_lines(name, judged, limit, show_allowed), (1 if any(not why for _, why in judged) else 0)
 
 
@@ -475,6 +580,9 @@ def parser():
                         "with NEW in it")
     p.add_argument("--allow-md-sections", metavar="TITLE", action="append", default=[],
                    help="allow a Markdown difference under a heading that begins with TITLE")
+    p.add_argument("--allow-target", action="store_true",
+                   help="allow what the target alone makes differ: options.target, targets.opened, and a Markdown or "
+                        "JUnit line that is A's with A's target and slug read as B's")
     p.add_argument("--show-allowed", action="store_true", help="list the allowed differences too")
     p.add_argument("--limit", metavar="N", type=int, default=50, help="list at most N differences a run (default 50)")
     return p
@@ -482,7 +590,8 @@ def parser():
 
 def main(argv=None):
     args = parser().parse_args(argv)
-    allow = Allowances(tuple(args.allow_keys), tuple(map(tuple, args.allow_texts)), tuple(args.allow_md_sections))
+    allow = Allowances(tuple(args.allow_keys), tuple(map(tuple, args.allow_texts)), tuple(args.allow_md_sections),
+                       args.allow_target)
     if any(not old and not new for old, new in allow.texts):
         print("compare_reports.py: --allow-texts '' '' allows nothing it can name: give OLD or NEW", file=sys.stderr)
         return 2

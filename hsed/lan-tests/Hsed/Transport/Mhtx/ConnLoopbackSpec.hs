@@ -14,7 +14,7 @@ On a socket bindLoopback 0 bound (a fresh one per example, closed after it): its
 127.0.0.1 and the port it gave, a port in use is refused and a closed one bound again; text,
 binary and close 4000 with its reason carried both ways, the close echoed, a receive after it a
 close again; a text message of about 1.4 MB (a 1 MiB IF-SEND's frame) passed both ways; a message over
-the 2 MiB limit closed with 1009, the code s1-sources.txt predicts once Conn sends it, the
+the 2 MiB limit closed with 1009, the code design 13.34 (28)(b) predicts once Conn sends it, the
 library sending none, while the server serves the next connection; a text frame of invalid UTF-8
 given to fromClient as it came, which ignores it, the connection kept; and a dial that fails
 (no listener, a listener that never answers, a path refused) a reason within its wait, the

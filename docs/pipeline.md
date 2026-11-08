@@ -218,9 +218,11 @@ PORT=54293
 - What it allows beyond commands and `describe`: `--allow-remote-control` (the `peek` and `release`
   ops, which the jig needs), `--allow-remote-reset` (the `reset` op, a power cycle, hardware reset or
   hot plug, broadcast), `--conformance-hooks` (`POST /emit` and `GET /clients`, for mh_transport's
-  conformance suite); `--token-file FILE` makes a client give the token.
+  conformance suite); `--token-file FILE` makes a client, and a hook, give the token.
 - The heartbeat: `--heartbeat-interval-ms` and `--dead-timeout-ms`, 20000 and 60000 by default.
-- It refuses root. SIGINT or SIGTERM closes every client with 1001, and it exits 0.
+- It refuses root. It refuses with 403 a request from a web page (an `Origin` header) or for a host other
+  than 127.0.0.1 or localhost, and holds back a client that does not read its answers (an 8 MiB backlog
+  per connection). SIGINT or SIGTERM closes every client with 1001, and it exits 0.
 
 ## 9. The host jig (`Hsed.Jig.*`, exe `hsed-jig`)
 

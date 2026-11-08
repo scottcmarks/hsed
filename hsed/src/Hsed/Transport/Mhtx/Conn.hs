@@ -32,7 +32,7 @@ no request crossing the close is answered; a receive after the close gives
 a close again (in memory the same one; over a socket the stream's end, with
 no code, once the peer drops the connection). A message over 2 MiB
 ('messageLimit'), which the websockets library refuses with no close frame
-of its own (s1-sources.txt), is closed here with 1009 ('codeTooBig'), and a
+of its own (design 13.34 (28)(b)), is closed here with 1009 ('codeTooBig'), and a
 frame the library cannot read with 1002 ('codeProtocolError'). The wait for
 the peer's close after one's own (1 s at most, design 6.3 as M5c builds it)
 is the reader's, the hub's or the client's: 'connClose' sends and returns.

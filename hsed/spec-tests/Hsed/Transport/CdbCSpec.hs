@@ -69,6 +69,7 @@ import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Options      (RunOptions (..), defaultRunOptions)
 import           Hsed.Jig.Run          (driveCases, runOpened)
 import           Hsed.Jig.Script       (controlComPacket, propertiesCall)
+import           Hsed.Jig.Simulator    (inProcess)
 import           Hsed.Jig.Support      (silently)
 import           Hsed.Jig.Target       (Target (..))
 import           Hsed.Jig.Transcript   (TEntry (..), entries, newTranscript)
@@ -183,7 +184,7 @@ jigSends = withSystemTempDirectory "hsed-cdbc" $ \reports -> do
   (sim, control) <- openedInProc params (InProcOpts UnitBlocks512 0)
   t <- newTranscript
   _ <- silently (runOpened defaultRunOptions { roTests = driveCases, roSim = params, roReportDir = reports } t
-                           (SimTarget sim control))
+                           (SimTarget sim (inProcess control)))
   es <- entries t
   pure [ q | Issued _ _ q _ <- es, dir q == IfSend ]
 

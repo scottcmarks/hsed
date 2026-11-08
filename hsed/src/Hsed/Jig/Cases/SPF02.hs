@@ -70,12 +70,12 @@ import           Hsed.Jig.Script       (MethodOutcome (..), RunEnv (..), Script,
                                         expectMethodStatus, expectStatus, expectT45, framesOf, getCells, ifRecvOn, ifRecvWith,
                                         observe, peekSim, rawIfSend, returnedOf, sendInSession, sendLength, simOnly, statusName,
                                         t45On, t45RowOf, unmet, withSession)
+import           Hsed.Jig.Simulator    (Simulator (..))
 import           Hsed.Jig.Target       (Target (..))
 import           Hsed.Sim              (syncOf)
 import           Hsed.Sim.Bytes        (byteRange)
 import           Hsed.Sim.Sync         (T45Row (..))
 import           Hsed.Sim.Types        (ByteTable (..), SPState (..), SyncState (..), TPerState (..))
-import           Hsed.Transport.InProc (SimControl (..))
 import           Hsed.Wire             (ExchangeOpts (..), IfStatus (..), Response)
 
 
@@ -128,8 +128,10 @@ emptyAtoms = fmap (fromMaybe (Skipped "the simulator's alone")) . simOnly $ do
   len <- sendLength bytes
   rawIfSend base len bytes >>= expectStatus "the IF-SEND of four Empty atoms" Good
   after <- asks reTarget >>= \t -> case t of
-    SimTarget _ control -> liftIO (syncOf base <$> scPeek control)
-    _                   -> pure Nothing
+    SimTarget _ sim -> case simStateInProc sim of
+      Just peek -> liftIO (syncOf base <$> peek)
+      Nothing   -> unmet "not yet written: group G4 (Hsed.Jig.Cases.SPF02.emptyAtoms: the base ComID's state read through the simulator's view)"
+    _               -> pure Nothing
   unless (after == Just S1) (unmet ("after the IF-SEND the ComID is in " <> maybe "no state" tshow after <> ", not S1"))
   ifRecvOn base >>= expectT45 "the next IF-RECV" base AllReturnedNoData
   pure Pass

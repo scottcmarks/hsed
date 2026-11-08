@@ -130,6 +130,7 @@ import           Hsed.Jig.Prereq        (level0OutsideSync, sessionsUnobservable
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
 import           Hsed.Jig.Script        (controlComPacket)
+import           Hsed.Jig.Simulator     (inProcess)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, fakeDrive, onFakeDrive, silently)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), newTranscript)
@@ -630,7 +631,7 @@ spec = do
           failed <- exchangeComPacket defaultExchangeOpts (\q -> Right <$> ifSend sim (proto q) (comId q) (lenBytes q) (payload q)) channel sim base bytes
           failed `shouldSatisfy` isRight
           t <- newTranscript
-          code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-21/adminsp", roReportDir = dir </> "report" } t (SimTarget sim control))
+          code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-21/adminsp", roReportDir = dir </> "report" } t (SimTarget sim (inProcess control)))
           code `shouldBe` ExitFailure 1
           json <- reportIn dir
           verdicts json `shouldBe` [(str "ETC-21/adminsp", str "skipped")]
@@ -651,7 +652,7 @@ spec = do
           held <- scPeek control
           Map.size (tsSessions held) `shouldBe` 1
           t <- newTranscript
-          code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-02", roReportDir = dir </> "report" } t (SimTarget sim control))
+          code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-02", roReportDir = dir </> "report" } t (SimTarget sim (inProcess control)))
           code `shouldBe` ExitSuccess
           released <- scPeek control
           Map.null (tsSessions released) `shouldBe` True
@@ -778,7 +779,7 @@ spec = do
         code <- silently $ runOpened
           defaultRunOptions { roTarget = TPair TSim (TReplay "a failing drive"), roTests = keys "UCT-01"
                             , roCapture = Just capture, roReportDir = dir </> "report" }
-          t (PairTarget (SimTarget sim control) (DriveTarget g))
+          t (PairTarget (SimTarget sim (inProcess control)) (DriveTarget g))
         code `shouldBe` ExitFailure 1
         readIORef asked `shouldReturn` 1
         doesFileExist capture `shouldReturn` False
@@ -1188,7 +1189,7 @@ spec = do
         let stopping = sim { tExchange = \q -> when (Wire.dir q == IfSend) (writeIORef stop (Just "SIGINT")) >> tExchange sim q }
         t <- newTranscript
         code <- silently (runOpenedStopping defaultRunOptions { roTests = keys "SPF-02:1,ETC-04", roReportDir = dir </> "report" } t stop
-                                            (SimTarget stopping control))
+                                            (SimTarget stopping (inProcess control)))
         json <- reportIn dir
         code `shouldBe` ExitFailure 130
         verdicts json `shouldBe` [(str "SPF-02:1", str "pass"), (str "ETC-04", str "skipped")]
@@ -1208,7 +1209,7 @@ spec = do
               tExchange sim q }
         t <- newTranscript
         code <- silently (runOpenedStopping defaultRunOptions { roTests = keys "UCT-03:1a-1c", roReportDir = dir </> "report" } t stop
-                                            (SimTarget stopping control))
+                                            (SimTarget stopping (inProcess control)))
         json <- reportIn dir
         code `shouldBe` ExitFailure 130
         verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "pass")]

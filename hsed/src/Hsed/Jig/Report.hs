@@ -134,7 +134,7 @@ import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (createOwned, writeOwned)
 import           Hsed.Jig.Guard         (Allowed (..), Policy (..), decide)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName)
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), WsUrl (..), lockingOFSName, renderWsUrl)
 import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
 import           Hsed.Jig.PairProperties (PropDiff (..), PropertiesPair (..), Side (..), pairProperties, propertiesFail, propertiesLines)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
@@ -239,8 +239,11 @@ slug :: TargetSpec -> Text
 slug = \case
   TSim      -> "sim"
   TDevice d -> T.intercalate "-" (filter (not . T.null) (T.split (== '/') d))
-  TReplay f -> "replay-" <> T.map (\c -> if C.isAlphaNum c || c `elem` ['-', '_', '.'] then c else '_') (T.pack (takeBaseName f))
+  TReplay f -> "replay-" <> safe (T.pack (takeBaseName f))
   TPair a b -> slug a <> "+" <> slug b
+  TWs u     -> T.intercalate "-" (["ws", "127.0.0.1", tshow (wsPort u)] <> map safe (filter (not . T.null) (T.split (== '/') (wsPath u))))
+  where
+    safe = T.map (\c -> if C.isAlphaNum c || c `elem` ['-', '_', '.'] then c else '_')
 
 -- | A target as @--target@ takes it.
 renderTarget :: TargetSpec -> Text
@@ -249,6 +252,7 @@ renderTarget = \case
   TDevice d -> d
   TReplay f -> "replay:" <> T.pack f
   TPair a b -> renderTarget a <> "+" <> renderTarget b
+  TWs u     -> renderWsUrl u
 
 -- | An exit code as a number.
 exitNumber :: ExitCode -> Int

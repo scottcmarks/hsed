@@ -52,6 +52,7 @@ import           Hsed.Jig.Pair            (Judgement (..))
 import           Hsed.Jig.PairProperties
 import           Hsed.Jig.Run             (runOpened)
 import           Hsed.Jig.Script          (PropertiesAnswer (..))
+import           Hsed.Jig.Simulator       (inProcess)
 import           Hsed.Jig.Support         (at, silently)
 import           Hsed.Jig.Target          (Target (..))
 import           Hsed.Jig.Transcript      (newTranscript)
@@ -347,7 +348,7 @@ spec = do
         t <- newTranscript
         let reports = dir </> "report"
             opts    = defaultRunOptions { roTarget = TPair TSim TSim, roTests = either (error . T.unpack) id (parseCaseKeys "UCT-02"), roReportDir = reports }
-        code <- silently (runOpened opts t (PairTarget (SimTarget sim simControl) (SimTarget drive driveControl)))
+        code <- silently (runOpened opts t (PairTarget (SimTarget sim (inProcess simControl)) (SimTarget drive (inProcess driveControl))))
         code `shouldBe` ExitSuccess
         json <- listDirectory reports >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
           [f] -> readFileBinary (reports </> f) >>= either throwString pure . A.eitherDecodeStrict'

@@ -51,6 +51,7 @@ import           Hsed.Jig.Guard         (recoverMethods)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Run           (driveAllowedFor, runOpened, selectedCases)
 import           Hsed.Jig.Script        (RunEnv (..), Script, SyncAnswer (..), adminSPAsAnybody, emptyRunCtx, startSession)
+import           Hsed.Jig.Simulator     (inProcess)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, fakeDrive, onFakeDrive, silently)
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (newTranscript)
@@ -71,7 +72,7 @@ onSim tr control s = do
   channel <- newChannel
   ctx <- newIORef emptyRunCtx
   stop <- newIORef Nothing
-  runRIO (RunEnv (SimTarget tr control) t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
+  runRIO (RunEnv (SimTarget tr (inProcess control)) t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
 
 -- | The ComIDs a session holds in the simulator's state.
 associated :: SimControl -> IO [Word16]
@@ -158,7 +159,7 @@ spec = describe "--recover (Hsed.Jig.Recover through Hsed.Jig.Run.runOpened)" $ 
       associated control `shouldReturn` [0x1004]
       onSim tr control (startSession adminSPAsAnybody) `shouldReturn` Right (SyncFailed SP_BUSY)
       t <- newTranscript
-      code <- silently (runOpened opts t (SimTarget tr control))
+      code <- silently (runOpened opts t (SimTarget tr (inProcess control)))
       code `shouldBe` ExitSuccess
       associated control `shouldReturn` []
       json <- reportIn (tmp </> "report")

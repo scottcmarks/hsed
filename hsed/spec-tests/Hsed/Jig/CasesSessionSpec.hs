@@ -42,6 +42,7 @@ import           Hsed.Jig.Cases.ETC21  (lastByteChanged)
 import           Hsed.Jig.Catalogue    (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Options      (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Run          (RunOptions (..), runJig, runOpened)
+import           Hsed.Jig.Simulator    (inProcess)
 import           Hsed.Jig.Support      (at, atPath, silently)
 import           Hsed.Jig.Target       (Target (..))
 import           Hsed.Jig.Transcript   (newTranscript)
@@ -212,7 +213,7 @@ spec = do
         let params = defaultSimParams { spLockingOFS = Manufactured }
         (sim, control) <- openedInProc params (InProcOpts UnitBytes 0)
         t <- newTranscript
-        code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-07", roSim = params, roReportDir = dir </> "report" } t (SimTarget sim control))
+        code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-07", roSim = params, roReportDir = dir </> "report" } t (SimTarget sim (inProcess control)))
         code `shouldBe` ExitSuccess
         (Map.null . tsSessions <$> scPeek control) `shouldReturn` True
 

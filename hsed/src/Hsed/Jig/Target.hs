@@ -45,10 +45,11 @@ import qualified RIO.Text              as T
 import           Hsed.Jig.Files        (runningAsRoot)
 import           Hsed.Jig.Guard        (Allowed, GuardedDrive, driveClose, guardDrive)
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), parseTarget)
+import           Hsed.Jig.Simulator    (Simulator, inProcess)
 import           Hsed.Jig.Transcript   (Transcript)
 import           Hsed.Sim.Types        (SimParams (..), foldProblemText, simParamsProblems)
 import           Hsed.Transport.Drive  (RawDrive (..))
-import           Hsed.Transport.InProc (InProcOpts (..), SimControl, newInProc)
+import           Hsed.Transport.InProc (InProcOpts (..), newInProc)
 import           Hsed.Transport.MacKext (KextOpts (..), openKext)
 import           Hsed.Transport.Replay (openReplay)
 import           Hsed.Wire             (Cap (..), Transport, closeTransport)
@@ -56,7 +57,8 @@ import           Hsed.Wire             (Cap (..), Transport, closeTransport)
 
 -- | An opened target.
 data Target
-  = SimTarget !(Transport 'ReadWrite) !SimControl
+  = SimTarget !(Transport 'ReadWrite) !Simulator  -- ^ the simulator's transport, and the simulator as the jig reads it
+                                                --   besides ("Hsed.Jig.Simulator": in process, or over the LAN leg)
   | DriveTarget !GuardedDrive   -- ^ a drive (with what the IORegistry says of it) or a replay, behind the Guard
   | PairTarget !Target !Target  -- ^ the simulator, then the drive
 
@@ -74,7 +76,7 @@ openTarget opts admits t = open (roTarget opts)
     open = \case
       TSim -> case simParamsProblems sim of
         []       -> newInProc sim (InProcOpts (spUnits sim) (roHold opts)) <&> \case
-          Right (tr, control) -> Right (SimTarget tr control)
+          Right (tr, control) -> Right (SimTarget tr (inProcess control))
           Left folds          -> Left ("the simulator's SPs do not fold: " <> T.intercalate "; " (map foldProblemText folds))
         problems -> pure (Left ("the simulator's parameters: " <> T.intercalate "; " problems))
         where sim = roSim opts
@@ -91,6 +93,7 @@ openTarget opts admits t = open (roTarget opts)
         Right ta -> open b >>= \case
           Left e   -> Left e <$ closeTarget ta
           Right tb -> pure (Right (PairTarget ta tb))
+      TWs _ -> pure (Left "not yet written: group G3 (Hsed.Jig.Target.openTarget: a ws:// target opened over Hsed.Transport.Mhtx.Client)")
     bsdName dev = fromMaybe dev (T.stripPrefix "/dev/" dev)
     -- a replay carries Level 0 Discovery alone, so binds no base ComID
     replayBind _ = pure (Left "a replay answers Level 0 Discovery alone (Hsed.Transport.Replay)")

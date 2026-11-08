@@ -119,6 +119,7 @@ import           Hsed.Jig.Cases.UCT02      (hostProperties, tperExpected, uct02)
 import           Hsed.Jig.Guard            (Allowed (..), guardDrive, readOnlyMethods)
 import           Hsed.Jig.Options          (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Script
+import           Hsed.Jig.Simulator        (inProcess)
 import           Hsed.Jig.Target           (Target (..))
 import           Hsed.Jig.Transcript       (TEntry (..), entries, newTranscript, recording)
 import           Hsed.Level0               (splitLevel0)
@@ -155,7 +156,7 @@ scripted sim s = do
   ctx <- newIORef emptyRunCtx
   stop <- newIORef Nothing
   target <- if sim
-    then pure (SimTarget (counted n) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
+    then pure (SimTarget (counted n) (inProcess (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))))
     else DriveTarget <$> guardDrive t [] Nothing (RawDrive (counted n) (\_ -> pure (Left "a test drive binds nothing")))
   a <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef n <*> entries t
@@ -198,7 +199,7 @@ harnessOn u sends recvs s = do
         , tDescribe = Describe "tper" "a test" u Nothing Nothing Nothing Nothing
         , tClose    = pure ()
         }
-      target = SimTarget tr (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
+      target = SimTarget tr (inProcess (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
   a <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef seen <*> entries t
 
@@ -261,7 +262,7 @@ endOver drive opts stop hook sends recvs s = do
         , tClose    = pure ()
         }
   target <- case drive of
-    Nothing     -> pure (SimTarget (recording t (scriptedAs "tper" UnitBytes)) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
+    Nothing     -> pure (SimTarget (recording t (scriptedAs "tper" UnitBytes)) (inProcess (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))))
     Just admits -> DriveTarget <$> guardDrive t admits Nothing (RawDrive (scriptedAs "drive" UnitBlocks512) (\_ -> pure (Right ())))
   a <- runRIO (RunEnv target t channel ctx opts stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef seen <*> entries t
@@ -898,7 +899,7 @@ spec = do
             , tDescribe = Describe "tper" "a test" UnitBytes Nothing Nothing Nothing Nothing
             , tClose    = pure ()
             }
-          target = SimTarget (recording t tr) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
+          target = SimTarget (recording t tr) (inProcess (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
       r <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) powerCycle
       r `shouldBe` Right Good
       readIORef events `shouldReturn` [PowerCycle]

@@ -73,6 +73,7 @@ import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Options         (defaultRunOptions)
 import           Hsed.Jig.Script          (MethodOutcome (..), RunCtx (..), RunEnv (..), StartArgs (..), SyncAnswer (..),
                                            emptyRunCtx, endSession, getCells, startSession)
+import           Hsed.Jig.Simulator       (inProcess)
 import           Hsed.Jig.Target          (Target (..))
 import           Hsed.Jig.Transcript      (newTranscript)
 import           Hsed.Sim                 (step, syncOf)
@@ -346,7 +347,7 @@ readLocks ref = do
   channel    <- newChannel
   ctx        <- newIORef emptyRunCtx { rcBaseComId = Just base }
   stop       <- newIORef Nothing
-  let target = SimTarget (stepped ref) (SimControl (\_ -> pure ()) (readIORef ref))
+  let target = SimTarget (stepped ref) (inProcess (SimControl (\_ -> pure ()) (readIORef ref)))
       env    = RunEnv target transcript channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))
   runRIO env $ startSession (StartArgs uSP_Locking (Just LockingSP.uAuthority_Admin1) (Just (spMsid defaultSimParams)) True) >>= \case
     Right (Synced h) -> do

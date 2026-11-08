@@ -57,6 +57,7 @@ import           Hsed.Gen.Core.UIDs     (uSP_Admin)
 import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Run           (runJig, runOpened)
+import           Hsed.Jig.Simulator     (inProcess)
 import           Hsed.Jig.Support       (at, atPath, silently)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (newTranscript)
@@ -251,7 +252,7 @@ spec = do
         let params = manufactured UnitBytes
         (sim, control) <- openedInProc params (InProcOpts UnitBytes 0)
         t <- newTranscript
-        code <- silently (runOpened defaultRunOptions { roTests = oldPlusSeven, roSim = params, roReportDir = dir </> "report", roExchange = quick } t (SimTarget sim control))
+        code <- silently (runOpened defaultRunOptions { roTests = oldPlusSeven, roSim = params, roReportDir = dir </> "report", roExchange = quick } t (SimTarget sim (inProcess control)))
         json <- reportIn dir
         verdicts json `shouldSatisfy` all ((== str "pass") . snd)
         code `shouldBe` ExitSuccess

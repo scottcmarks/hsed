@@ -205,6 +205,7 @@ import           Hsed.Jig.Script        (Credential (..), Interrupted (..), RunC
                                          Verdict (..), admitsStackReset, attempt, baseComId, describeStatus, discover, drain,
                                          emptyRunCtx, ifRecvOn, maskAnswersSince, simCredential, spName, stackReset, t45Of, t45On,
                                          transcriptMark, verdictText)
+import           Hsed.Jig.Simulator     (Simulator (..))
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
 import           Hsed.Level0            (Level0)
@@ -214,7 +215,6 @@ import           Hsed.Sim.Types         (ComIdLife (Associated), ComIdState (..)
                                          SyncState (..), TPerState (..), lifeCycleValue, simParamsProblems)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
-import           Hsed.Transport.InProc  (SimControl (..))
 import           Hsed.Transport.Kext    (diskName)
 import           Hsed.Version           (hsedVersion)
 import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
@@ -392,6 +392,7 @@ devices :: TargetSpec -> [Text]
 devices = \case
   TDevice d -> [d]
   TPair a b -> devices a <> devices b
+  TWs _     -> []
   _         -> []
 
 -- | Whether a target has a drive's end, its own or a replay.
@@ -401,12 +402,16 @@ hasDriveEnd = \case
   TDevice _ -> True
   TReplay _ -> True
   TPair a b -> hasDriveEnd a || hasDriveEnd b
+  TWs _     -> False
 
--- | Whether a target has the simulator's end: the simulator, or a pair with
---   it.
+-- | Whether a target has the simulator's end: the simulator, in process or
+--   over the LAN leg (written out: the wildcard's False would drop a ws://
+--   run's Locking SP rule of the default selection and its parameters'
+--   gate), or a pair with it.
 hasSimEnd :: TargetSpec -> Bool
 hasSimEnd = \case
   TSim      -> True
+  TWs _     -> True
   TPair a b -> hasSimEnd a || hasSimEnd b
   _         -> False
 
@@ -562,7 +567,7 @@ data End = End
 --   recording into the run's transcript and its own already.
 endsOf :: RunOptions -> Transcript -> LogFunc -> IORef (Maybe Text) -> Target -> IO [End]
 endsOf opts t lf stop = \case
-  SimTarget tr control -> pure <$> end (roleOf tr) (SimTarget (recording t tr) control) Nothing
+  SimTarget tr sim     -> pure <$> end (roleOf tr) (SimTarget (recording t tr) sim) Nothing
   DriveTarget g        -> pure <$> end (roleOf (driveTransport g)) (DriveTarget g) (Just g)
   PairTarget a b       -> (<>) <$> endsOf opts t lf stop a <*> endsOf opts t lf stop b
   where
@@ -876,7 +881,9 @@ prerequisites c = go (map fst (common (cSection c)) <> cOwnPrereqs c)
 --   drive case waives, and LockingManufacturedInactive are not observable.
 establish :: Case -> Prereq -> Script (Either Text (Maybe Waiver))
 establish c p = asks reTarget >>= \case
-  SimTarget _ control -> liftIO (scPeek control) >>= onSim control
+  SimTarget _ sim -> case simStateInProc sim of
+    Just peek -> liftIO peek >>= onSim peek
+    Nothing   -> pure (Left "not yet written: group G4 (Hsed.Jig.Run.establish: a prerequisite read through the simulator's view)")
   DriveTarget _
     | p `elem` [SyncIdle, NoSessions], all (== NeedLevel0) (cNeeds c) -> pure (Right (Just (Waiver p level0OutsideSync)))
     | otherwise -> settled onDrive
@@ -887,7 +894,7 @@ establish c p = asks reTarget >>= \case
     credentialsVacuous = "CredentialsKnown: vacuous, the case authenticates no authority (a session as Anybody needs no credential, Core 5.3.4.1.2.1, PDF 211)"
     challengeVacuous   = "HostChallengeIsCurrentPin: vacuous, the case sends no HostChallenge"
     readWrite          = "ReadWriteSessions: every session the jig opens is read-write (StartSession's Write True, Test Cases 4.1 e, PDF 26)"
-    onSim control st = case p of
+    onSim peek st = case p of
       SyncIdle -> do
         let busy = [ comid | (comid, s) <- Map.toList (tsComIds st), cSync s /= S1 ]
         unless (null busy) (note ("SyncIdle: draining " <> T.unwords (map hex busy)))
@@ -901,7 +908,7 @@ establish c p = asks reTarget >>= \case
           for_ held $ \comid -> stackReset comid >>= \outcome ->
             note ("NoSessions: STACK_RESET on " <> hex comid <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
           asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing })
-          liftIO (scPeek control) <&> holding <&> \case
+          liftIO peek <&> holding <&> \case
             []    -> Right Nothing
             still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
       LockingManufactured

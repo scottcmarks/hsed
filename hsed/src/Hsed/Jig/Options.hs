@@ -30,6 +30,8 @@ hsed-sim reads them as the jig does and imports no module of the jig.
 module Hsed.Jig.Options
   ( -- * Targets
     TargetSpec (..)
+  , WsUrl (..)
+  , renderWsUrl
   , parseTarget
     -- * Options
   , RunOptions (..)
@@ -59,7 +61,25 @@ data TargetSpec
   | TDevice !Text                -- ^ a drive, @/dev/diskN@, through the kext
   | TReplay !FilePath            -- ^ a captured Level 0 response, as a drive
   | TPair !TargetSpec !TargetSpec  -- ^ the simulator and a drive, step by step (the Pair runner)
+  | TWs !WsUrl                   -- ^ the simulator served by hsed-sim over mh_transport frames (M5c's LAN leg); 'parseTarget'
+                                 --   refuses it until group G3 builds its client
   deriving (Eq, Show)
+
+-- | A @ws://@ target's URL: its port and its path, the host being 127.0.0.1
+--   alone (the cross-host run is M6's, D4; agents listen on loopback alone,
+--   D6; Scott's answer Q1).
+data WsUrl = WsUrl
+  { wsPort :: !Word16
+  , wsPath :: !Text   -- ^ beginning @/@
+  }
+  deriving (Eq, Show)
+
+-- | A @ws://@ target's URL as @--target@ takes it.
+--
+-- >>> renderWsUrl (WsUrl 41234 "/ws")
+-- "ws://127.0.0.1:41234/ws"
+renderWsUrl :: WsUrl -> Text
+renderWsUrl u = "ws://127.0.0.1:" <> tshow (wsPort u) <> wsPath u
 
 -- | @sim@, @/dev/diskN@, @replay:FILE@, @sim+/dev/diskN@ or @sim+replay:FILE@;
 --   a @ws://@ target, M5c's (the LAN leg: the mh_transport client, design

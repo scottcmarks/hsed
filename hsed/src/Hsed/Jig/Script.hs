@@ -250,6 +250,7 @@ import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
                                          driveLatched, driveRecv, driveSend, driveTransport, uintegerOf)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
+import           Hsed.Jig.Simulator     (Simulator (..))
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
@@ -260,7 +261,6 @@ import           Hsed.Sim.View          (Credential (..), SimQuery (..))
 import qualified Hsed.Sim.View          as View (answer)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
-import           Hsed.Transport.InProc  (SimControl (..))
 import           Hsed.Wire              (Cap (..), Channel, Describe (..), Dir (..), Event (..), ExchangeError (..), ExchangeOpts (..),
                                          IfStatus (..), Request (..), Response (..), Transport, Unit (..),
                                          comIdManagementProtocol, comPacketProtocol, dataKind, defaultExchangeOpts,
@@ -1465,12 +1465,14 @@ namedColumn desc name =
   maybe (unmet ("the generated " <> tdName desc <> " table description has no column " <> name)) (pure . fromIntegral . colNumber)
         (columnNamed name desc)
 
--- | The simulator's state, on the simulator ("Hsed.Transport.InProc"'s
---   control); 'Nothing' on a drive.
+-- | The simulator's state, on the simulator in process ("Hsed.Jig.Simulator"'s
+--   transitional 'simStateInProc'); 'Nothing' on a drive.
 peekSim :: Script (Maybe TPerState)
 peekSim = asks reTarget >>= \case
-  SimTarget _ control -> Just <$> liftIO (scPeek control)
-  _                   -> pure Nothing
+  SimTarget _ sim -> case simStateInProc sim of
+    Just peek -> Just <$> liftIO peek
+    Nothing   -> unmet "not yet written: group G4 (Hsed.Jig.Script.peekSim: the simulator's state read through its view)"
+  _               -> pure Nothing
 
 -- | An authority's credential read from the simulator's state, by the SP's
 --   UID and the authority's: the SP's Authority row of the UID, its

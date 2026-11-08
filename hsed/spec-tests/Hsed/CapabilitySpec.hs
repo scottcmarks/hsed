@@ -161,6 +161,17 @@ spec = do
       [ (name, word) | (name, text) <- jig, word <- ["TPerState", "scPeek", "simStateInProc"], word `T.isInfixOf` text, word `standsIn` text ]
         `shouldBe` []
 
+  describe "the import reader the rules share (the M5c review)" $
+    it "reads an import however it is spelt: alone on its line, after a tab, with a package's name, qualified after, from a source file" $ do
+      let spellings = [ "import\n  Hsed.Jig.Run (runJig)\n", "import\tHsed.Jig.Run\n", "import \"hsed\" Hsed.Jig.Run\n"
+                      , "import qualified \"hsed\" Hsed.Jig.Run as R\n", "import {-# SOURCE #-} Hsed.Jig.Run\n", "import Hsed.Jig.Run qualified as R\n"
+                      , "import\n" ]
+      map importsOf spellings `shouldBe` replicate 6 ["Hsed.Jig.Run"] <> [[]]
+      [ t | t <- [ "import\n  Network.Socket (bind)\n", "import \"network\" Network.Socket (bind)\n", "import\tNetwork.Wai.Handler.Warp\n"
+                 , "import qualified\n    Network.WebSockets as W\nx = W.runServer\n" ]
+          , null (listenersNamed t) ] `shouldBe` []
+      importsOf "importance :: Int\nimports = 1\n" `shouldBe` []
+
   describe "hsed-test's sockets (design 11 M5c; the lead's L4: the socket suites are hsed-lan-test's)" $
     it "are none: no module of spec-tests or fixture names a function that listens, dials or serves a socket, nor writes in its code one of hsed's own (bindLoopback, dialLoopback, runHub, withHub, withHubOn, rawHttp)" $ do
       sources <- concat <$> traverse modulesUnder ["spec-tests", "fixture"]
@@ -210,14 +221,9 @@ modulesUnder root = map named <$> files root
       texts   <- traverse (\p -> (,) p . decodeUtf8Lenient <$> readFileBinary p) here
       (texts <>) . concat <$> traverse files below
 
--- | The modules a source's import declarations name.
+-- | The modules a source's import declarations name ('importDecls').
 importsOf :: Text -> [Text]
-importsOf = mapMaybe imported . T.lines
-  where
-    imported line = case T.words line of
-      "import" : rest -> listToMaybe (map moduleName (dropWhile (`elem` ["qualified", "safe", "{-#", "SOURCE", "#-}"]) rest))
-      _               -> Nothing
-    moduleName = T.takeWhile (\c -> c /= '(' && c /= ' ')
+importsOf = map idModule . importDecls
 
 -- | The modules a list of imports reaches, walked to a fixed point through
 --   the sources a map holds by module name: each module named, and in turn
@@ -242,7 +248,7 @@ outsideSim name =
 --   them (and the modules under it): network's bind, and its listen, which
 --   on a socket not bound binds the wildcard address; warp's runners but
 --   runSettingsSocket, which serves a socket already bound; websockets'
---   servers (s1-sources, read from the packages' sources at M5c's S1.0).
+--   servers (read from the packages' sources at M5c's S1.0, design 13.34 (28)(b)).
 listeners :: [(Text, [Text])]
 listeners =
   [ ("Network.Socket", ["bind", "listen"])
@@ -355,14 +361,19 @@ data ImportDecl = ImportDecl
   }
 
 -- | A source's import declarations, each read whole: a line that begins
---   @import@ and the indented lines after it, their comments left out.
+--   with the word @import@ (a space, a tab or the line's end after it) and
+--   the indented lines after it, their comments left out; a package's name
+--   (PackageImports' string literal) passed over, @qualified@ before the
+--   module or after it.
 importDecls :: Text -> [ImportDecl]
 importDecls = mapMaybe (importDecl . T.unwords) . declarations . map (fst . T'.breakOn "--") . T.lines
   where
-    declarations ls = case dropWhile (not . ("import " `T.isPrefixOf`)) ls of
+    declarations ls = case dropWhile (not . importLine) ls of
       []         -> []
       (l : rest) -> let (more, others) = span (maybe False (C.isSpace . fst) . T.uncons) rest in (l : more) : declarations others
-    importDecl line = case filter (`notElem` ["safe", "{-#", "SOURCE", "#-}"]) (T.words (T.takeWhile (/= '(') line)) of
+    importLine l = maybe False (\r -> maybe True (C.isSpace . fst) (T.uncons r)) (T.stripPrefix "import" l)
+    importDecl line = case filter (\w -> w `notElem` ["safe", "{-#", "SOURCE", "#-}"] && not ("\"" `T.isPrefixOf` w))
+                                  (T.words (T.takeWhile (/= '(') line)) of
       "import" : ws | m : more <- filter (/= "qualified") ws -> Just ImportDecl
         { idModule    = m
         , idQualified = "qualified" `elem` ws
